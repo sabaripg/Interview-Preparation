@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 4 — Java Collections</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #242424;
+    --text-secondary: #6b6b6b;
+    --rule: #e8e8e8;
+    --accent: #1a8917;
+    --code-bg: #f2f2f2;
+    --code-text: #292929;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+    font-size: 21px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Medium's signature thin reading-progress bar */
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--accent);
+    z-index: 1000;
+    transition: width 0.1s ease-out;
+  }
+
+  .wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 64px 24px 120px;
+  }
+
+  header.masthead {
+    margin-bottom: 56px;
+  }
+
+  .kicker {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+  h1.title {
+    font-family: 'Source Serif Pro', Georgia, serif;
+    font-weight: 700;
+    font-size: 42px;
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    margin: 0 0 20px;
+    color: #1a1a1a;
+  }
+
+  .byline {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 15px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .byline .dot { color: #c9c9c9; }
+
+  .dek {
+    font-size: 19px;
+    line-height: 1.6;
+    color: #3a3a3a;
+    font-style: italic;
+    border-left: 3px solid var(--rule);
+    padding-left: 20px;
+  }
+
+  nav.toc {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 14px;
+    background: #fafafa;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 22px 26px;
+    margin-bottom: 8px;
+  }
+  nav.toc .toc-title {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  nav.toc ol {
+    margin: 0;
+    padding-left: 20px;
+    columns: 2;
+    column-gap: 28px;
+  }
+  nav.toc li { margin-bottom: 7px; break-inside: avoid; }
+  nav.toc a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  nav.toc a:hover { border-bottom-color: var(--accent); color: var(--accent); }
+
+  section.chapter {
+    margin-top: 72px;
+  }
+
+  h2.section-title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-bottom: 14px;
+    margin: 0 0 36px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  article.question {
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  article.question:last-child { border-bottom: none; }
+
+  details { padding: 30px 0; }
+  details[open] { padding-bottom: 38px; }
+
+  summary {
+    cursor: pointer;
+    list-style: none;
+    font-family: 'Source Serif Pro', Georgia, serif;
+    font-weight: 600;
+    font-size: 23px;
+    line-height: 1.4;
+    color: #1a1a1a;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  summary::-webkit-details-marker { display: none; }
+
+  summary .qnum {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--accent);
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+
+  summary .chevron {
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-size: 16px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  details[open] summary .chevron { transform: rotate(90deg); }
+
+  .body-content {
+    margin-top: 22px;
+    padding-left: 34px;
+    color: var(--text);
+  }
+
+  .body-content p { margin: 0 0 20px; }
+  .body-content ul { margin: 0 0 20px; padding-left: 24px; }
+  .body-content li { margin-bottom: 12px; }
+
+  .label {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    display: block;
+    margin: 26px 0 10px;
+  }
+  .label:first-child { margin-top: 0; }
+
+  .label.pitfall { color: #b8611a; }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 20px 22px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 4px 0 22px;
+  }
+
+  code.inline {
+    font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+    font-size: 0.85em;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  strong { font-weight: 700; color: #1a1a1a; }
+
+  footer.end {
+    margin-top: 90px;
+    padding-top: 30px;
+    border-top: 1px solid var(--rule);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  #back-to-top {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--rule);
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  #back-to-top.visible { opacity: 1; pointer-events: auto; }
+  #back-to-top:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 600px) {
+    body { font-size: 19px; }
+    h1.title { font-size: 32px; }
+    summary { font-size: 20px; }
+    .body-content { padding-left: 0; }
+    nav.toc ol { columns: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Interview Preparation · Java</div>
+    <h1 class="title">Java Collections</h1>
+    <div class="byline">
+      <span>42 questions</span>
+      <span class="dot">·</span>
+      <span>11 sections</span>
+      <span class="dot">·</span>
+      <span id="read-time">— min read</span>
+    </div>
+    <p class="dek">Deep internals, tricky questions, and the pitfalls that actually come up — from ArrayList's lazy allocation to why ConcurrentHashMap disallows null.</p>
+  </header>
+
+  <nav class="toc" id="toc">
+    <div class="toc-title">In this chapter</div>
+    <ol id="toc-list"></ol>
+  </nav>
+
+  <div id="content"></div>
+
+  <footer class="end">
+    Chapter 4 of Sabari's Interview Preparation notes · reformatted for reading
+  </footer>
+
+</div>
+
+<button id="back-to-top" title="Back to top">↑</button>
+
+<script>
+const DATA = [
+{ section: "List Fundamentals", items: [
+  { q: "What are the differences between ArrayList and LinkedList? When would you choose one over the other?",
+    answer: [
+      "<code class='inline'>ArrayList</code>: backed by a resizable array — O(1) random access (<code class='inline'>get(index)</code>), O(n) insert/delete in the middle (requires shifting elements), amortized O(1) append at the end",
+      "<code class='inline'>LinkedList</code>: doubly-linked list — O(1) insert/delete at known positions (given a node reference/iterator), O(n) random access (must traverse from head or tail), higher per-element memory overhead (two pointers + object header per node vs a flat array slot)",
+      "Choose <code class='inline'>ArrayList</code> for read-heavy workloads with random access (the vast majority of real-world cases); choose <code class='inline'>LinkedList</code> only when you have genuinely frequent insert/delete at arbitrary known positions — in practice <code class='inline'>ArrayDeque</code> usually beats <code class='inline'>LinkedList</code> even for queue/stack use cases due to better cache locality"
+    ],
+    pitfall: "LinkedList is chosen far less often in practice than its \"O(1) insert/delete\" reputation suggests — array-backed structures usually win in real benchmarks due to CPU cache locality, even for insert-heavy workloads at small-to-medium sizes; know this nuance rather than reciting Big-O alone" },
+  { q: "How can you make an ArrayList immutable?",
+    answer: [
+      "<code class='inline'>List.of(...)</code> (Java 9+) — creates a genuinely immutable list, throws <code class='inline'>UnsupportedOperationException</code> on any mutation attempt",
+      "<code class='inline'>Collections.unmodifiableList(list)</code> — wraps an existing list in an immutable view; mutations through the wrapper throw, but the underlying original list can still be mutated directly, which then reflects through the \"immutable\" view (a common gotcha)",
+      "<code class='inline'>List.copyOf(list)</code> (Java 10+) — makes a genuinely independent immutable copy, safe even if the source list is later mutated"
+    ],
+    pitfall: "Collections.unmodifiableList() is not truly immutable, only unmodifiable-through-that-reference — if you still hold a reference to the original mutable list elsewhere, it can change underneath you; List.copyOf() or List.of() are the genuinely safe choices" },
+  { q: "Can a final ArrayList be changed?",
+    answer: [
+      "Yes — <code class='inline'>final</code> on a variable only prevents reassigning the reference to a different object; it says nothing about the mutability of the object itself",
+      "<code class='inline'>final List&lt;String&gt; list = new ArrayList&lt;&gt;(); list.add(\"x\");</code> compiles and works fine — you just can't do <code class='inline'>list = new ArrayList&lt;&gt;();</code> afterward"
+    ],
+    pitfall: "Classic conflation of final (reference immutability) with object immutability — they're unrelated concepts in Java, unlike some other languages where const/final on a collection might imply deep immutability" },
+  { q: "How can you make an ArrayList synchronized?",
+    answer: [
+      "<code class='inline'>Collections.synchronizedList(new ArrayList&lt;&gt;())</code> — wraps the list so every individual method call is synchronized on a common lock",
+      "Caveat: compound operations (like iterating) still need external synchronization on the returned list object, or you'll get ConcurrentModificationException from another thread mutating during iteration"
+    ],
+    code: "List<String> syncList = Collections.synchronizedList(new ArrayList<>());\nsynchronized (syncList) {\n    for (String s : syncList) { ... }  // must be manually synchronized\n}",
+    pitfall: "The \"still need to manually synchronize iteration\" caveat is the detail most people miss — synchronizedList alone doesn't make iteration safe from concurrent modification by other threads" }
+]},
+{ section: "ArrayList Internals", items: [
+  { q: "How to choose initial capacity for an ArrayList that's repeatedly cleared and reused?",
+    answer: [
+      "Set the initial capacity to the typical/peak size you expect it to reach, via the sized constructor <code class='inline'>new ArrayList&lt;&gt;(expectedSize)</code> — avoids repeated internal array resizing during the fill-up phase",
+      "Important: <code class='inline'>clear()</code> does not shrink the backing array's capacity — it just resets size to 0 and nulls out references, so the already-grown capacity is retained across reuse cycles"
+    ],
+    pitfall: "Know explicitly that clear() doesn't shrink capacity — some candidates assume it does and unnecessarily worry about capacity being \"lost\" between reuse cycles" },
+  { q: "ArrayList's lazy initialization and growth — what actually happens under the hood?",
+    answer: [
+      "<code class='inline'>new ArrayList()</code> allocates zero memory beyond the object itself — elementData points to a shared empty sentinel array; the first add() call detects this and allocates the real backing array at the default capacity (10)",
+      "<code class='inline'>new ArrayList(n)</code> for n &gt; 0 allocates immediately — no lazy path",
+      "Growth formula (Java 8+): <code class='inline'>newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1)</code> — a 1.5x grow, not 2x. Sequence from default 10: 10 → 15 → 22 → 33 → 49 → 73 → 109..."
+    ],
+    pitfall: "The \"zero allocation until first add\" detail is what separates a real answer from \"capacity starts at 10\" — many candidates don't know the default constructor path defers allocation entirely" },
+  { q: "Why does ArrayList explicitly null-out the last slot after remove()?",
+    code: "// Before remove: [A, B, C, D, E], size=5\n// After removing index 1 (B):\n// Shift left:    [A, C, D, E, E]   <- E duplicated, still 5 physical slots\n// Null last:     [A, C, D, E, null]\n// size = 4",
+    answer: [
+      "After shifting elements left to fill the gap, the array's last physical slot still holds a reference to the object that's now logically \"removed\" — that stale reference keeps the object reachable, preventing garbage collection",
+      "ArrayList explicitly sets that trailing slot to null specifically to drop the reference and let GC reclaim the object"
+    ],
+    pitfall: "This is the exact pattern to mirror in any custom array-backed data structure you write yourself — forgetting the null-out step is a real, subtle memory leak" },
+  { q: "subList() — why is it considered a dangerous view?",
+    code: "List<Integer> sub = list.subList(2, 5);  // a VIEW, not a copy\nsub.set(0, 99);   // changes list.get(2) too!\nlist.add(\"x\");    // structurally modifies the ORIGINAL\nsub.get(0);        // ConcurrentModificationException!",
+    answer: [
+      "subList() returns a live view backed by the original list — reads and writes through the sublist affect the original and vice versa",
+      "The danger: any structural modification to the original list after the sublist was created invalidates it — the next operation on the sublist throws ConcurrentModificationException, even in single-threaded code"
+    ],
+    pitfall: "If you need an independent snapshot rather than a live view, wrap it explicitly: new ArrayList<>(list.subList(2, 5))" },
+  { q: "Arrays.asList() — why is it a common source of subtle bugs?",
+    code: "String[] arr = {\"a\", \"b\", \"c\"};\nList<String> list = Arrays.asList(arr);\nlist.set(0, \"x\");   // ALLOWED — mutates arr[0] too!\nlist.add(\"d\");       // UnsupportedOperationException — fixed-size!\narr[1] = \"Y\";        // list.get(1) is now \"Y\"",
+    answer: [
+      "Arrays.asList() returns a fixed-size view directly backed by the array you passed in — not a java.util.ArrayList, but an inner Arrays$ArrayList class",
+      "It's also a genuine two-way view: mutating the original array after the fact changes what the list reports, and vice versa"
+    ],
+    pitfall: "For a fully mutable, independent list: wrap it explicitly — new ArrayList<>(Arrays.asList(\"a\", \"b\", \"c\"))" }
+]},
+{ section: "LinkedList & Deque", items: [
+  { q: "How does LinkedList implement List, Deque, and Queue simultaneously?",
+    answer: [
+      "LinkedList is a doubly-linked list where each node has prev/next pointers — that structure naturally supports efficient operations at both ends, exactly what Deque requires",
+      "Queue is a subset of Deque's capability; List is satisfied via index-based traversal (walking from whichever end is closer to the target index)"
+    ],
+    pitfall: "LinkedList.get(index) isn't O(1) despite implementing List — it's O(n) with a smart-but-still-linear optimization" },
+  { q: "How can you implement an LRU cache using a LinkedList?",
+    answer: [
+      "Combine a LinkedList (or doubly-linked list) with a HashMap&lt;Key, Node&gt; for O(1) access: the HashMap gives O(1) lookup, the linked list maintains recency order",
+      "In practice, Java's own LinkedHashMap already does exactly this internally — constructing it with accessOrder=true and overriding removeEldestEntry() gives you a working LRU cache in a few lines"
+    ],
+    code: "Map<K,V> lru = new LinkedHashMap<>(16, 0.75f, true) {\n    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {\n        return size() > MAX_CAPACITY;\n    }\n};",
+    pitfall: "Mentioning LinkedHashMap's built-in LRU support is the strongest answer — shows you know the JDK has already solved this" },
+  { q: "ArrayDeque internals — why must its capacity always be a power of 2?",
+    code: "Index:   [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]\nContent: [ ]  [ ]  [ ]  [A]  [B]  [C]  [D]  [ ]\n                        ^head              ^tail",
+    answer: [
+      "ArrayDeque is a circular buffer — head/tail indices wrap around using a bitmask: (index) & (capacity - 1) instead of the modulo operator",
+      "Bitwise AND is a single CPU instruction, far cheaper than integer division — but this trick only works correctly if capacity is a power of 2, since only then is (capacity - 1) a run of all-1-bits"
+    ],
+    pitfall: "Explain the mechanism (why AND-with-power-of-2-minus-1 equals modulo), not just \"it uses bitwise tricks for speed\"" },
+  { q: "Why does ArrayDeque throw NullPointerException on null elements?",
+    answer: [
+      "ArrayDeque uses null internally as a sentinel marking an empty slot in its circular array — pollFirst()/pollLast() check if (e != null) to determine whether a slot actually holds an element",
+      "If null were a legal element value, the implementation could no longer distinguish \"empty\" from \"legitimately holds a null\""
+    ],
+    pitfall: "Contrast directly with LinkedList, which does allow null — no such sentinel-collision problem" },
+  { q: "Why replace java.util.Stack and LinkedList-as-Queue with ArrayDeque?",
+    answer: [
+      "Stack extends the legacy Vector — every method is synchronized, even in single-threaded code, adding pure overhead with zero benefit",
+      "LinkedList as a Queue allocates a new Node object on every single enqueue — constant GC pressure from millions of short-lived Node objects",
+      "ArrayDeque: no synchronization overhead, no per-element allocation, far better cache locality — consistently 2–5x faster in practice"
+    ],
+    pitfall: "ArrayDeque is essentially a strict upgrade over both Stack and LinkedList-as-Queue/Deque for single-threaded use" }
+]},
+{ section: "PriorityQueue Internals", items: [
+  { q: "PriorityQueue's binary heap — how do offer() and poll() actually work?",
+    code: "Array: [1, 3, 5, 7, 9, 8, 6]\nTree:          1\n            /     \\\n           3       5\n         /   \\   /   \\\n        7     9 8     6\n// For index i: left child = 2i+1, right child = 2i+2, parent = (i-1)/2",
+    answer: [
+      "PriorityQueue is a binary min-heap stored in a flat array — no actual tree nodes, just index arithmetic",
+      "offer() (sift up, O(log n)): append the new element at the end, then repeatedly swap it with its parent while smaller",
+      "poll() (sift down, O(log n)): save the root, move the last element into root position, sift down to smaller child",
+      "Building a heap from a collection is O(n), not O(n log n) — Java uses Floyd's heapify algorithm"
+    ],
+    pitfall: "Knowing sift-up is for insertion and sift-down is for removal (not the reverse) shows you understand the mechanism" },
+  { q: "Why doesn't iterating a PriorityQueue give you elements in sorted order?",
+    code: "PriorityQueue<Integer> pq = new PriorityQueue<>(List.of(5, 3, 1, 4, 2));\nfor (int x : pq) System.out.print(x + \" \");  // NOT sorted!\nwhile (!pq.isEmpty()) System.out.print(pq.poll() + \" \"); // sorted!",
+    answer: [
+      "The heap property only guarantees the minimum element sits at index 0 — it says nothing about the order of any other pair of elements",
+      "Only repeatedly calling poll() produces elements in sorted order, since each poll() re-establishes the heap property"
+    ],
+    pitfall: "This surprises people who assume \"priority queue\" implies \"iterates in priority order\" — it doesn't" }
+]},
+{ section: "Set Implementations", items: [
+  { q: "When might LinkedHashSet outperform TreeSet, and vice versa?",
+    answer: [
+      "LinkedHashSet: O(1) add/remove/contains while preserving insertion order — use when you need predictable order without needing sorted order",
+      "TreeSet: O(log n), but maintains sorted order and supports range queries (headSet, tailSet, subSet) — use when you need sorted iteration"
+    ],
+    pitfall: "The deciding factor is \"do you need sorted order/range queries,\" not raw performance alone" }
+]},
+{ section: "HashMap Internals & Key Design", items: [
+  { q: "Designing a Person key class for use in a HashMap — what do you need?",
+    code: "public final class PersonKey {\n    private final String name;\n    private final int age;\n    @Override\n    public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof PersonKey)) return false;\n        PersonKey p = (PersonKey) o;\n        return age == p.age && Objects.equals(name, p.name);\n    }\n    @Override\n    public int hashCode() { return Objects.hash(name, age); }\n}",
+    answer: [
+      "Override equals() and hashCode() consistently, based on the same set of fields",
+      "Make the class immutable (final fields, no setters) — critical because HashMap uses the key's hash code to determine its bucket at insertion time; if the key mutates afterward, the entry becomes unfindable"
+    ],
+    pitfall: "Immutability isn't just \"good practice\" here — it's a functional requirement for correct HashMap behavior" },
+  { q: "[Follow-up] What are the potential issues with using mutable objects as HashMap keys?",
+    answer: [
+      "If a key's fields change after insertion, its hash code changes — but the entry is still sitting in the old bucket",
+      "The entry becomes effectively unreachable via normal lookup, yet still consumes memory and shows up in iteration — a subtle, hard-to-diagnose bug"
+    ],
+    pitfall: "A very concrete real production bug pattern (e.g. a mutable JPA entity as a HashMap key) — have this failure mode ready as a story" },
+  { q: "[Follow-up] What happens if you override only equals() and not hashCode()?",
+    answer: [
+      "Violates the equals/hashCode contract: two .equals()-equal objects may end up with different default hash codes",
+      "In a HashMap, two \"equal\" keys can land in different buckets — put/get can silently fail to find the entry"
+    ],
+    pitfall: "State the contract explicitly: \"equal objects must have equal hash codes\" (the reverse isn't required)" },
+  { q: "What is a hash collision in Java?",
+    answer: [
+      "When two different keys produce the same hash bucket index — collisions are expected and normal, not an error condition",
+      "HashMap handles collisions by chaining in the same bucket — since Java 8, a bucket with 8+ colliding entries converts to a red-black tree, improving worst case from O(n) to O(log n)"
+    ],
+    pitfall: "Mentioning the Java 8 treeification threshold (8 to treeify, 6 to revert) shows deeper knowledge" },
+  { q: "What changes were made to HashMap implementation in Java 8?",
+    answer: [
+      "Treeification: buckets with 8+ colliding entries convert to a red-black tree — a mitigation against hash-flooding attacks",
+      "Changed collision-resolution insertion order from head-insertion to tail-insertion, fixing a subtle concurrent-resize infinite-loop bug",
+      "Simplified/improved the hash spreading function to better distribute keys"
+    ],
+    pitfall: "The treeification detail is the headline change interviewers usually want — have the exact thresholds ready" },
+  { q: "What is HashMap's load factor, and why is the default 0.75?",
+    answer: [
+      "Load factor is the threshold (fraction of capacity filled) at which the bucket array resizes — default 0.75, resizes once 75% full",
+      "Lower LF → sparser buckets, faster lookups, more resizes. Higher LF → denser buckets, more collisions, fewer resizes",
+      "0.75 is the JDK's chosen balance — override via HashMap(initialCapacity, loadFactor) if a workload justifies it"
+    ],
+    pitfall: "Connect this to the treeification discussion — load factor controls how often resizing happens; the treeification threshold controls the worst case between resizes" }
+]},
+{ section: "Specialized Maps", items: [
+  { q: "Can you store null keys or values in a TreeMap?",
+    answer: [
+      "Null values: yes, allowed without restriction",
+      "Null keys: no — TreeMap maintains sorted order by comparing keys, and comparing null throws NullPointerException"
+    ],
+    pitfall: "Direct, testable contrast with HashMap's null-key behavior — pair the two answers together" },
+  { q: "What is the difference between HashMap and IdentityHashMap in key handling?",
+    answer: [
+      "HashMap uses equals()/hashCode() (logical equality) to determine if two keys are \"the same\"",
+      "IdentityHashMap uses reference identity (==) instead — two distinct objects are always different keys, even if equals() would consider them equal"
+    ],
+    pitfall: "A rarely-used but conceptually important class — knowing it exists and why is the signal" },
+  { q: "What is WeakHashMap, and when would you actually reach for it?",
+    answer: [
+      "WeakHashMap stores its keys as WeakReferences — if a key has no other strong references, GC can reclaim it and the entry is auto-removed",
+      "Use cases: a cache keyed by large objects that should be evictable, or per-object metadata side-tables"
+    ],
+    pitfall: "A very common mistake: using String literals as WeakHashMap keys — these always have a strong reference somewhere, so the entry never gets collected" },
+  { q: "EnumSet/EnumMap internals — why are they dramatically faster than HashSet/HashMap for enum keys?",
+    code: "Set<DayOfWeek> workDays = EnumSet.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY);\n// Internally: a single long bitmask",
+    answer: [
+      "EnumSet is backed by a single long bitmask — each constant's ordinal() maps directly to a bit position. add/remove/contains are single CPU instructions",
+      "EnumMap is backed by a plain Object[] array indexed directly by ordinal() — zero hashing overhead",
+      "Both are typically 10–100x faster than the HashSet/HashMap equivalent"
+    ],
+    pitfall: "\"If the keys are an enum type, always use EnumSet/EnumMap\" — one of the few \"always, no tradeoff\" rules in the framework" }
+]},
+{ section: "ConcurrentHashMap & Thread-Safety", items: [
+  { q: "How would you implement a thread-safe HashMap without using ConcurrentHashMap?",
+    answer: [
+      "Collections.synchronizedMap(new HashMap<>()) — wraps all operations in synchronization on a single lock, serializes all access",
+      "Manual synchronization, or the legacy Hashtable — technically thread-safe but obsolete"
+    ],
+    pitfall: "Any of these approaches is strictly worse than ConcurrentHashMap for real concurrent workloads — this question tests whether you understand why CHM exists as more than \"a HashMap with a lock\"" },
+  { q: "How is ConcurrentHashMap different from HashMap?",
+    answer: [
+      "Thread safety: HashMap isn't thread-safe at all; CHM is safe for concurrent reads and writes without external sync",
+      "Locking granularity: Java 8+ CHM uses fine-grained bucket-level locking/CAS rather than one global lock",
+      "Iteration: CHM's iterators are weakly consistent — never throw CME",
+      "Null handling: CHM disallows both null keys and null values — deliberately, since null creates ambiguity under concurrent access"
+    ],
+    pitfall: "The null-disallowance reasoning is a favorite senior follow-up — have the ambiguity explanation ready" },
+  { q: "ConcurrentHashMap's evolution — Java 7 segment locking vs Java 8's redesign.",
+    answer: [
+      "Java 7: divided the map into 16 independent Segments, each its own mini-HashMap with its own ReentrantLock",
+      "Java 8: segments removed entirely — a single flat Node[] table, each bucket its own lock (CAS for empty buckets, synchronized for collisions)",
+      "Reads (get()) are always lock-free in both versions"
+    ],
+    pitfall: "Describing only the Java 7 segment model as if it's still current is a dated answer — Java 8+'s per-bucket model is what runs today" }
+]},
+{ section: "Other Concurrent Collections", items: [
+  { q: "CopyOnWriteArrayList internals — why is its iterator immune to ConcurrentModificationException?",
+    code: "List<Listener> listeners = new CopyOnWriteArrayList<>();\nfor (Listener l : listeners) {\n    l.onEvent(event);\n    listeners.remove(l);  // SAFE — modifies a NEW array\n}",
+    answer: [
+      "Every mutation creates an entirely new copy of the backing array, then atomically swaps the internal volatile array reference",
+      "The iterator captures the array reference at creation time — it never looks at the current live array again, only its own snapshot"
+    ],
+    pitfall: "Every write is O(n) — a severe anti-pattern for write-heavy lists, appropriate almost exclusively for read-heavy, rarely-mutated collections" },
+  { q: "The BlockingQueue family — how do you choose?",
+    answer: [
+      "ArrayBlockingQueue — fixed-capacity, a single lock shared by put/take",
+      "LinkedBlockingQueue — optionally bounded (unbounded by default — real production risk), separate putLock/takeLock, ~2x throughput",
+      "SynchronousQueue — zero capacity, a pure handoff between producer and consumer",
+      "PriorityBlockingQueue — unbounded min-heap, take() blocks when empty",
+      "DelayQueue — elements implement Delayed, take() only returns once delay expires"
+    ],
+    pitfall: "LinkedBlockingQueue's unbounded-by-default constructor is a genuine production OOM risk if not given an explicit capacity" },
+  { q: "What is ConcurrentSkipListMap, and when would you use it over ConcurrentHashMap?",
+    answer: [
+      "The concurrent, thread-safe equivalent of TreeMap — a sorted map backed by a skip list rather than a balanced tree",
+      "A skip list needs no rebalancing on insert/delete — this is what makes it straightforward to implement fully lock-free"
+    ],
+    pitfall: "Individual key lookups are slower than ConcurrentHashMap — reach for it specifically when you need sorted/range operations under concurrency" }
+]},
+{ section: "Comparable vs Comparator & Sorting", items: [
+  { q: "Comparable vs Comparator — complete comparison, and the subtraction overflow trap.",
+    code: "class Employee implements Comparable<Employee> {\n    public int compareTo(Employee other) { return Integer.compare(salary, other.salary); }\n}\nComparator<Employee> byDeptThenSalary = Comparator\n    .comparing(Employee::getDepartment)\n    .thenComparingInt(Employee::getSalary);",
+    answer: [
+      "Comparable defines the one natural ordering for a class, used automatically by TreeSet/TreeMap/Collections.sort()",
+      "Comparator is external — use when the class has no natural ordering, or you need multiple different orderings",
+      "The subtraction trap: (a, b) -> a - b looks correct but silently breaks on overflow — always use Integer.compare(a, b) instead"
+    ],
+    pitfall: "The subtraction trick usually looks like it works in testing and only fails in production with extreme values — always default to Type.compare()" },
+  { q: "TreeSet/TreeMap use compareTo() for equality, not equals() — what breaks because of this?",
+    code: "TreeSet<BigDecimal> treeSet = new TreeSet<>();\ntreeSet.add(new BigDecimal(\"1.0\"));\ntreeSet.add(new BigDecimal(\"1.00\"));\ntreeSet.size();  // 1! compareTo() says equal\n\nHashSet<BigDecimal> hashSet = new HashSet<>();\nhashSet.add(new BigDecimal(\"1.0\"));\nhashSet.add(new BigDecimal(\"1.00\"));\nhashSet.size();  // 2! equals() says different",
+    answer: [
+      "TreeSet/TreeMap determine duplicates using compareTo() returning 0 — not equals()",
+      "BigDecimal is the well-known case where these disagree: compareTo ignores scale, equals doesn't"
+    ],
+    pitfall: "This is why the Comparable Javadoc recommends compareTo be \"consistent with equals\"" },
+  { q: "How does Collections.sort() work internally?",
+    answer: [
+      "Delegates to list.sort(comparator), using a variant of TimSort — a hybrid merge-sort/insertion-sort, stable, O(n log n) worst case",
+      "It's stable — elements that compare equal retain their original relative order"
+    ],
+    pitfall: "Mention stability explicitly and why it matters for multi-level sorts" },
+  { q: "What happens if you sort a list containing null elements with Collections.sort()?",
+    answer: [
+      "NullPointerException — calling compareTo() on/with a null element throws immediately",
+      "Workaround: Comparator.nullsFirst(comparator) or Comparator.nullsLast(comparator) (Java 8+)"
+    ],
+    pitfall: "Know the specific fix, not just \"it throws NPE\"" },
+  { q: "Can you sort a list of custom objects with Collections.sort() without providing a Comparator?",
+    answer: [
+      "Only if the class implements Comparable<T> — this establishes the \"natural ordering\" the no-Comparator overload relies on",
+      "Without Comparable, it's a compile error, not a runtime exception"
+    ],
+    pitfall: "This fails at compile time — candidates sometimes assume a runtime exception instead" },
+  { q: "What is the difference between Collections.sort() and Stream.sorted()?",
+    answer: [
+      "Collections.sort(list) sorts in place, mutating the original list",
+      "list.stream().sorted() returns a new stream, leaving the original untouched — needs a terminal operation to materialize a result"
+    ],
+    pitfall: "Lead with the mutation difference — the underlying sort algorithm is essentially the same" }
+]},
+{ section: "Iterators & Common Pitfalls", items: [
+  { q: "What is Map.Entry?",
+    code: "for (Map.Entry<String, Integer> entry : map.entrySet()) {\n    System.out.println(entry.getKey() + \"=\" + entry.getValue());\n}",
+    answer: [
+      "A nested interface within Map representing a single key-value pair — returned by entrySet()",
+      "More efficient than iterating keySet() and calling get(key) for each — avoids a redundant lookup per entry"
+    ],
+    pitfall: "Mention the entrySet-vs-keySet-plus-get efficiency angle explicitly" },
+  { q: "What are the different iterator types in Java, and when do you reach for each?",
+    answer: [
+      "Iterator<T> — the base, forward-only traversal contract",
+      "ListIterator<T> — List-specific, bidirectional traversal plus in-place mutation during iteration",
+      "Spliterator<T> — the Java 8 traversal-and-partitioning abstraction underlying the Streams API"
+    ],
+    pitfall: "ListIterator.remove()/set() operate on the last element returned — calling either without first calling next()/previous() throws IllegalStateException" },
+  { q: "Fail-fast vs fail-safe vs weakly-consistent iterators — what's the real distinction?",
+    answer: [
+      "Fail-fast (ArrayList, HashMap, HashSet): tracks modCount, throws ConcurrentModificationException on mismatch — a best-effort bug detector, not a correctness guarantee",
+      "Fail-safe/snapshot-based (CopyOnWriteArrayList): iterates a private frozen copy — immune to CME, but never sees post-creation modifications",
+      "Weakly consistent (ConcurrentHashMap): never throws CME, but reflects some non-deterministic state during iteration"
+    ],
+    pitfall: "Conflating \"fail-safe\" and \"weakly consistent\" is a common imprecision — fail-safe is deterministic (fixed snapshot), weak consistency is explicitly non-deterministic" }
+]}
+];
+
+// ---- Render ----
+const contentEl = document.getElementById('content');
+const tocList = document.getElementById('toc-list');
+let qCounter = 0;
+let totalWords = 0;
+
+DATA.forEach((section) => {
+  const sec = document.createElement('section');
+  sec.className = 'chapter';
+  const h2 = document.createElement('h2');
+  h2.className = 'section-title';
+  h2.textContent = section.section;
+  sec.appendChild(h2);
+
+  section.items.forEach((item) => {
+    qCounter++;
+    const id = 'q' + qCounter;
+
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + id;
+    a.textContent = 'Q' + qCounter + '. ' + item.q.replace(/<[^>]*>/g, '').slice(0, 60) + (item.q.length > 60 ? '…' : '');
+    li.appendChild(a);
+    tocList.appendChild(li);
+
+    const article = document.createElement('article');
+    article.className = 'question';
+    article.id = id;
+
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.innerHTML = `<span class="qnum">Q${qCounter}</span><span>${item.q}</span><span class="chevron">›</span>`;
+    details.appendChild(summary);
+
+    const body = document.createElement('div');
+    body.className = 'body-content';
+
+    if (item.code) {
+      const pre = document.createElement('pre');
+      pre.textContent = item.code;
+      body.appendChild(pre);
+    }
+
+    const answerLabel = document.createElement('span');
+    answerLabel.className = 'label';
+    answerLabel.textContent = 'Answer';
+    body.appendChild(answerLabel);
+
+    const ul = document.createElement('ul');
+    item.answer.forEach((point) => {
+      const liP = document.createElement('li');
+      liP.innerHTML = point;
+      ul.appendChild(liP);
+    });
+    body.appendChild(ul);
+
+    if (item.pitfall) {
+      const pitfallLabel = document.createElement('span');
+      pitfallLabel.className = 'label pitfall';
+      pitfallLabel.textContent = 'Pitfall';
+      body.appendChild(pitfallLabel);
+      const p = document.createElement('p');
+      p.innerHTML = item.pitfall;
+      body.appendChild(p);
+    }
+
+    totalWords += (item.q + item.answer.join(' ') + (item.pitfall || '') + (item.code || '')).split(/\s+/).length;
+
+    details.appendChild(body);
+    article.appendChild(details);
+    sec.appendChild(article);
+  });
+
+  contentEl.appendChild(sec);
+});
+
+document.getElementById('read-time').textContent = Math.max(1, Math.round(totalWords / 200)) + ' min read';
+
+// ---- Reading progress bar ----
+const progressBar = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  progressBar.style.width = pct + '%';
+
+  const backBtn = document.getElementById('back-to-top');
+  if (scrollTop > 600) backBtn.classList.add('visible');
+  else backBtn.classList.remove('visible');
+});
+
+document.getElementById('back-to-top').addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+
+</body>
+</html>
