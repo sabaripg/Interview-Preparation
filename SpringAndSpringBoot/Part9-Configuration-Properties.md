@@ -1,32 +1,40 @@
-# Part 9 — Configuration & Properties
+# 🧾 Part 9 — Configuration & Properties
 
-> Loading values dynamically, YAML vs properties files. Interview Q&A at the end.
-
-## Dynamically Loading Values in Spring Boot
-
-- `@Value("${some.property}")` — injects a single property value from `application.properties`/`.yml`, environment variables, or command-line args (Spring's layered property source resolution).
-- `@ConfigurationProperties(prefix = "app")` — binds a whole group of related properties to a strongly-typed Java class, preferred over many individual `@Value` fields for structured config.
-- `Environment` bean — programmatic access (`environment.getProperty("key")`) when you need dynamic/conditional property lookup rather than static injection.
-- For genuinely runtime-dynamic values (changing without a restart): integrate Spring Cloud Config with `@RefreshScope`, or a feature-flag service.
-
-> ⚠️ **Pitfall:** plain `@Value`/`@ConfigurationProperties` values are resolved **once** at startup and don't automatically pick up changes afterward — don't imply they're "dynamic" in the live-reloading sense unless paired with `@RefreshScope`/Spring Cloud Config or similar.
-
-## YAML vs Properties Files
-
-**`.properties`** — flat key-value pairs (`app.database.url=...`), simple, no native support for lists/maps beyond comma-separated hacks, less readable for deeply nested configuration.
-
-**`.yml`** — hierarchical/nested structure via indentation, natively supports lists and maps cleanly, generally more readable for complex configuration, supports multiple profile-specific documents in a single file (`---` separators).
-
-**When to prefer which:** YAML for configuration with meaningful nesting/hierarchy (most real Spring Boot apps). `.properties` remains fine for simple flat configuration or when avoiding YAML's whitespace-sensitivity concerns.
-
-> ⚠️ **Pitfall:** YAML's whitespace sensitivity is a real practical downside — a tab character or misaligned indent can cause a subtle config error that's harder to spot than a typo in a flat `.properties` file.
+> Neat, point-based format with callout boxes, tables, and icons. Interview Q&A at the end.
 
 ---
 
-## Interview Q&A
+## 🔌 Dynamically Loading Values in Spring Boot
 
-**Q: How can you dynamically load values in a Spring Boot application?**
-Covered above.
+| Approach | Use when |
+|---|---|
+| `@Value("${some.property}")` | Injecting a single property value |
+| `@ConfigurationProperties(prefix = "app")` | Binding a whole group of related properties to a typed class |
+| `Environment` bean | Dynamic/conditional programmatic lookup (`environment.getProperty("key")`) |
+| Spring Cloud Config + `@RefreshScope` | Genuinely runtime-dynamic values that change without a restart |
 
-**Q: Key differences between YML and properties files — when to prefer one?**
-Covered above.
+> [!WARNING]
+> Plain `@Value`/`@ConfigurationProperties` values are resolved **once** at startup and don't automatically pick up changes afterward — don't imply they're "dynamic" in the live-reloading sense unless paired with `@RefreshScope`/Spring Cloud Config.
+
+---
+
+## 📄 YAML vs Properties Files
+
+| | `.properties` | `.yml` |
+|---|---|---|
+| Structure | Flat key-value pairs | Hierarchical/nested via indentation |
+| Lists/maps | Comma-separated hacks | Native support |
+| Readability | Lower for complex config | Higher for nested config |
+| Multiple profiles in one file | No | Yes (`---` separators) |
+
+> [!CAUTION]
+> YAML's whitespace sensitivity is a real downside — a tab character or misaligned indent can cause a subtle config error that's harder to spot than a typo in a flat `.properties` file.
+
+---
+
+## 📋 Interview Q&A
+
+| Question | Short answer |
+|---|---|
+| Dynamically loading values? | @Value, @ConfigurationProperties, Environment, or @RefreshScope for true dynamism |
+| YAML vs properties — when to prefer one? | YAML for nested config; properties for simple flat config or avoiding whitespace issues |

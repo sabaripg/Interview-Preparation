@@ -1,6 +1,6 @@
 # Spring / Spring Boot — Interview Preparation
 
-A complete, corrected, and expanded Spring/Spring Boot interview guide — basic fundamentals through advanced topics, each part with What/Why/When explanations, worked code, pitfalls, and interview Q&A. Sourced and cross-checked against your Notion Chapter 14 (103 questions).
+A complete, corrected, and expanded Spring/Spring Boot interview guide — basic fundamentals through advanced topics, each part with point-based explanations, callout boxes, comparison tables, worked code, and interview Q&A. Sourced and cross-checked against your Notion Chapter 14 (103 questions).
 
 ## 📚 Contents
 

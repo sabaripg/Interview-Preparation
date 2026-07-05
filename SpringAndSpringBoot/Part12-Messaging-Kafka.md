@@ -1,8 +1,10 @@
-# Part 12 — Messaging: Event-Driven (Kafka)
+# 📨 Part 12 — Messaging: Event-Driven (Kafka)
 
-> The same event-driven pattern applied with Kafka instead of RabbitMQ. Interview Q&A at the end.
+> Neat, point-based format with callout boxes, tables, and icons. Interview Q&A at the end.
 
-## Event-Driven Communication Between Spring Boot Services
+---
+
+## 🔗 Event-Driven Communication Between Spring Boot Services
 
 ```java
 @Service
@@ -19,17 +21,24 @@ public class OrderEventConsumer {
 }
 ```
 
-**What it does:** the same structural pattern regardless of broker — define an event class (a simple data carrier, a `record` is a natural fit), publish it via a template (`KafkaTemplate`/`RabbitTemplate`), consume it via a listener annotation (`@KafkaListener`/`@RabbitListener`, the latter covered extensively in Part 11).
+- Same structural pattern regardless of broker: event class → publish via a template → consume via a listener annotation.
 
-**Why:** decoupling (producer doesn't know who consumes), independent scalability (add consumers without touching the producer), asynchronous, non-blocking communication between services.
+| Broker | Template | Listener |
+|---|---|---|
+| RabbitMQ | `RabbitTemplate` | `@RabbitListener` |
+| Kafka | `KafkaTemplate` | `@KafkaListener` |
 
-**Choosing Kafka vs RabbitMQ:** Kafka for high-throughput, replayable event logs. RabbitMQ for simpler task-queue/routing-flexible messaging.
+**Why this pattern:** decoupling (producer doesn't know who consumes), independent scalability, asynchronous non-blocking communication.
 
-> ⚠️ **Pitfall:** don't present this as "new" territory if you've already covered RabbitMQ in depth — the strong answer explicitly says "same pattern I use for RabbitMQ, just swapping `RabbitTemplate`/`@RabbitListener` for `KafkaTemplate`/`@KafkaListener`," which signals the pattern is understood generically, not memorized per-broker.
+**Kafka vs RabbitMQ:** Kafka for high-throughput, replayable event logs. RabbitMQ for simpler task-queue/routing-flexible messaging. (See the full Kafka guide for the deep dive.)
+
+> [!TIP]
+> Don't present this as "new" territory if you've covered RabbitMQ in depth — the strong answer explicitly says "same pattern I use for RabbitMQ, just swapping the template/listener pair," signaling the pattern is understood generically.
 
 ---
 
-## Interview Q&A
+## 📋 Interview Q&A
 
-**Q: How would you implement event-driven communication between Spring Boot services?**
-Covered above.
+| Question | Short answer |
+|---|---|
+| Event-driven communication between services? | Same publish/consume pattern as RabbitMQ, via KafkaTemplate/@KafkaListener |

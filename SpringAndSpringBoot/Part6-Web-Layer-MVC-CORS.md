@@ -1,34 +1,45 @@
-# Part 6 — Web Layer: MVC, Filters, Interceptors, CORS & Reactive
+# 🌐 Part 6 — Web Layer: MVC, Filters, Interceptors, CORS & Reactive
 
-> DispatcherServlet, @RestController vs @Controller, Filters vs Interceptors, CORS end-to-end, WebFlux. Interview Q&A at the end.
+> Neat, point-based format with callout boxes, tables, and icons. Interview Q&A at the end.
 
-## @RestController vs @Controller
+---
 
-**What they are:** `@Controller` is the traditional Spring MVC controller — methods return a **view name** (resolved to a template, e.g. Thymeleaf/JSP) by default, unless individual methods are annotated with `@ResponseBody`. `@RestController` = `@Controller` + `@ResponseBody` applied to every method automatically — all methods return data (JSON/XML) directly serialized into the response body. The standard choice for REST APIs.
+## 🎯 @RestController vs @Controller
 
-## The DispatcherServlet
+| | `@Controller` | `@RestController` |
+|---|---|---|
+| Return value | A **view name**, resolved to a template (Thymeleaf/JSP) | JSON/XML data, serialized directly into the response body |
+| Needs `@ResponseBody`? | Yes, per method, to return raw data | No — it's `@Controller` + `@ResponseBody` on every method automatically |
+| Standard use | Traditional server-rendered MVC | REST APIs |
 
-**What it is:** the central **Front Controller** (design pattern) for Spring MVC — every incoming HTTP request first hits `DispatcherServlet`, which delegates to the appropriate `HandlerMapping` to find the right controller method, invokes it (via a `HandlerAdapter`), and delegates the result to a `ViewResolver` (traditional MVC) or directly serializes it (`@RestController`).
+---
 
-**Why it matters:** it's registered automatically by Spring Boot's auto-configuration when a web starter is on the classpath — you rarely configure it manually.
+## 🚦 The DispatcherServlet
 
-## Where HandlerMapping Is Stored
+- The central **Front Controller** for Spring MVC.
+- Every incoming HTTP request hits it first → delegates to `HandlerMapping` → invokes the controller (via `HandlerAdapter`) → delegates to a `ViewResolver` (or serializes directly for `@RestController`).
+- Registered automatically by Boot's auto-configuration when a web starter is on the classpath.
 
-**What it is:** `HandlerMapping` beans (e.g. `RequestMappingHandlerMapping`, which maps `@RequestMapping`/`@GetMapping` etc. to URLs) are registered as beans in the `ApplicationContext` itself, like any other Spring-managed component. `DispatcherServlet` holds references to all registered `HandlerMapping` beans, consulting them in order at request time.
+## 📍 Where HandlerMapping Is Stored
 
-## Servlet Filter vs Interceptor
+- `HandlerMapping` beans (e.g. `RequestMappingHandlerMapping`) are registered as beans in the `ApplicationContext` — like any other component.
+- `DispatcherServlet` holds references to all of them, consulting them in order at request time.
+
+---
+
+## 🧱 Servlet Filter vs Interceptor
 
 | | `Filter` (Servlet API) | `HandlerInterceptor` (Spring MVC) |
 |---|---|---|
-| Operates at | Servlet container level, **before** `DispatcherServlet` even sees the request | **Inside** the Spring MVC flow, after `DispatcherServlet` resolves the handler |
-| Framework awareness | Spring-agnostic, raw `ServletRequest`/`ServletResponse` | Has access to the actual controller method/handler object |
+| Operates at | Servlet container level, **before** `DispatcherServlet` sees the request | **Inside** the MVC flow, after the handler is resolved |
+| Framework awareness | Spring-agnostic, raw `ServletRequest`/`ServletResponse` | Has access to the actual controller method/handler |
 | Hook points | Chained via `FilterChain` | `preHandle`, `postHandle`, `afterCompletion` |
+| Use for | Encoding, low-level CORS, raw request logging | Auth checks needing handler context, finer MVC lifecycle hooks |
 
-**When to use which:** `Filter` for concerns that should apply broadly regardless of framework (encoding, CORS at the lowest level, raw request logging). `Interceptor` when you need Spring MVC-specific context (which controller/handler method is about to run) or finer-grained hooks around the MVC lifecycle.
+> [!IMPORTANT]
+> "Has access to the resolved handler" is the concrete technical difference — Filters run too early to know which controller method will ultimately handle the request; Interceptors run after that resolution.
 
-> ⚠️ **Pitfall:** "has access to the resolved handler" is the concrete technical difference — Filters run too early in the pipeline to know which controller method will ultimately handle the request; Interceptors run after that resolution.
-
-## Using an Interceptor in Spring Boot
+### Using an Interceptor in Spring Boot
 
 ```java
 public class LoggingInterceptor implements HandlerInterceptor {
@@ -45,41 +56,49 @@ public class WebConfig implements WebMvcConfigurer {
     }
 }
 ```
-Common use cases: request/response logging, authentication/authorization checks before controller invocation, adding common response headers, timing requests.
 
-> ⚠️ **Pitfall:** returning `false` from `preHandle` short-circuits the request entirely — the controller never runs, and you're responsible for writing an appropriate response yourself (e.g. a 401/403) before returning false, or the client gets an empty/incomplete response.
-
-## Spring WebFlux and Reactive Programming
-
-**What it is:** Spring's **reactive**, non-blocking web framework, built on Project Reactor (`Mono<T>` for 0-or-1 results, `Flux<T>` for 0-to-N results) and running on Netty by default (instead of the traditional Servlet/Tomcat thread-per-request model).
-
-**Why it matters:** non-blocking I/O throughout the stack means a small, fixed number of event-loop threads can handle a very large number of concurrent connections, since threads aren't blocked waiting on I/O — well-suited for high-concurrency, I/O-bound workloads (e.g. proxying/aggregating many downstream service calls).
-
-> ⚠️ **Pitfall — the most important practical nuance:** the entire call chain (including the database driver) must be genuinely non-blocking to realize the benefit. Mixing in a blocking JDBC call inside a WebFlux pipeline defeats the purpose and can even be worse than a traditional blocking stack, since it can starve the small event-loop thread pool. Know when WebFlux is and isn't the right choice — I/O-bound high-concurrency vs typical CRUD apps, where virtual threads (see the Multithreading guide) are increasingly a simpler alternative.
+> [!WARNING]
+> Returning `false` from `preHandle` short-circuits the request entirely — the controller never runs, and **you're** responsible for writing an appropriate response (e.g. 401/403) before returning `false`, or the client gets an empty/incomplete response.
 
 ---
 
-## CORS (Cross-Origin Resource Sharing)
+## 🌊 Spring WebFlux and Reactive Programming
 
-### What CORS Is and How It Works
+- Spring's **reactive**, non-blocking web framework — built on Project Reactor (`Mono<T>` for 0-or-1, `Flux<T>` for 0-to-N), running on Netty by default.
+- Non-blocking I/O means a small, fixed number of event-loop threads handle huge numbers of concurrent connections — great for high-concurrency, I/O-bound workloads.
 
-**What it does:** a browser-enforced security mechanism controlling which origins (domain+protocol+port) may make cross-origin requests to your server. By default, the browser's Same-Origin Policy blocks such requests unless the server explicitly opts in via response headers.
+> [!CAUTION]
+> The **entire call chain (including the database driver) must be genuinely non-blocking** to realize the benefit. Mixing a blocking JDBC call into a WebFlux pipeline defeats the purpose and can starve the small event-loop thread pool — a genuine anti-pattern, not just suboptimal. Know when WebFlux is right (I/O-bound high-concurrency) vs a typical CRUD app (virtual threads are increasingly a simpler alternative).
 
-**Flow:** the browser makes the request, checks the response for CORS headers, and only exposes the response to the calling JavaScript if the headers permit that origin.
+---
 
-**Key headers:** `Access-Control-Allow-Origin` (which origin(s) may access the resource), `Access-Control-Allow-Methods` (permitted HTTP methods), `Access-Control-Allow-Headers` (permitted custom request headers), `Access-Control-Allow-Credentials` (whether cookies/auth headers are allowed cross-origin).
+## 🚧 CORS (Cross-Origin Resource Sharing)
 
-> ⚠️ **Pitfall:** CORS is a **browser-side** protection — it does nothing to stop server-to-server requests or tools like curl/Postman. A common misconception is treating CORS as a server-side security boundary when it's specifically a browser-enforced client protection.
+### What It Is and How It Works
+- A **browser-enforced** security mechanism controlling which origins may make cross-origin requests to your server.
+- Flow: browser makes the request → checks response headers → only exposes the response to calling JavaScript if headers permit that origin.
 
-### Preflight Requests — When Exactly Does the Browser Send One?
+| Header | Purpose |
+|---|---|
+| `Access-Control-Allow-Origin` | Which origin(s) may access the resource |
+| `Access-Control-Allow-Methods` | Permitted HTTP methods |
+| `Access-Control-Allow-Headers` | Permitted custom request headers |
+| `Access-Control-Allow-Credentials` | Whether cookies/auth headers are allowed cross-origin |
 
-**What it is:** an automatic `OPTIONS` request the browser sends *before* the real request, asking the server "is this cross-origin request allowed?" — only sent for **non-simple** requests.
+> [!CAUTION]
+> CORS is a **browser-side** protection — it does nothing to stop server-to-server requests or tools like curl/Postman. Don't treat it as a server-side security boundary.
 
-**Triggers:** a non-simple HTTP method (`PUT`, `DELETE`, `PATCH`), custom headers beyond the "simple" set, or a `Content-Type` other than `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` — `application/json` always triggers preflight.
+### Preflight Requests — Exactly When Does the Browser Send One?
 
-If the server's `OPTIONS` response includes valid `Access-Control-Allow-*` headers, the browser sends the actual request; otherwise it's blocked before reaching the server-side handler.
+- An automatic `OPTIONS` request sent **before** the real request, for **non-simple** requests only.
 
-> ⚠️ **Pitfall:** a JSON API using `PUT`/`DELETE` or an `Authorization` header will **always** trigger preflight — this is why REST APIs commonly need explicit CORS configuration even for "simple"-seeming requests.
+**Triggers:**
+- Non-simple HTTP method (`PUT`, `DELETE`, `PATCH`).
+- Custom headers beyond the "simple" set.
+- `Content-Type` other than `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` — **`application/json` always triggers preflight**.
+
+> [!IMPORTANT]
+> A JSON API using `PUT`/`DELETE` or an `Authorization` header will **always** trigger preflight — this is why REST APIs commonly need explicit CORS configuration even for "simple"-seeming requests.
 
 ### Configuring CORS in Spring Boot
 
@@ -106,40 +125,21 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 }
 ```
 
-**Why Spring Security needs its own CORS config:** if Spring Security is on the classpath, its filter chain runs **before** Spring MVC — so a `WebMvcConfigurer`-based CORS config alone never gets a chance to run, since Security's filters reject or mishandle the preflight `OPTIONS` request first. `http.cors(...)` inside the `SecurityFilterChain` is the only way to make CORS actually work once Security is present.
-
-> ⚠️ **Pitfall:** "I configured CORS but I'm still getting CORS errors" in a Spring Security app is one of the most common real-world Spring misconfigurations — the root cause is almost always CORS configured only at the `WebMvcConfigurer` level while Security's filter chain intercepts the preflight first.
+> [!CAUTION]
+> If Spring Security is on the classpath, its filter chain runs **before** Spring MVC — a `WebMvcConfigurer`-based CORS config alone never gets a chance to run, since Security's filters reject the preflight `OPTIONS` first. `http.cors(...)` inside the `SecurityFilterChain` is the only way to make CORS work once Security is present. "I configured CORS but still get CORS errors" is one of the most common real-world Spring misconfigurations.
 
 ---
 
-## Interview Q&A
+## 📋 Interview Q&A
 
-**Q: Difference between @RestController and @Controller?**
-Covered above.
-
-**Q: Where is HandlerMapping stored in Spring?**
-Covered above.
-
-**Q: What is the DispatcherServlet in Spring Framework?**
-Covered above.
-
-**Q: Primary difference between a Servlet Filter and DispatcherFilter?**
-"DispatcherFilter" isn't a standard Spring/Servlet term — worth naming that directly rather than inventing a confident false answer. The closest legitimate concept is `DispatcherServlet` (not "Filter") — see above.
-
-**Q: Primary difference between a Servlet Filter and an Interceptor?**
-Covered above.
-
-**Q: How would you use an Interceptor in a Spring Boot application?**
-Covered above.
-
-**Q: What is Spring WebFlux, and how does it support reactive programming?**
-Covered above.
-
-**Q: What is CORS, how does it work, and what are the key response headers?**
-Covered above.
-
-**Q: What is a preflight request, and exactly when does the browser send one?**
-Covered above.
-
-**Q: What are the ways to configure CORS in Spring Boot, and why must Spring Security configure it separately?**
-Covered above.
+| Question | Short answer |
+|---|---|
+| @RestController vs @Controller? | `@RestController` = `@Controller` + `@ResponseBody` on every method |
+| Where is HandlerMapping stored? | As a bean in the ApplicationContext, referenced by DispatcherServlet |
+| What is DispatcherServlet? | The Front Controller for Spring MVC |
+| Filter vs Interceptor? | Filter runs before DispatcherServlet, no handler context; Interceptor runs inside MVC flow, has handler context |
+| Using an Interceptor? | Implement HandlerInterceptor, register via WebMvcConfigurer |
+| What is Spring WebFlux? | Reactive, non-blocking web framework on Project Reactor + Netty |
+| What is CORS and its key headers? | Browser-enforced origin control; Allow-Origin/Methods/Headers/Credentials |
+| What triggers a preflight request? | Non-simple method, custom headers, or non-simple Content-Type (JSON always) |
+| Configuring CORS with Spring Security present? | Must configure via `http.cors()` in the SecurityFilterChain, not just WebMvcConfigurer |

@@ -1,8 +1,10 @@
-# Part 10 — Async & Scheduling
+# ⏰ Part 10 — Async & Scheduling
 
-> @Async gotchas, @Scheduled types, and configuring thread pools for both. Interview Q&A at the end.
+> Neat, point-based format with callout boxes, tables, and icons. Interview Q&A at the end.
 
-## @Async — What It Does and the Gotchas in Getting It to Actually Run Asynchronously
+---
+
+## ⚡ @Async — What It Does and the Gotchas
 
 ```java
 @EnableAsync  // on a @Configuration class — required, easy to forget
@@ -12,15 +14,19 @@ public CompletableFuture<String> processAsync() {
 }
 ```
 
-**What it does:** runs the annotated method on a separate thread (from a configurable task executor) instead of the caller's thread. The method's declared return type must be `void`, `Future<T>`, or `CompletableFuture<T>` — anything else is a configuration error, since the caller can't get a synchronous return value from an async call.
+- Runs the annotated method on a separate thread instead of the caller's.
+- Return type must be `void`, `Future<T>`, or `CompletableFuture<T>` — anything else is a configuration error.
+- Requires `@EnableAsync` to activate the AOP proxy — without it, the annotation is **silently ignored** and the method runs synchronously, no error.
 
-**Why `@EnableAsync` is required:** it activates the underlying AOP proxy that intercepts `@Async`-annotated calls — without it, the annotation is silently ignored and the method just runs synchronously, no error.
+> [!CAUTION]
+> Same **self-invocation bypass** as `@Transactional` (Part 5) — since `@Async` is also AOP-proxy-based, calling it via `this.asyncMethod()` from the same bean skips the proxy and runs synchronously, no warning.
 
-> ⚠️ **Pitfall — same self-invocation bypass as `@Transactional`:** since `@Async` is also AOP-proxy-based, calling an `@Async` method via `this.asyncMethod()` from within the same bean skips the proxy entirely and runs synchronously, with no warning.
+> [!WARNING]
+> The default task executor (`SimpleAsyncTaskExecutor`) creates a **new thread per task with no pooling and no bound** — dangerous in production under load. Always configure a proper `ThreadPoolTaskExecutor` bean explicitly.
 
-> ⚠️ **Pitfall — the default executor is dangerous:** the default task executor (`SimpleAsyncTaskExecutor`) creates a **new thread per task with no pooling and no bound** — fine for a demo, dangerous in production under load (unbounded thread creation). Always configure a proper `ThreadPoolTaskExecutor` bean explicitly for real workloads.
+---
 
-## @Scheduled vs @Async, the Three Scheduling Types, and Thread Pool Configuration
+## 📅 @Scheduled vs @Async, the Three Scheduling Types
 
 ```java
 @Configuration
@@ -36,23 +42,26 @@ public class SchedulingConfig {
 }
 ```
 
-**The core distinction:** `@Async` runs a method asynchronously *when called* (one-off, on-demand); `@Scheduled` runs a method **periodically**, on its own schedule, with no external caller triggering it — different problems entirely despite both involving background execution.
+| | `@Async` | `@Scheduled` |
+|---|---|---|
+| Trigger | Called on-demand, one-off | Runs periodically, on its own schedule, no caller |
 
-**Three `@Scheduled` types:**
-- `fixedRate` — starts every N ms **regardless** of whether the previous run finished — can overlap if a run takes longer than the interval.
-- `fixedDelay` — waits N ms **after** the previous run completes before starting the next — never overlaps.
-- `cron` — a full cron expression for calendar-based schedules.
+**The three scheduling types:**
 
-**Requires `@EnableScheduling`.** By default, scheduled tasks run on a **single-threaded** scheduler, so multiple `@Scheduled` methods can block each other — define a `ThreadPoolTaskScheduler` bean with a real pool size for concurrent scheduled tasks.
+| Type | Behavior | Can overlap? |
+|---|---|---|
+| `fixedRate` | Starts every N ms regardless of previous run's completion | ✅ Yes, if a run exceeds the interval |
+| `fixedDelay` | Waits N ms **after** the previous run completes | ❌ Never |
+| `cron` | Full cron expression for calendar-based schedules | Depends on expression |
 
-> ⚠️ **Pitfall:** the `fixedRate`-can-overlap vs `fixedDelay`-never-overlaps distinction is the detail most often glossed over — if a `fixedRate` task's execution time exceeds its interval, you get concurrent overlapping runs unless the method itself is otherwise safe for that.
+> [!IMPORTANT]
+> Requires `@EnableScheduling`. By default, scheduled tasks run on a **single-threaded** scheduler, so multiple `@Scheduled` methods can block each other — define a `ThreadPoolTaskScheduler` bean for real concurrency.
 
 ---
 
-## Interview Q&A
+## 📋 Interview Q&A
 
-**Q: What does @Async do, and what are the gotchas in getting it to actually run asynchronously?**
-Covered above.
-
-**Q: @Scheduled vs @Async, the three scheduling types, and configuring a thread pool for scheduled tasks?**
-Covered above.
+| Question | Short answer |
+|---|---|
+| What does @Async do, and its gotchas? | Runs on a separate thread; needs @EnableAsync; self-invocation bypass; default executor is unbounded |
+| @Scheduled vs @Async, the three types, thread pool config? | On-demand vs periodic; fixedRate can overlap, fixedDelay never does |
