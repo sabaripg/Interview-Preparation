@@ -3,6 +3,9 @@
 > Segregated from the original 59-question flat list into thematic sections for easier revision.
 > **Bold** = key answer point. `⚠️ Pitfall` = interview trap / common mistake.
 
+**Deep-dive companion files in this folder** (same style — explanation, worked Java code, pitfalls):
+[Reflection](./Reflection.md) · [Enum](./Enums.md) · [Generics](./Generics.md) · [Exception Handling](./Exception-Handling.md)
+
 ---
 
 ## 1. JVM Startup, Main Method & Program Execution
