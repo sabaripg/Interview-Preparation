@@ -57,10 +57,61 @@ lock.lockInterruptibly(); // can be interrupted while waiting — NOT possible w
 ```
 
 **5. Multiple condition variables:**
+
+**What problem this solves:** `synchronized` gives you exactly **one** wait-set per object — call `wait()`/`notifyAll()` and you're waking up (or checking) *every* thread waiting on that object's monitor, even if they're waiting for completely different things. `Lock.newCondition()` lets a **single lock** hand out several independent wait-queues, one per distinct condition, so you can wake only the threads that actually care.
+
+**Concrete example — a bounded buffer with two separate wait conditions:**
 ```java
-Condition notFull = lock.newCondition();
-Condition notEmpty = lock.newCondition();
+class BoundedBuffer<T> {
+    private final Queue<T> queue = new LinkedList<>();
+    private final int capacity;
+    private final Lock lock = new ReentrantLock();
+    private final Condition notFull  = lock.newCondition();  // producers wait here
+    private final Condition notEmpty = lock.newCondition();  // consumers wait here
+
+    BoundedBuffer(int capacity) { this.capacity = capacity; }
+
+    void put(T item) throws InterruptedException {
+        lock.lock();
+        try {
+            while (queue.size() == capacity) {
+                System.out.println(Thread.currentThread().getName() + ": buffer full, waiting on notFull");
+                notFull.await();               // releases lock, parks on THIS condition only
+            }
+            queue.add(item);
+            System.out.println(Thread.currentThread().getName() + ": put " + item);
+            notEmpty.signal();                 // wakes a thread waiting on notEmpty (a consumer) — never touches notFull waiters
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    T take() throws InterruptedException {
+        lock.lock();
+        try {
+            while (queue.isEmpty()) {
+                System.out.println(Thread.currentThread().getName() + ": buffer empty, waiting on notEmpty");
+                notEmpty.await();              // releases lock, parks on THIS condition only
+            }
+            T item = queue.poll();
+            System.out.println(Thread.currentThread().getName() + ": took " + item);
+            notFull.signal();                  // wakes a thread waiting on notFull (a producer) — never touches notEmpty waiters
+            return item;
+        } finally {
+            lock.unlock();
+        }
+    }
+}
 ```
+**What's happening, step by step:**
+1. `lock.newCondition()` doesn't create a new lock — it creates a *named wait-queue* tied to the one `lock` this `BoundedBuffer` already has. Both `notFull` and `notEmpty` share the same underlying lock, but track their waiters separately.
+2. A producer calling `put()` when the buffer is full calls `notFull.await()` — this releases `lock` (so a consumer can get in) and parks the producer specifically on the `notFull` queue.
+3. A consumer calling `take()` removes an item, then calls `notFull.signal()` — this wakes **one** thread waiting on `notFull` (a blocked producer), and has no effect on any thread waiting on `notEmpty`. That precision is the entire point.
+4. Contrast with `wait()`/`notifyAll()` on a single monitor: `notifyAll()` would wake *every* waiter — both producers waiting for space and consumers waiting for items — and each one would have to re-check its own condition and often go right back to waiting. Functionally similar end state, but wastefully wakes threads that had no chance of proceeding.
+
+> ⚠️ **Pitfall:** always call `await()` inside a `while` loop checking the condition, never `if` — a spuriously woken or re-signaled thread must re-verify state after re-acquiring the lock, exactly like `wait()`. Also: `notFull`/`notEmpty` are just conventional names — nothing links them to "fullness" automatically; the correctness comes entirely from *which* condition you `await()`/`signal()` on at each call site.
+>
+> See Part 3 → **Condition** for how this compares directly to raw `wait()`/`notify()`.
 
 **Exception safety — why `synchronized` can never leak a lock:** when an exception occurs inside a `synchronized` block, the JVM automatically releases the monitor as the thread exits, whether normally or via exception. The exception itself still propagates to the caller unchanged.
 
@@ -281,6 +332,28 @@ Pessimistic -> Frequent updates, high contention, retry is expensive
               (bank accounts, wallet balances, stock inventory, ticket booking)
 ```
 > ⚠️ **Pitfall:** optimistic locking doesn't *prevent* concurrent updates — it only *detects* conflicts at commit time via `@Version`, and you must handle `OptimisticLockException` by retrying or informing the user. Pessimistic locking holds a row-level lock until commit/rollback — long transactions reduce concurrency and can deadlock if different transactions acquire locks in different orders.
+
+## Choosing the Right Lock — Situational Guide
+
+Every lock covered in this part solves a different shape of problem. The interview-ready version of "which lock should I use" is never "the newest one" — it's matching the tool to the actual access pattern. Read this top to bottom as a decision path, not just a table.
+
+| Situation | Use | Why not the alternatives |
+|---|---|---|
+| Simple critical section, single JVM, no special requirements | **`synchronized`** | Automatic lock release (even on exception) means nothing to forget. Default choice for most business logic — reach for something else only when you hit a concrete limitation below. |
+| Need to **fail fast** instead of blocking when the lock is busy | **`ReentrantLock.tryLock()`** | `synchronized` has no non-blocking option at all — it's block-until-acquired or nothing. |
+| Need to wait **up to a bound**, then give up (avoid a stuck request pile-up) | **`ReentrantLock.tryLock(timeout, unit)`** | Same reason — `synchronized` cannot time out. |
+| A blocked thread must be **cancellable** (respond to interruption while waiting for the lock itself) | **`ReentrantLock.lockInterruptibly()`** | `synchronized` blocks uninterruptibly — once you're waiting for the monitor, you're waiting until you get it, full stop. |
+| Multiple threads waiting for genuinely **different conditions** on the same guarded state (producer/consumer with distinct "full" and "empty" cases) | **`ReentrantLock` + multiple `Condition`s** | A `synchronized` monitor has exactly one wait-set — `notifyAll()` wakes everyone regardless of what they're actually waiting for. See the worked example above. |
+| Preventing **starvation** matters more than raw throughput (e.g. a long-running low-priority task must not be perpetually skipped) | **`new ReentrantLock(true)`** (fair) or `new ReentrantReadWriteLock(true)` | Default (unfair) locks allow "barging" for better average throughput, at the cost of no ordering guarantee. |
+| **Read-heavy, write-rare** shared state where reads can safely run concurrently (an in-memory cache, config object, routing table) | **`ReadWriteLock`** (`ReentrantReadWriteLock`) | `synchronized`/`ReentrantLock` serialize *everything*, including reads that don't conflict with each other — wasted throughput when reads dominate. |
+| Read-heavy, write-rare, and you need to squeeze out **more** throughput than `ReadWriteLock` — reads that can tolerate occasionally re-validating and retrying | **`StampedLock`** optimistic-read mode | `ReadWriteLock` readers still pay CAS/counter overhead to register as a reader even without blocking; `StampedLock`'s optimistic mode skips that entirely. Trade-off: not reentrant, no `Condition` support — don't reach for it as a casual `ReadWriteLock` swap. |
+| A **counter or accumulator** under high contention (metrics, request counts) — no critical section beyond the single value itself | **Lock-free**: `AtomicLong`/`LongAdder` (Part 5) — not a lock at all | Taking any lock (even a fast one) for a single-variable update is strictly more overhead than a CAS loop; `LongAdder` specifically wins once contention is high (Part 5). |
+| A cache-style structure needing **LRU eviction ordering** on every access, including reads | **A single `synchronized`/`ReentrantLock`**, not `ReadWriteLock` | Covered in Part 6 — `LinkedHashMap` access-order mode mutates state on `get()` too, so "reads" aren't actually read-only here; `ReadWriteLock`'s core assumption (reads don't mutate) doesn't hold. |
+| Frequent conflicting updates to the **same DB row** (bank balance, inventory count, seat booking) | **Pessimistic locking** (`SELECT ... FOR UPDATE` / `@Lock(PESSIMISTIC_WRITE)`) | Optimistic locking under heavy contention means most transactions retry repeatedly — the conflict rate makes the "assume no conflict" bet a bad one. |
+| **Rare** conflicting updates to the same DB row (most transactions touch different rows/entities) | **Optimistic locking** (`@Version`) | Pessimistic locking here pays row-lock overhead and blocks other transactions for a conflict that was unlikely to happen anyway. |
+| Mutual exclusion needed **across multiple JVMs/service instances**, not just within one process | **A distributed lock** (Redis/Redisson, ZooKeeper, or a DB-row-based lock) — everything above is out of scope | Every lock in this file (`synchronized`, `ReentrantLock`, `ReadWriteLock`, `StampedLock`) only coordinates threads **inside a single JVM**. Two separate service instances each holding their own in-process lock provide zero mutual exclusion between each other — a classic microservices mistake. |
+
+> ⚠️ **Pitfall — the trap interviewers set:** naming `StampedLock` or `ReadWriteLock` as a reflexive "better" answer whenever locking comes up, without checking whether the access pattern is actually read-heavy. If writes are frequent or the "read" secretly mutates state (the LRU cache case above), these are *worse* than plain `synchronized`, not better.
 
 ## Deadlock
 

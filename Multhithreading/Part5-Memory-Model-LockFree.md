@@ -23,6 +23,29 @@ while (running) {
 ```
 Without `volatile`, Thread B might keep reading a stale cached `true` and never exit the loop.
 
+**The guarantee goes further than just the volatile field itself:** a `volatile` write forces the *entire* set of variables visible to the writing thread at that point to be flushed to main memory, not just the `volatile` field — and symmetrically, a subsequent `volatile` read by another thread guarantees it sees the latest value of *every* one of those variables, not only the `volatile` one. This is precisely a **happens-before** edge (see the JMM section later in this file) — everything the writing thread did before the volatile write becomes visible to anything the reading thread does after the volatile read.
+
+```java
+class Config {
+    private int timeout = 30;      // plain field
+    private String mode = "default"; // plain field
+    private volatile boolean ready = false; // volatile field
+
+    void configure() {
+        timeout = 60;       // (1) plain write
+        mode = "fast";      // (2) plain write
+        ready = true;       // (3) volatile write — publishes (1) and (2) too
+    }
+
+    void useConfig() {
+        if (ready) {                      // volatile read
+            System.out.println(timeout + " " + mode); // guaranteed to see 60 "fast", never 30 "default"
+        }
+    }
+}
+```
+> ⚠️ **Pitfall:** this is why `volatile` is the idiomatic way to **safely publish** a fully-built object or a group of related fields — set every plain field first, then the `volatile` flag last. Readers who check the `volatile` flag are guaranteed to see the plain fields as they were at that point, even though those fields themselves are never marked `volatile`. Reversing the write order (setting `ready` before `timeout`/`mode`) breaks the guarantee entirely.
+
 **Appropriate when:** (a) only one thread ever writes, others only read (a status flag like `volatile boolean running`), or (b) the variable's new value doesn't depend on its own previous value (no read-modify-write).
 
 > ⚠️ **Pitfall:** the most common mistake is using `volatile` on a counter and assuming `count++` is now thread-safe — it isn't, since increment is a compound (read-then-write) operation. `volatile` only fixes visibility, not atomicity.
@@ -243,3 +266,6 @@ Covered above.
 
 **Q: Trace through why counter++ isn't atomic — step by step, with a concrete race.**
 Covered above under "The 'Not Atomic' counter++ Problem."
+
+**Q: Does a volatile write only guarantee visibility of the volatile variable itself, or more than that?**
+More than that — covered above. A `volatile` write flushes every variable visible to the writing thread at that point, not just the `volatile` field; a subsequent `volatile` read by another thread sees all of them at their latest values. This is the mechanism behind the common "publish a fully-built object via a volatile flag" pattern.

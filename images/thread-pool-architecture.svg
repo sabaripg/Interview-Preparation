@@ -1,0 +1,79 @@
+<svg viewBox="0 0 900 460" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#444"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="460" fill="#ffffff"/>
+  <text x="450" y="28" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">ThreadPoolExecutor — Task Submission Flow</text>
+
+  <!-- Incoming tasks -->
+  <text x="60" y="70" font-size="13" font-weight="600" fill="#333">New Tasks</text>
+  <g font-size="12" fill="#1a1a1a">
+    <rect x="20" y="80" width="90" height="28" rx="4" fill="#eef3fb" stroke="#4a7fc1"/>
+    <text x="65" y="98" text-anchor="middle">task.submit()</text>
+    <rect x="20" y="118" width="90" height="28" rx="4" fill="#eef3fb" stroke="#4a7fc1"/>
+    <text x="65" y="136" text-anchor="middle">task.submit()</text>
+    <rect x="20" y="156" width="90" height="28" rx="4" fill="#eef3fb" stroke="#4a7fc1"/>
+    <text x="65" y="174" text-anchor="middle">task.submit()</text>
+  </g>
+  <path d="M112,94 L165,110" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+  <path d="M112,132 L165,140" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+  <path d="M112,170 L165,155" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- Step 1 core threads -->
+  <rect x="165" y="60" width="150" height="150" rx="6" fill="none" stroke="#333" stroke-dasharray="4,3"/>
+  <text x="240" y="52" text-anchor="middle" font-size="12" font-weight="600" fill="#333">1. Fill core threads first</text>
+  <rect x="185" y="80" width="110" height="30" rx="4" fill="#2e7d32" opacity="0.15" stroke="#2e7d32"/>
+  <text x="240" y="100" text-anchor="middle" font-size="12" fill="#1a1a1a">Core Thread 1</text>
+  <rect x="185" y="120" width="110" height="30" rx="4" fill="#2e7d32" opacity="0.15" stroke="#2e7d32"/>
+  <text x="240" y="140" text-anchor="middle" font-size="12" fill="#1a1a1a">Core Thread 2</text>
+  <text x="240" y="200" text-anchor="middle" font-size="11" fill="#555">corePoolSize = 2</text>
+
+  <!-- Step 2 queue -->
+  <text x="450" y="52" text-anchor="middle" font-size="12" font-weight="600" fill="#333">2. Then queue fills up</text>
+  <rect x="360" y="60" width="180" height="150" rx="6" fill="none" stroke="#333" stroke-dasharray="4,3"/>
+  <g font-size="11" fill="#1a1a1a">
+    <rect x="375" y="80" width="150" height="24" rx="3" fill="#fff8e1" stroke="#c79a1e"/>
+    <text x="450" y="96" text-anchor="middle">queued task</text>
+    <rect x="375" y="108" width="150" height="24" rx="3" fill="#fff8e1" stroke="#c79a1e"/>
+    <text x="450" y="124" text-anchor="middle">queued task</text>
+    <rect x="375" y="136" width="150" height="24" rx="3" fill="#fff8e1" stroke="#c79a1e"/>
+    <text x="450" y="152" text-anchor="middle">queued task</text>
+  </g>
+  <text x="450" y="200" text-anchor="middle" font-size="11" fill="#555">bounded workQueue</text>
+  <path d="M315,135 L360,135" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- Step 3 extra threads up to max -->
+  <text x="690" y="52" text-anchor="middle" font-size="12" font-weight="600" fill="#333">3. Then grow up to max</text>
+  <rect x="600" y="60" width="180" height="150" rx="6" fill="none" stroke="#333" stroke-dasharray="4,3"/>
+  <rect x="615" y="76" width="150" height="26" rx="4" fill="#e65100" opacity="0.15" stroke="#e65100"/>
+  <text x="690" y="94" text-anchor="middle" font-size="11" fill="#1a1a1a">Extra Thread 3</text>
+  <rect x="615" y="108" width="150" height="26" rx="4" fill="#e65100" opacity="0.15" stroke="#e65100"/>
+  <text x="690" y="126" text-anchor="middle" font-size="11" fill="#1a1a1a">Extra Thread 4</text>
+  <rect x="615" y="140" width="150" height="26" rx="4" fill="#e65100" opacity="0.15" stroke="#e65100"/>
+  <text x="690" y="158" text-anchor="middle" font-size="11" fill="#1a1a1a">Extra Thread 5</text>
+  <text x="690" y="200" text-anchor="middle" font-size="11" fill="#555">up to maximumPoolSize = 5</text>
+  <path d="M540,135 L600,135" stroke="#444" stroke-width="1.5" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- Step 4 rejection -->
+  <rect x="330" y="280" width="240" height="60" rx="6" fill="#fdecea" stroke="#c0392b"/>
+  <text x="450" y="305" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">RejectedExecutionHandler</text>
+  <text x="450" y="324" text-anchor="middle" font-size="11" fill="#7a1f16">queue full AND pool at maximumPoolSize</text>
+  <path d="M450,210 L450,280" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrowRed)" fill="none"/>
+  <text x="465" y="250" font-size="11" fill="#c0392b">4. only if both full</text>
+
+  <!-- keepAliveTime note -->
+  <rect x="600" y="280" width="240" height="70" rx="6" fill="#eef3fb" stroke="#4a7fc1"/>
+  <text x="720" y="302" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">keepAliveTime</text>
+  <text x="720" y="320" text-anchor="middle" font-size="11" fill="#333">idle non-core threads</text>
+  <text x="720" y="336" text-anchor="middle" font-size="11" fill="#333">above corePoolSize die off</text>
+  <path d="M690,210 L720,280" stroke="#4a7fc1" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow)" fill="none"/>
+
+  <text x="450" y="410" text-anchor="middle" font-size="12" fill="#555">Order: fill core threads → fill bounded queue → grow to max threads → reject.</text>
+  <text x="450" y="430" text-anchor="middle" font-size="12" fill="#555">An unbounded queue means step 3 (grow to max) never happens — pool never exceeds corePoolSize.</text>
+</svg>

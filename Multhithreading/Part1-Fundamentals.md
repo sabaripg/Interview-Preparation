@@ -114,6 +114,61 @@ running on Thread-0
 
 > ⚠️ **Pitfall:** exact scheduling behavior (quantum length, whether it's strictly round-robin) is OS/JVM-dependent — don't rely on it for correctness, only for general throughput expectations.
 
+## Interrupting Threads
+
+**What it does:** `Thread.interrupt()` is how one thread asks another to stop what it's doing. Critically, calling it does **not** forcibly stop anything — it only **sets a boolean interrupt flag** on the target thread. What happens next depends entirely on what that thread is doing when the flag gets set:
+
+- If the target thread is currently blocked in `sleep()`, `wait()`, or `join()`, the JVM wakes it immediately, **clears the interrupt flag**, and throws `InterruptedException` right there.
+- If the target thread is just running normal code (not blocked in one of those calls), nothing happens automatically — the flag is simply set, and the thread must **cooperatively** check it (`isInterrupted()`) and decide to stop on its own. Nothing forces it to.
+
+```java
+class InterruptExample {
+    static void example() throws InterruptedException {
+        Thread sleepyThread = new Thread(() -> {
+            try {
+                System.out.println("I am too sleepy... let me sleep for an hour.");
+                Thread.sleep(1000 * 60 * 60);
+            } catch (InterruptedException ie) {
+                // sleep() already cleared the flag as part of throwing this exception
+                System.out.println("Flag right after catching: " + Thread.interrupted() + " " + Thread.currentThread().isInterrupted());
+
+                Thread.currentThread().interrupt(); // re-set the flag ourselves, to demonstrate the two check methods
+                System.out.println("Oh, someone woke me up!");
+
+                System.out.println("Flag after re-interrupting: " + Thread.currentThread().isInterrupted() + " " + Thread.interrupted());
+            }
+        });
+        sleepyThread.start();
+        System.out.println("About to wake up the sleepy thread...");
+        sleepyThread.interrupt();
+        System.out.println("Woke up sleepy thread...");
+        sleepyThread.join();
+    }
+}
+```
+**Output:**
+```
+I am too sleepy... let me sleep for an hour.
+About to wake up the sleepy thread...
+Woke up sleepy thread...
+Flag right after catching: false false
+Oh, someone woke me up!
+Flag after re-interrupting: true true
+```
+
+**Why the first line prints `false false`:** when `sleep()` is interrupted, the JVM clears the interrupt flag as part of throwing `InterruptedException` — by the time you're inside the `catch` block, the flag is already `false` again, before you've called anything yourself.
+
+**Two ways to check the flag — and they behave differently:**
+
+| | `Thread.interrupted()` | `someThread.isInterrupted()` |
+|---|---|---|
+| Kind | `static` — always checks the **current** thread | Instance method — checks **whatever thread you call it on** |
+| Side effect | **Clears** the flag as it reads it | Just reads it, **no side effect** |
+
+> ⚠️ **Pitfall — order of evaluation matters:** in the last print statement above, `isInterrupted()` runs first (sees `true`, doesn't touch the flag), *then* `Thread.interrupted()` runs (also sees `true`, then clears it) — so both print `true`. Swap the call order and the second call would see the flag already cleared by the first, printing `true false` instead. This is exactly the kind of "trace it through" question that separates a memorized answer from real understanding — the flag is mutable state, and *which* method you call, and in what order, changes what the next call sees.
+
+> ⚠️ **Pitfall — interruption is advisory, not forced:** `interrupt()` can only unblock a thread that's already in an interruptible wait (`sleep`/`wait`/`join`), or set a flag a running thread must **choose** to check. A `while(true) { /* tight loop, no blocking call, never checks isInterrupted() */ }` thread will simply never stop no matter how many times you call `interrupt()` on it. See Part 2's "Thread Interruption in the Executor Framework" for how this cooperative model plays out with `Future.cancel()`.
+
 ## Monitor Lock
 
 A monitor lock ensures only one thread at a time executes a `synchronized` block/method on a given object.
@@ -306,3 +361,9 @@ Covered above under "Program vs Process vs Thread." If asked to justify a design
 **Q: Why is creating a new Thread expensive, concretely?**
 Three real costs: **(1) Native OS thread allocation** — a genuine system call. **(2) Stack allocation** — each thread gets its own dedicated stack (commonly ~512KB–1MB), reserved up front. **(3) Scheduler registration** — the thread must register with the OS scheduler before it's even eligible to run.
 > ⚠️ **Pitfall:** "thread pools reuse threads" is the standard answer to why pools exist — but naming these three specific costs being amortized away is what separates a memorized rule from an understood one.
+
+**Q: What happens when you call interrupt() on a thread that's blocked in sleep()/wait()? What if it's just running normal code?**
+Covered above under "Interrupting Threads." Blocked in `sleep()`/`wait()`/`join()`: woken immediately, flag cleared, `InterruptedException` thrown. Running normal code: only the flag is set — the thread must periodically call `isInterrupted()` itself and choose to stop; nothing forces it to.
+
+**Q: Thread.interrupted() vs someThread.isInterrupted() — what's the actual difference?**
+Covered above. `Thread.interrupted()` is `static`, always targets the *current* thread, and **clears** the flag as a side effect of reading it. `isInterrupted()` is an instance method, can check *any* thread, and never clears anything. Calling both in the same statement, the order changes what the second call sees.

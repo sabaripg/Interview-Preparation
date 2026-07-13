@@ -217,6 +217,86 @@ try {
 
 > ⚠️ **Pitfall:** same "always loop, never `if`" rule applies — `while (condition) await();`, not `if`, since a signaled thread must re-verify the condition after re-acquiring the lock. The multiple-conditions capability is the actual "why use this over wait/notify" answer — name the specific precision gain, don't just say "it's newer."
 
+## Missed Signals — a Condition Pitfall
+
+**What it is:** a signal is only useful if *someone is already waiting* when it fires. `signal()`/`notify()` don't queue up or get remembered for later — if the signaling thread calls it before any thread has called `await()`/`wait()`, the signal simply vanishes into nothing, and the eventual waiter blocks forever with no signal left to receive.
+
+```java
+class MissedSignalExample {
+    static void example() throws InterruptedException {
+        ReentrantLock lock = new ReentrantLock();
+        Condition condition = lock.newCondition();
+
+        Thread signaller = new Thread(() -> {
+            lock.lock();
+            try {
+                condition.signal();
+                System.out.println("Sent signal");
+            } finally { lock.unlock(); }
+        });
+
+        Thread waiter = new Thread(() -> {
+            lock.lock();
+            try {
+                condition.await();       // <-- nothing to catch, the signal already fired and vanished
+                System.out.println("Received signal");
+            } catch (InterruptedException ie) {
+                // handle interruption
+            } finally { lock.unlock(); }
+        });
+
+        signaller.start();
+        signaller.join();   // signaller finishes and exits BEFORE waiter even starts
+        waiter.start();
+        waiter.join();
+        System.out.println("Program exiting.");
+    }
+}
+```
+**What actually happens:** `signaller` runs to completion — signals, then exits — entirely before `waiter` even starts. By the time `waiter` calls `await()`, there is no pending signal to receive; nothing will ever wake it. `waiter.join()` blocks forever and the program never reaches "Program exiting."
+
+**Why this happens — the root cause:** `Condition`/`wait`-`notify` signals are not state. There's no counter, no memory of "a signal happened at 10:02am" — a `signal()` call only has any effect on threads that are *already* parked in `await()` at that exact moment. If nobody's listening, the signal is simply thrown away.
+
+**Fix 1 — the idiomatic fix: encode the "did it happen" state in a boolean, and loop on it** (the same `while (condition) await()` rule from the section above):
+```java
+boolean signalled = false; // shared, guarded by the same lock
+
+// signaller
+lock.lock();
+try {
+    signalled = true;
+    condition.signal();
+} finally { lock.unlock(); }
+
+// waiter
+lock.lock();
+try {
+    while (!signalled) {   // if the signal already happened, this loop is skipped entirely — no missed signal possible
+        condition.await();
+    }
+} finally { lock.unlock(); }
+```
+This is the real reason `await()`/`wait()` must always be called in a `while` loop checking real, persisted state — not just so a spuriously-woken thread re-checks, but because it's the only thing that protects you from a signal that arrived *before* you started waiting at all.
+
+**Fix 2 — use a `Semaphore` instead, when the goal is pure signaling:** unlike a `Condition`, a `Semaphore`'s permits **are** state — `release()` before anyone `acquire()`s just leaves a permit sitting there, available whenever a thread eventually asks for it. Nothing is lost.
+```java
+Semaphore semaphore = new Semaphore(0); // starts empty — a waiter blocks until a permit exists
+
+Thread signaller = new Thread(() -> {
+    semaphore.release(); // leaves a permit available, even with zero waiters right now
+    System.out.println("Sent signal");
+});
+Thread waiter = new Thread(() -> {
+    try {
+        semaphore.acquire(); // picks up the permit whenever it runs — even if that's well after release()
+        System.out.println("Received signal");
+    } catch (InterruptedException ie) { }
+});
+```
+See the "Semaphore vs Mutex" section above for the full runnable version of this exact pattern — it's the same underlying fix.
+
+> ⚠️ **Pitfall:** this is precisely the mistake that separates "I know the `Condition` API" from "I understand what it actually guarantees." `Condition`/`wait`/`notify` coordinate around a **moment in time**; a `Semaphore`'s permit count coordinates around **durable state**. Whenever the order between "signal" and "start waiting" isn't guaranteed by your code's structure, prefer a mechanism with real state (a boolean + `while` loop, or a `Semaphore`/`BlockingQueue`) over a raw signal.
+
 ---
 
 ## Interview Q&A
@@ -236,6 +316,9 @@ Covered above.
 
 **Q: What is the Condition interface, and how does it improve on wait()/notify()?**
 Covered above.
+
+**Q: What is a "missed signal," and how do you avoid it?**
+Covered above under "Missed Signals." A `signal()`/`notify()` call has no effect on threads that aren't already waiting at that exact moment — signals aren't remembered or queued. Fix: never rely on signal timing alone; guard `await()`/`wait()` with a real, persisted boolean condition checked in a `while` loop, or use a `Semaphore`/`BlockingQueue` whose state (permits, queued items) survives regardless of when threads show up.
 
 **Q: Write the Producer/Consumer problem using wait and notify.**
 ```java

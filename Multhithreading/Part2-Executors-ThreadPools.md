@@ -68,10 +68,45 @@ Both defaults are risky in production: an unbounded queue means the pool never g
 
 ## Blocking Queue
 
-**What it does:** a queue that makes a thread wait instead of failing when it tries to take from an empty queue, or put into a full one — this is what feeds tasks to worker threads.
+**What it does:** a queue that makes a thread wait instead of failing when it tries to take from an empty queue, or put into a full one — this is the `workQueue` that feeds tasks to a `ThreadPoolExecutor`'s worker threads.
 
 - **Bounded queue** — fixed capacity, e.g. `ArrayBlockingQueue`.
-- **Unbounded queue** — no fixed capacity, e.g. `LinkedBlockingQueue`.
+- **Unbounded queue** — no fixed capacity, e.g. `LinkedBlockingQueue` (with no capacity given).
+
+```java
+BlockingQueue<String> queue = new ArrayBlockingQueue<>(2); // capacity 2
+
+Thread producer = new Thread(() -> {
+    try {
+        queue.put("item-1");
+        System.out.println("Produced item-1");
+        queue.put("item-2");
+        System.out.println("Produced item-2");
+        queue.put("item-3"); // queue full (capacity 2) — blocks here until a slot frees up
+        System.out.println("Produced item-3");
+    } catch (InterruptedException e) {}
+});
+
+Thread consumer = new Thread(() -> {
+    try {
+        Thread.sleep(500); // let the producer fill the queue and block first
+        System.out.println("Consumed: " + queue.take()); // frees a slot — unblocks the producer
+    } catch (InterruptedException e) {}
+});
+
+producer.start();
+consumer.start();
+```
+**One possible output:**
+```
+Produced item-1
+Produced item-2
+Consumed: item-1
+Produced item-3
+```
+The producer blocks on `put("item-3")` — not an exception, not a dropped item — the instant the queue reaches capacity 2. It only proceeds once the consumer's `take()` frees a slot. This is exactly the mechanism `ThreadPoolExecutor` relies on: tasks submitted beyond `corePoolSize` sit here waiting for a worker thread, rather than failing immediately.
+
+> ⚠️ **Pitfall:** `put()`/`take()` block; `offer()`/`poll()` don't (they return `false`/`null` immediately, or take an optional timeout). Picking the blocking pair when you actually wanted non-blocking behavior — or vice versa — is a common source of surprise latency or silently dropped work. `ArrayBlockingQueue` vs `LinkedBlockingQueue` vs `SynchronousQueue` tradeoffs are covered in depth in Part 6.
 
 ## Types of Thread Pool Executors
 
@@ -92,7 +127,17 @@ Task B on pool-1-thread-2
 **2. Cached Thread Pool** — creates threads on demand, reuses idle ones, kills threads idle 60s+.
 ```java
 ExecutorService executor = Executors.newCachedThreadPool();
+executor.submit(() -> System.out.println("Task 1 on " + Thread.currentThread().getName()));
+executor.submit(() -> System.out.println("Task 2 on " + Thread.currentThread().getName()));
+executor.shutdown();
 ```
+**One possible output (a new thread per task if none is idle yet):**
+```
+Task 1 on pool-1-thread-1
+Task 2 on pool-1-thread-2
+```
+Internally backed by a `SynchronousQueue` (zero capacity) with `maximumPoolSize = Integer.MAX_VALUE` — there's no queueing at all; if no idle thread is available, a brand new one is created immediately instead of waiting.
+
 > ⚠️ **Pitfall:** no upper bound on thread count — sustained heavy load can spawn enough threads to exhaust memory or crush the scheduler.
 
 **3. Scheduled Thread Pool** — runs tasks after a delay or repeatedly.
