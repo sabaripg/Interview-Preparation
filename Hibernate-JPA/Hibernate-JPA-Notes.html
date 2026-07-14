@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hibernate & JPA — Interview Guide</title>
+<style>
+:root{
+  --navy:#0f172a; --blue:#1d4ed8; --blue-bg:#eef4ff;
+  --amber:#b45309; --amber-bg:#fff7ed; --amber-border:#f59e0b;
+  --card-border:#e2e8f0; --code-bg:#0f172a; --code-fg:#e2e8f0; --grey:#475569;
+}
+*{box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8fafc;color:#1e293b;margin:0;line-height:1.55;}
+.topbar{position:sticky;top:0;z-index:10;background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+.topbar h2{margin:0;font-size:17px;}
+.topbar .actions button{background:#1e293b;color:#fff;border:1px solid #334155;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;margin-left:8px;}
+.topbar .actions button:hover{background:#334155;}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 80px;}
+.file-section{margin-bottom:44px;}
+.file-title{
+  background:linear-gradient(90deg,var(--navy),#1e3a5f);color:#fff;padding:14px 18px;border-radius:10px;
+  font-size:20px;margin:0 0 14px 0;box-shadow:0 2px 4px rgba(0,0,0,.12);
+}
+.file-intro{color:var(--grey);font-size:14px;margin:0 0 16px 4px;font-style:italic;}
+.file-intro blockquote{margin:0;border-left:3px solid #94a3b8;padding-left:12px;}
+details.topic{
+  background:#fff;border:1px solid var(--card-border);border-radius:10px;margin-bottom:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,.03);overflow:hidden;
+}
+details.topic summary{
+  cursor:pointer;list-style:none;font-weight:700;font-size:15px;color:var(--navy);
+  padding:12px 16px;display:flex;align-items:center;user-select:none;
+}
+details.topic summary::before{content:"▸";display:inline-block;margin-right:10px;color:var(--blue);transition:transform .15s ease;font-size:13px;}
+details.topic[open] summary::before{transform:rotate(90deg);}
+details.topic summary::-webkit-details-marker{display:none;}
+details.topic summary:hover{background:#f1f5f9;}
+.topic-body{padding:4px 20px 16px 20px;font-size:14.5px;}
+.topic-body p{margin:10px 0;padding-left:10px;border-left:3px solid #e2e8f0;}
+.topic-body ul, .topic-body ol{margin:8px 0;padding-left:26px;}
+.topic-body li{margin-bottom:5px;}
+.topic-body h3{font-size:14.5px;color:var(--blue);margin:16px 0 6px 0;}
+.topic-body pre{
+  background:var(--code-bg);color:var(--code-fg);padding:12px 14px;border-radius:8px;
+  overflow-x:auto;font-size:12.8px;font-family:'Consolas','Courier New',monospace;line-height:1.45;margin:10px 0;
+}
+.topic-body code{font-family:'Consolas','Courier New',monospace;background:#e2e8f0;padding:1px 5px;border-radius:4px;font-size:.92em;}
+.topic-body pre code{background:none;padding:0;}
+.topic-body blockquote{
+  background:var(--amber-bg);border-left:4px solid var(--amber-border);color:#7c3d00;
+  margin:10px 0;padding:10px 14px;border-radius:6px;font-size:13.8px;
+}
+.topic-body blockquote p{border-left:none;padding-left:0;margin:0;}
+.topic-body table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px;}
+.topic-body th,.topic-body td{border:1px solid var(--card-border);padding:6px 10px;text-align:left;}
+.topic-body th{background:#f1f5f9;}
+.topic-body img{max-width:100%;border:1px solid var(--card-border);border-radius:8px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.topic-body hr{border:none;border-top:1px solid var(--card-border);margin:16px 0;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h2>Hibernate & JPA — Interview Guide</h2>
+  <div class="actions">
+    <button onclick="toggleAll(true)">Expand all</button>
+    <button onclick="toggleAll(false)">Collapse all</button>
+  </div>
+</div>
+<div class="wrap">
+<section class="file-section" id="hibernate-jpa-interview-preparation">
+<h1 class="file-title">Hibernate & JPA — Interview Preparation</h1>
+<div class="file-intro"><blockquote>
+<p>Spring Data JPA's repository abstraction through Hibernate's own core mechanics — locking, caching, the N+1 problem, entity lifecycle, and the ownership/cascade rules that cause silent persistence bugs. Every section has a worked Java example and an explicit pitfall.</p>
+</blockquote></div>
+<details class="topic" open><summary>Contents</summary><div class="topic-body"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Part</th>
+<th>Covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="./Part1-JPA-Spring-Data.md">JPA &amp; Spring Data JPA</a></td>
+<td>CrudRepository vs JpaRepository, custom queries &amp; repositories, findById vs deprecated getOne(), pagination, Query By Example, <code>@Embeddable</code>, optimistic vs pessimistic locking (with the precise "when is the lock actually held" answer), cascading OneToMany, query performance optimization</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="./Part2-Hibernate-Core.md">Hibernate Core</a></td>
+<td>Spring Boot setup, get() vs load(), HQL, association default fetch types, the N+1 problem, Criteria API, entity states, Session vs SessionFactory, first/second-level cache, inheritance strategies, cascade vs inverse/mappedBy, hbm2ddl.auto, JDBC batching</td>
+</tr>
+</tbody>
+</table></div></details>
+<details class="topic"><summary>How to use this</summary><div class="topic-body"><ul>
+<li>Note that Spring Data JPA's <code>findById()</code>/<code>getReferenceById()</code> (Part 1) and Hibernate's own <code>get()</code>/<code>load()</code> (Part 2) are <strong>the same underlying concept exposed through two different APIs</strong> — interviewers sometimes ask both to see if you recognize that.</li>
+<li>Cross-references: <code>SpringAndSpringBoot/Part8-Spring-Data-JPA.md</code> for the Spring-layer configuration angle, <code>Multhithreading/Part4-Locks.md</code> for how pessimistic DB locking compares to in-JVM locking.</li>
+</ul><hr/><p><em>Last updated: July 2026</em></p></div></details>
+</section>
+<section class="file-section" id="part-1-jpa-spring-data-jpa">
+<h1 class="file-title">Part 1 — JPA & Spring Data JPA</h1>
+<div class="file-intro"><blockquote>
+<p>Spring Data JPA's abstraction over JPA/Hibernate, CrudRepository vs JpaRepository, writing custom queries and custom repositories, findById vs the deprecated getOne(), pagination, Query By Example, embeddables, optimistic vs pessimistic locking with the exact "when is the lock actually held" answer, cascading OneToMany relationships, and real query performance optimization. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>What Spring Data JPA Actually Is</summary><div class="topic-body"><p><strong>What it does:</strong> a data-access abstraction layer built on top of JPA and Hibernate that eliminates repository boilerplate — you write an <strong>interface</strong>, Spring generates the implementation at runtime via a dynamic proxy. CRUD operations, query-method generation from method names, pagination, and custom JPQL/native queries all come from extending the right base interface, not from hand-written DAO code.</p><pre><code class="language-java">public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+    List&lt;User&gt; findByStatus(String status); // implementation generated by Spring -- no method body needed
+}
+</code></pre></div></details>
+<details class="topic"><summary>CrudRepository vs JpaRepository</summary><div class="topic-body"><p><code>CrudRepository</code> provides the minimal set — <code>save</code>, <code>findById</code>, <code>findAll</code>, <code>delete</code> — with <strong>no</strong> pagination, sorting, or batch operations. <code>JpaRepository</code> extends <strong>both</strong> <code>CrudRepository</code> <strong>and</strong> <code>PagingAndSortingRepository</code>, adding pagination, sorting, batch operations, and JPA-specific lifecycle methods like <code>flush()</code>/<code>saveAndFlush()</code>.</p><pre><code>JpaRepository = CrudRepository + PagingAndSortingRepository + JPA-specific extras
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> defaulting to <code>JpaRepository</code> "just in case" is fine in practice, but knowing the actual composition (not just "JpaRepository has more stuff") is what a senior-level answer demonstrates.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Writing Custom Queries</summary><div class="topic-body"><p><strong>JPQL</strong> (entity-oriented, database-independent):</p><pre><code class="language-java">@Query("select u from User u where u.status = :status")
+List&lt;User&gt; findByStatus(@Param("status") String status);
+</code></pre><p><strong>Native SQL</strong> (for cases JPQL can't efficiently express):</p><pre><code class="language-java">@Query(value = "select * from users where status = ?", nativeQuery = true)
+List&lt;User&gt; findByStatusNative(String status);
+</code></pre><p><strong><code>@Modifying</code></strong> — required whenever a <code>@Query</code> <strong>writes</strong> rather than reads. Spring Data assumes every <code>@Query</code> is a <code>SELECT</code> by default; <code>UPDATE</code>/<code>DELETE</code> JPQL needs the explicit flag plus <code>@Transactional</code>:</p><pre><code class="language-java">@Modifying
+@Transactional
+@Query("update User u set u.status = :status where u.id = :id")
+int updateUserStatus(Long id, String status);
+</code></pre><p>Omitting <code>@Modifying</code> on an update/delete query throws an exception at execution time — not a compile error, which is exactly why it's an easy thing to miss until the query actually runs in a test or in production.</p><p><strong><code>@Query</code> delete vs <code>deleteById()</code> — a real behavioral difference, not just style:</strong> a <code>@Modifying @Query("delete from User u where ...")</code> executes a <strong>single bulk JPQL delete</strong> directly against the database — entities are never loaded into the persistence context, and JPA lifecycle callbacks (<code>@PreRemove</code>) never fire. <code>deleteById()</code> is a derived method that <strong>first fetches the entity</strong> via a SELECT, then deletes it — multiple SQL round-trips, lifecycle callbacks <em>do</em> fire, and it's slower. Use the bulk <code>@Query</code> form when performance matters and lifecycle callbacks aren't needed; use <code>deleteById()</code> when they are.</p></div></details>
+<details class="topic"><summary>Custom Repository Implementation (When Derived Methods Aren't Enough)</summary><div class="topic-body"><pre><code class="language-java">public interface UserRepositoryCustom {
+    List&lt;User&gt; findActiveUsers();
+}
+
+@Repository
+public class UserRepositoryImpl implements UserRepositoryCustom {
+    @PersistenceContext private EntityManager em;
+    @Override public List&lt;User&gt; findActiveUsers() {
+        return em.createQuery("select u from User u where u.active = true", User.class).getResultList();
+    }
+}
+
+public interface UserRepository extends JpaRepository&lt;User, Long&gt;, UserRepositoryCustom { }
+</code></pre><p>Use this specifically when you need raw <code>EntityManager</code> control (dynamic Criteria queries, complex native SQL assembly) that a derived query method or <code>@Query</code> annotation can't express cleanly.</p></div></details>
+<details class="topic"><summary>findById() vs the Deprecated getOne()</summary><div class="topic-body"><p><code>findById()</code> <strong>hits the database immediately</strong>, returns <code>Optional&lt;T&gt;</code>, and is safe to call outside a transaction — no proxy involved. <code>getOne()</code> returns a <strong>lazy proxy</strong> with no immediate database call; the actual query fires only when a property is first accessed, which means it <strong>must</strong> be called inside an active transaction, or accessing it later throws <code>LazyInitializationException</code>. Because of that footgun, <code>getOne()</code> is <strong>deprecated</strong> in modern Spring Data JPA, replaced by <code>getReferenceById()</code> (same lazy-proxy behavior, clearer name and contract).</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> reaching for <code>getOne()</code>/<code>getReferenceById()</code> "because it's cheaper" without checking you're inside a transaction is one of the most common <code>LazyInitializationException</code> sources in real codebases — it looks correct in a unit test (where the whole test method might be <code>@Transactional</code>) and then breaks the moment it's called from a context without an open transaction/session.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Pagination and Sorting</summary><div class="topic-body"><pre><code class="language-java">Pageable pageable = PageRequest.of(0, 20, Sort.by("createdDate").descending());
+Page&lt;User&gt; page = userRepository.findAll(pageable);
+
+List&lt;User&gt; sorted = userRepository.findByStatusOrderByCreatedDateDesc("ACTIVE"); // via method name
+List&lt;User&gt; sortedExplicit = userRepository.findByStatus("ACTIVE", Sort.by(Sort.Direction.DESC, "createdDate")); // via Sort param
+</code></pre><p>Key interfaces: <code>Pageable</code> (the request — page number, size, sort), <code>Page&lt;T&gt;</code> (the response — content plus total count/pages, one extra <code>COUNT</code> query under the hood).</p><p><strong>Query method naming rules:</strong> must start with <code>find</code>/<code>read</code>/<code>get</code>/<code>query</code>; property names must match <strong>entity field names</strong>, not database column names; supports <code>And</code>/<code>Or</code>/<code>Between</code>/<code>LessThan</code>/<code>GreaterThan</code>/<code>Like</code>/<code>In</code>/<code>IsNull</code> as composable keywords (e.g. <code>findByStatusAndType(String status, String type)</code>).</p></div></details>
+<details class="topic"><summary>Query By Example (QBE)</summary><div class="topic-body"><pre><code class="language-java">User probe = new User();
+probe.setStatus("ACTIVE");
+probe.setCountry("India");
+Example&lt;User&gt; example = Example.of(probe); // non-null properties become the search criteria
+List&lt;User&gt; users = userRepository.findAll(example);
+</code></pre><p>Useful for dynamic search forms where the set of filters varies per request, without writing a custom query method for every possible combination.</p></div></details>
+<details class="topic"><summary>@Embeddable / @Embedded — Value Objects Without Their Own Table</summary><div class="topic-body"><pre><code class="language-java">@Embeddable
+public class Address {
+    private String street, city, state, zip;
+}
+
+@Entity
+public class Employee {
+    @Id private int id;
+    private String name;
+    @Embedded private Address address; // columns land in the SAME table as Employee, prefixed "address_"
+}
+</code></pre><p><strong>Customizing column names:</strong></p><pre><code class="language-java">@Embedded
+@AttributeOverrides({
+    @AttributeOverride(name = "street", column = @Column(name = "emp_street")),
+    @AttributeOverride(name = "city", column = @Column(name = "emp_city"))
+})
+private Address address;
+</code></pre><p><code>@Embeddable</code> marks a class as a value type with no identity/table of its own; <code>@Embedded</code> tells JPA to inline that value type's fields as columns of the enclosing entity's own table — no join, no separate table, no foreign key.</p></div></details>
+<details class="topic"><summary>Optimistic Locking — the Rules That Actually Get Checked</summary><div class="topic-body"><pre><code class="language-java">@Entity
+public class Student {
+    @Id private Long id;
+    private String name;
+    @Version private Integer version; // JPA increments this automatically on every update
+}
+</code></pre><p><strong>The actual rules for the version attribute</strong> — asked precisely because they're easy to get subtly wrong: exactly <strong>one</strong> version attribute per entity; it must be on the <strong>primary table</strong> if the entity spans several tables; its type must be one of <code>int</code>/<code>Integer</code>/<code>long</code>/<code>Long</code>/<code>short</code>/<code>Short</code>/<code>java.sql.Timestamp</code>. You can <strong>read</strong> the version via the entity, but you must <strong>never manually update or increment it</strong> — only the persistence provider is allowed to, or the consistency guarantee it exists to provide breaks.</p><p><strong>What actually happens on conflict:</strong> every transaction reading the entity captures the version value it saw; on update, JPA checks the version in the database still matches what was read — if another transaction updated it in between, the version no longer matches, and JPA throws <code>OptimisticLockException</code>, which the caller must catch and typically resolve via retry or surfacing a conflict to the user.</p></div></details>
+<details class="topic"><summary>Pessimistic Locking — When the Lock Is Actually Held</summary><div class="topic-body"><pre><code class="language-java">@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("select a from Account a where a.id = :id")
+Account findByIdForUpdate(Long id);
+</code></pre><pre><code class="language-java">@Transactional
+public void transferMoney(Long fromId, Long toId) {
+    Account from = accountRepo.findByIdForUpdate(fromId); // 🔒 LOCK ACQUIRED HERE
+    Account to   = accountRepo.findByIdForUpdate(toId);   // 🔒 LOCK ACQUIRED HERE
+    from.debit(100);
+    to.credit(100);
+} // lock released when the transaction commits or rolls back
+</code></pre><p>The generated SQL is effectively <code>SELECT * FROM account WHERE id = ? FOR UPDATE</code> — the lock is genuinely held <strong>at the database level</strong>, blocking any other transaction from reading (for update) or writing that row, from the moment the query executes until the enclosing transaction commits or rolls back.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the lock WILL NOT happen if:</strong> the method isn't actually running inside an active <code>@Transactional</code> context (no transaction, no lock held past the single query), or the underlying database doesn't support the requested lock mode the way you'd expect. "Adding <code>@Lock</code>" without a genuine surrounding transaction is a common false sense of safety — always verify the method is inside <code>@Transactional</code> before trusting the lock is real.</p>
+</blockquote><p><strong>Optimistic vs Pessimistic — when to actually choose which:</strong> pessimistic assumes conflicts are likely and blocks up front (bank balances, inventory counts, seat booking — anything where a lost update is expensive and retries are costly); optimistic assumes conflicts are rare and only detects them at commit time (user profiles, catalog data — anything mostly independent, where blocking readers/writers unnecessarily would hurt throughput for no real benefit).</p></div></details>
+<details class="topic"><summary>Cascading a OneToMany Relationship — the Employee/Address Pattern</summary><div class="topic-body"><p><strong>Requirement:</strong> saving an <code>Employee</code> should save its <code>Address</code> records; deleting an <code>Employee</code> should delete its addresses too.</p><pre><code class="language-java">class Employee {
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "emp_id")
+    private List&lt;Address&gt; address = new ArrayList&lt;&gt;();
+}
+</code></pre><p><code>CascadeType.ALL</code> propagates persist/merge/remove/refresh operations from <code>Employee</code> to its <code>Address</code> children automatically. <code>orphanRemoval = true</code> additionally deletes an <code>Address</code> the moment it's <strong>removed from the collection</strong>, even if the parent <code>Employee</code> itself isn't being deleted — a distinct, narrower guarantee than cascade delete, worth stating explicitly since the two are often conflated.</p><p><strong>Finding employee count by postal code</strong> (a realistic query-method question building on the mapping above):</p><pre><code class="language-java">@Query("select count(e) from Employee e join e.address a where a.postCode = :postCode")
+long countByPostalCode(@Param("postCode") String postCode);
+</code></pre></div></details>
+<details class="topic"><summary>Query Performance Optimization — the Real Toolkit</summary><div class="topic-body"><p><strong>Projections</strong> — fetch only the fields you need, avoiding the full entity hydration cost:</p><pre><code class="language-java">public interface UserNameOnly { String getFirstName(); String getLastName(); }
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+    List&lt;UserNameOnly&gt; findByLastName(String lastName);
+}
+</code></pre><p><strong>Fetch strategy control</strong> — <code>FetchType.LAZY</code> avoids loading associations until actually accessed:</p><pre><code class="language-java">@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+private List&lt;Post&gt; posts;
+</code></pre><p><strong>Batch fetching</strong> — reduces N+1-style query counts for collections:</p><pre><code class="language-java">@BatchSize(size = 10)
+@OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+private List&lt;Post&gt; posts;
+</code></pre><p><strong>Query caching</strong> for repeatedly executed, rarely-changing queries:</p><pre><code class="language-java">@QueryHints({ @QueryHint(name = "org.hibernate.cacheable", value = "true") })
+@Query("SELECT u FROM User u WHERE u.lastName = :lastName")
+List&lt;User&gt; findByLastName(@Param("lastName") String lastName);
+</code></pre><p><strong>Native queries</strong> for complex cases JPQL handles awkwardly, and <strong>Entity Graphs</strong> for defining a precise, per-query fetch plan without changing the entity's default fetch type globally.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> reaching for <code>FetchType.EAGER</code> by default "to avoid <code>LazyInitializationException</code>" is a common junior mistake that becomes a senior-level red flag — it silently turns every load of that entity into a bigger query (or an N+1 problem, see Part 2), regardless of whether the calling code actually needs the association. Default to <code>LAZY</code>, and fetch eagerly <em>per query</em> (via <code>JOIN FETCH</code>, <code>@EntityGraph</code>, or a projection) exactly when a specific use case actually needs it.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Spring Data JPA Versioning</summary><div class="topic-body"><p>Spring Boot <strong>2.x</strong> ships with Spring Data JPA <strong>2.x</strong>; Spring Boot <strong>3.x</strong> ships with Spring Data JPA <strong>3.x</strong>, which moved from <code>javax.persistence</code> to <strong><code>jakarta.persistence</code></strong> — a namespace change (not just a version bump) that breaks direct imports when upgrading, and is a common real-world migration pain point worth knowing by name.</p><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: <code>CrudRepository</code> vs <code>JpaRepository</code> — what's the actual composition, not just "one has more features"?</strong>
+<code>JpaRepository</code> extends both <code>CrudRepository</code> and <code>PagingAndSortingRepository</code>, plus adds JPA-specific methods like <code>flush()</code>/<code>saveAndFlush()</code> — it's a composition, not a single bigger interface built from scratch.</p><p><strong>Q: Why is <code>getOne()</code> deprecated, and what replaced it?</strong>
+It returns a lazy proxy with no immediate query, meaning it must be accessed inside an active transaction or it throws <code>LazyInitializationException</code> later — a common, confusing footgun. <code>getReferenceById()</code> replaced it with the same lazy semantics but a name that doesn't imply "already loaded."</p><p><strong>Q: <code>@Query</code>-based bulk delete vs <code>deleteById()</code> — what's the actual behavioral difference?</strong>
+The bulk <code>@Query</code> delete executes a single JPQL statement directly against the database, skipping the persistence context and lifecycle callbacks entirely — fast, but <code>@PreRemove</code> never fires. <code>deleteById()</code> loads the entity first (a SELECT), then deletes it, firing lifecycle callbacks at the cost of extra round-trips.</p><p><strong>Q: When exactly is a pessimistic lock actually held, and what's the most common false-safety mistake with it?</strong>
+It's held at the database level from the moment the locking query executes until the enclosing transaction commits or rolls back — but only if a real transaction is active. Adding <code>@Lock</code> to a repository method that isn't actually invoked inside <code>@Transactional</code> gives no real locking guarantee at all, which is the trap.</p><p><strong>Q: <code>CascadeType.ALL</code> vs <code>orphanRemoval = true</code> on a <code>@OneToMany</code> — are they the same thing?</strong>
+No. <code>CascadeType.ALL</code> propagates persist/merge/remove operations from parent to children generally (e.g., deleting the parent deletes the children). <code>orphanRemoval = true</code> is narrower and different: it deletes a child the moment it's removed from the parent's collection, even if the parent itself is never deleted.</p></div></details>
+</section>
+<section class="file-section" id="part-2-hibernate-core">
+<h1 class="file-title">Part 2 — Hibernate Core</h1>
+<div class="file-intro"><blockquote>
+<p>Setup in Spring Boot, <code>get()</code> vs <code>load()</code>, HQL, the four association types and their default fetch behavior, the N+1 problem, Criteria API, entity states, Session vs SessionFactory, caching (first vs second level), inheritance strategies, cascade/inverse ownership, JSON infinite recursion on bidirectional relationships, and JDBC batching. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>Hibernate Setup in Spring Boot</summary><div class="topic-body"><p>Mostly auto-configured — add <code>spring-boot-starter-data-jpa</code>, configure the datasource, and Spring Boot wires up <code>EntityManagerFactory</code>, Hibernate as the JPA provider, and transaction management with <strong>no manual <code>SessionFactory</code> or XML</strong> required.</p><pre><code class="language-properties">spring.datasource.url=jdbc:mysql://localhost:3306/appdb
+spring.datasource.username=root
+spring.datasource.password=pass
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+</code></pre></div></details>
+<details class="topic"><summary>session.get() vs session.load()</summary><div class="topic-body"><p><code>get()</code> <strong>hits the database immediately</strong> and returns <code>null</code> if the record doesn't exist — always a fully initialized object, appropriate when you're not sure the entity exists and need to touch its data right away. <code>load()</code> returns a <strong>proxy</strong> with no immediate query — Hibernate defers the actual <code>SELECT</code> until a property is first accessed, and if the record turns out not to exist, accessing the proxy throws <code>ObjectNotFoundException</code> rather than returning <code>null</code>. Use <code>load()</code> when you're confident the entity exists and want to benefit from lazy loading (e.g., you only need the ID to set up an association, and never actually touch any other field).</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> this is the exact same underlying trade-off as <code>findById()</code> vs <code>getReferenceById()</code> in Spring Data JPA (Part 1) — Hibernate's <code>Session</code> API and Spring Data's repository API expose the same two behaviors under different names, and interviewers sometimes ask both to see if you recognize they're the same concept.</p>
+</blockquote></div></details>
+<details class="topic"><summary>HQL (Hibernate Query Language)</summary><div class="topic-body"><p>An object-oriented query language operating on <strong>entity names and entity fields</strong>, not table/column names — database-independent, and supports polymorphic queries (querying a superclass and getting results across all subclasses).</p><pre><code class="language-java">from Employee e where e.department.name = :dept
+</code></pre><p><strong>Case sensitivity, a genuinely easy trap:</strong> keywords (<code>FROM</code>, <code>SELECT</code>, <code>WHERE</code>) are <strong>not</strong> case-sensitive, but entity and property names <strong>are</strong> case-sensitive (they must match your Java class/field names exactly, not your database column names).</p><p><strong>Commonly used <code>Query</code> methods:</strong> <code>list()</code> returns all results; <code>executeUpdate()</code> runs an update/delete; <code>setFirstResult(n)</code>/<code>setMaxResults(n)</code> implement pagination manually; <code>setParameter(position/name, value)</code> binds parameters safely (see SQL injection section below).</p></div></details>
+<details class="topic"><summary>Associations and Their Default Fetch Types</summary><div class="topic-body"><pre><code>| Association  | Default Fetch Type |
+|---------------|---------------------|
+| @ManyToOne    | EAGER               |
+| @OneToMany    | LAZY                |
+| @OneToOne     | EAGER               |
+| @ManyToMany   | LAZY                |
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — this table is asked precisely because the defaults are counter-intuitive to some:</strong> <code>@ManyToOne</code> and <code>@OneToOne</code> default to <code>EAGER</code>, while <code>@OneToMany</code>/<code>@ManyToMany</code> default to <code>LAZY</code> — the "to-one" side loads eagerly by default, the "to-many" side doesn't. Overriding <code>@ManyToOne</code> to <code>LAZY</code> explicitly is a common, deliberate performance optimization once a codebase matures, since the eager default can silently pull in more data than a given query path actually needs.</p>
+</blockquote><p><strong>Bidirectional relationships and JSON infinite recursion:</strong> a bidirectional <code>@OneToOne</code>/<code>@OneToMany</code> means each side holds a reference back to the other — serializing either side to JSON naively recurses forever (<code>Player → PlayerProfile → Player → ...</code>). Fix with <code>@JsonManagedReference</code> on the owning side and <code>@JsonBackReference</code> on the inverse side — Jackson serializes only the managed side, breaking the cycle.</p><pre><code class="language-java">class PlayerProfile {
+    @OneToOne(mappedBy = "playerProfile")
+    @JsonBackReference // this side is NOT serialized, breaking the cycle
+    private Player player;
+}
+</code></pre></div></details>
+<details class="topic"><summary>The N+1 Problem</summary><div class="topic-body"><p><strong>What it is:</strong> one query fetches N parent entities; then, because an association is lazily loaded and accessed per-parent in a loop, <strong>N additional queries</strong> fire — one per parent, to fetch each one's association separately. Example: 1 query for <code>users</code>, then N queries (one per user) for each user's <code>orders</code>.</p><p><strong>Fixes, in order of how often they're reached for:</strong>
+1. <strong><code>JOIN FETCH</code></strong> in JPQL — pulls the association into the same query.
+2. <strong><code>@EntityGraph</code></strong> — declares a fetch plan for a specific query without changing the entity's global fetch type.
+3. <strong><code>@BatchSize</code></strong> — batches the N follow-up queries into fewer, larger <code>IN (...)</code> queries instead of one-per-parent.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> N+1 is invisible in code review — the code looks correct, iterating a list and calling a getter. It only shows up as a real performance problem under load, in query logs or an APM tool, which is exactly why enabling <code>spring.jpa.show-sql=true</code> (or a proper SQL logging/monitoring setup) in staging/pre-prod is worth the noise — it's often the fastest way to actually <em>see</em> an N+1 pattern before a user reports slowness in production.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Criteria API — Dynamic, Type-Safe Queries</summary><div class="topic-body"><pre><code class="language-java">CriteriaBuilder cb = em.getCriteriaBuilder();
+CriteriaQuery&lt;Employee&gt; cq = cb.createQuery(Employee.class);
+Root&lt;Employee&gt; emp = cq.from(Employee.class);
+cq.where(cb.like(emp.get("fullName"), "%Hib%"));
+List&lt;Employee&gt; results = em.createQuery(cq).getResultList();
+</code></pre><p>Reach for Criteria specifically when the query's <strong>shape itself</strong> varies at runtime (an arbitrary combination of optional filters from a search form) — JPQL string-building for that scenario gets unwieldy and loses compile-time type checking fast.</p></div></details>
+<details class="topic"><summary>Entity States</summary><div class="topic-body"><p><strong>Transient</strong> — a <code>new</code>-ed object with no session association and no database representation; if abandoned, Hibernate simply ignores it. <strong>Persistent</strong> — associated with an active session; Hibernate tracks changes and synchronizes them to the database on flush/commit; entered via <code>save()</code>/<code>persist()</code>, or by loading via <code>get()</code>/<code>load()</code>. <strong>Detached</strong> — was persistent, but the session closed (or the object was explicitly evicted); no longer tracked, so further changes aren't automatically saved. <strong>Removed</strong> — marked for deletion, pending flush.</p><p><strong>Reattaching a detached entity:</strong></p><pre><code class="language-java">Entity managed = session.merge(detachedEntity); // returns a NEW managed instance -- the original stays detached
+session.update(detachedEntity);                  // reattaches the SAME instance -- assumes it's not already persistent elsewhere
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>merge()</code> returns a <em>different</em> object than the one you passed in — continuing to use the original detached reference after calling <code>merge()</code> (instead of the returned managed instance) is a classic subtle bug, since further changes to the original object are silently untracked.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Session vs SessionFactory</summary><div class="topic-body"><p><code>SessionFactory</code> is a <strong>thread-safe</strong>, heavyweight object responsible for creating <code>Session</code>s — created <strong>once per application</strong> (or once per database, in a multi-datasource setup). <code>Session</code> is a <strong>single-threaded</strong>, lightweight object providing the actual CRUD operations — typically created <strong>per request or per transaction</strong>, opened, used, and closed within that single unit of work, never shared across threads.</p></div></details>
+<details class="topic"><summary>hibernate.dialect and @GeneratedValue</summary><div class="topic-body"><p><code>hibernate.dialect</code> tells Hibernate which database-specific SQL variant to generate (<code>org.hibernate.dialect.PostgreSQLDialect</code>, <code>MySQL8Dialect</code>, etc.) — different databases have different SQL quirks Hibernate needs to account for.</p><pre><code class="language-java">@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+</code></pre><ul>
+<li><code>AUTO</code> — Hibernate picks a strategy based on the dialect.</li>
+<li><code>IDENTITY</code> — the database generates it (auto-increment column) — simple, but disables JDBC batch inserts for that entity (each insert needs its generated ID back before the next can proceed).</li>
+<li><code>SEQUENCE</code> — uses a database sequence — Hibernate can pre-fetch sequence values, making it batch-insert-friendly, unlike <code>IDENTITY</code>.</li>
+<li><code>TABLE</code> — a separate table simulates a sequence — portable across databases lacking real sequence support, but slower.</li>
+</ul></div></details>
+<details class="topic"><summary>First-Level Cache vs Second-Level Cache</summary><div class="topic-body"><p><strong>First-level</strong> — scoped to a single <code>Session</code>, <strong>enabled by default</strong>, cannot be disabled. Loading/saving an entity within a session caches it; requesting the same entity again in that same session returns the cached instance without hitting the database. Cleared when the session closes.</p><p><strong>Second-level</strong> — scoped to the <code>SessionFactory</code>, shareable <strong>across multiple sessions</strong>, <strong>not enabled by default</strong>, requires an explicit cache provider (Ehcache, Infinispan) and marking entities cacheable. Loading the same <code>Employee</code> in two entirely separate sessions can be served from the second-level cache instead of hitting the database twice, provided it's configured and the entity is cacheable.</p></div></details>
+<details class="topic"><summary>Inheritance Strategies</summary><div class="topic-body"><ul>
+<li><strong><code>SINGLE_TABLE</code></strong> — the whole hierarchy in one table, with a discriminator column. Fastest for queries (no joins), but sparse/nullable columns for subclass-specific fields across unrelated subclasses.</li>
+<li><strong><code>JOINED</code></strong> — each class gets its own table, joined via foreign keys on query. Normalized, no wasted columns, but slower due to joins.</li>
+<li><strong><code>TABLE_PER_CLASS</code></strong> — each <strong>concrete</strong> class gets its own complete table (no shared parent table). Avoids joins and nulls, but querying across the whole hierarchy needs <code>UNION</code>s, which is slow and awkward.</li>
+</ul></div></details>
+<details class="topic"><summary>Cascade and Inverse (mappedBy) — Two Genuinely Different Concepts</summary><div class="topic-body"><p><strong>Cascade</strong> controls <em>which operations propagate</em> from parent to child (save/update/delete).</p><pre><code class="language-java">@OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+private List&lt;Employee&gt; employees;
+</code></pre><p><code>CascadeType.PERSIST</code>/<code>MERGE</code>/<code>REMOVE</code>/<code>REFRESH</code>/<code>ALL</code> — saving/deleting a <code>Department</code> correspondingly saves/deletes its <code>Employee</code>s.</p><p><strong>Inverse (<code>mappedBy</code>)</strong> controls <em>which side owns the foreign key</em> — a completely orthogonal concern from cascading.</p><pre><code class="language-java">@Entity class Employee {
+    @ManyToOne @JoinColumn(name = "department_id") // OWNING side -- manages the actual FK column
+    private Department department;
+}
+@Entity class Department {
+    @OneToMany(mappedBy = "department") // INVERSE side -- a mirror, does NOT manage the FK
+    private List&lt;Employee&gt; employees;
+}
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — the mistake this rule exists to prevent:</strong> if you set the association only on the inverse (<code>Department.employees</code>) side and never on the owning (<code>Employee.department</code>) side, <strong>nothing gets persisted to the foreign key column at all</strong> — Hibernate only writes the FK based on the owning side's state, regardless of what the inverse side's in-memory collection looks like. Always set the relationship from the owning side, or explicitly keep both sides in sync in application code.</p>
+</blockquote></div></details>
+<details class="topic"><summary>hbm2ddl.auto — What Each Value Actually Does</summary><div class="topic-body"><ul>
+<li><code>create</code> — drops and recreates every table on startup; <strong>all existing data lost</strong>.</li>
+<li><code>create-drop</code> — same as <code>create</code>, plus drops tables again on shutdown; useful for tests only.</li>
+<li><code>update</code> — updates the schema to match entity mappings, preserving existing data.</li>
+<li><code>validate</code> — checks the schema matches the mappings, throws if not, <strong>makes no changes</strong>.</li>
+<li><code>none</code> — Hibernate touches nothing.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>create</code>/<code>update</code> in a real production environment is a well-known incident-waiting-to-happen — <code>create</code> destroys data outright, and even <code>update</code> can behave unexpectedly on some databases/versions for certain schema changes (column type narrowing, renames Hibernate can't safely infer). Production should run <code>validate</code> (or <code>none</code>), with schema changes managed through an explicit migration tool (Flyway/Liquibase) instead of Hibernate auto-DDL.</p>
+</blockquote></div></details>
+<details class="topic"><summary>SQL Injection, final Entities, and Named Queries</summary><div class="topic-body"><p><strong>SQL injection:</strong> Hibernate's query APIs (HQL/JPQL, Criteria, JPA <code>Query</code>) use parameter binding under the hood, compiling down to JDBC <code>PreparedStatement</code> parameters — user input passed via <code>setParameter()</code> is always treated as <em>data</em>, never as SQL syntax. The risk reappears specifically when native queries are built via raw string concatenation instead of bound parameters.</p><p><strong>Why an entity class should never be <code>final</code>:</strong> Hibernate implements lazy loading by generating a runtime <strong>proxy subclass</strong> of the entity. A <code>final</code> class can't be subclassed — lazy loading (and by extension, a large part of Hibernate's performance model) silently breaks or falls back to eager loading for that entity.</p><p><strong>Named queries</strong> — precompiled and validated at <code>SessionFactory</code> startup (catching typos/errors immediately at boot rather than at first execution), and centralized/easier to maintain for complex queries. Trade-off: not customizable at runtime beyond supplied parameters (can't change sorting or structure dynamically), and changing one requires reloading the <code>SessionFactory</code> — can't be hot-swapped in a running application.</p></div></details>
+<details class="topic"><summary>Flush Time and JDBC Batching</summary><div class="topic-body"><p><strong>"Flushing"</strong> means writing pending in-memory changes (INSERT/UPDATE/DELETE) to the actual database. Hibernate flushes: before a transaction commits (so the commit reflects the latest state), before executing a query that could be affected by pending changes (so the query sees consistent data), and whenever explicitly triggered via <code>session.flush()</code>.</p><p><strong><code>hibernate.jdbc.batch_size</code></strong> controls how many statements of the same type get grouped into a single JDBC batch instead of executing individually:
+1. Hibernate collects same-type SQL statements (e.g., all pending <code>Employee</code> inserts) in memory.
+2. Adds them to an internal JDBC batch.
+3. Once the configured batch size is reached, executes the whole batch in one round-trip.
+4. A flush/commit before the batch fills executes whatever's accumulated immediately, even partially filled.</p><p><code>batch_size = 0</code> (or unset) means no batching — every statement executes individually, increasing database round-trip overhead; acceptable for small operations or when debugging (individual statements are easier to see in logs), but a real throughput cost at scale. Note also that <code>GenerationType.IDENTITY</code> (above) effectively disables batching for inserts on that entity, regardless of the configured batch size, since each row's generated key must come back before the next insert can be batched.</p><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: <code>session.get()</code> vs <code>session.load()</code> — what's the actual difference, and when would you pick each?</strong>
+<code>get()</code> hits the database immediately and returns <code>null</code> if missing; <code>load()</code> returns a lazy proxy that only queries on first property access and throws <code>ObjectNotFoundException</code> if the row turns out not to exist. Use <code>get()</code> when existence is uncertain and you need the data now; <code>load()</code> when you're confident it exists and want to defer the actual query.</p><p><strong>Q: What's the N+1 problem, and what are the three standard fixes?</strong>
+One query for parent entities, then one additional query per parent for a lazily-loaded association accessed in a loop. Fix with <code>JOIN FETCH</code> (pull the association into the same query), <code>@EntityGraph</code> (declare a per-query fetch plan), or <code>@BatchSize</code> (batch the follow-up queries into fewer, larger ones).</p><p><strong>Q: Cascade vs Inverse/<code>mappedBy</code> — are these the same concept?</strong>
+No — cascade controls which <em>operations</em> (save/delete/etc.) propagate from parent to child; <code>mappedBy</code>/inverse controls which <em>side owns the foreign key</em> in a bidirectional relationship. Setting a bidirectional association only from the inverse side, with the owning side never updated, persists nothing to the actual FK column.</p><p><strong>Q: Why can't an entity class be <code>final</code> in Hibernate?</strong>
+Hibernate implements lazy loading via a runtime-generated proxy subclass of the entity — a <code>final</code> class can't be subclassed, so lazy loading breaks (or silently falls back to eager) for that entity.</p><p><strong>Q: Why is <code>hbm2ddl.auto=update</code> risky in production, even though it doesn't drop tables like <code>create</code> does?</strong>
+It can behave unpredictably for schema changes Hibernate can't safely infer from entity mappings (column narrowing, renames), and it bypasses any real migration history/rollback story. Production should use <code>validate</code>/<code>none</code> with schema changes managed by an explicit migration tool like Flyway or Liquibase.</p></div></details>
+</section>
+</div>
+<script>
+function toggleAll(open){
+  document.querySelectorAll('details.topic').forEach(d => d.open = open);
+}
+</script>
+</body>
+</html>

@@ -4,7 +4,9 @@
 > **Bold** = key answer point. `⚠️ Pitfall` = interview trap / common mistake.
 
 **Deep-dive companion files in this folder** (same style — explanation, worked Java code, pitfalls):
-[Reflection](./Reflection.md) · [Enum](./Enums.md) · [Generics](./Generics.md) · [Exception Handling](./Exception-Handling.md)
+[Reflection](./Reflection.md) · [Enum](./Enums.md) · [Generics](./Generics.md) · [Exception Handling](./Exception-Handling.md) · [StringBuilder & Immutability](./StringBuilder-Immutability.md) · [OOP Fundamentals](./OOP-Fundamentals.md)
+
+**See also:** [Java8-Features/](../Java8-Features/) — a dedicated folder for Streams API, Lambdas & Functional Interfaces, and Method References (kept separate since it's substantial enough to warrant its own set of parts).
 
 ---
 

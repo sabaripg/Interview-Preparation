@@ -1,0 +1,65 @@
+<svg viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrowFwd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrowComp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="800" height="480" fill="#ffffff"/>
+  <text x="400" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">Saga Pattern (Choreography) — Happy Path vs Compensation</text>
+
+  <!-- Services -->
+  <rect x="40" y="90" width="180" height="70" rx="8" fill="#eef3fb" stroke="#2c5aa0" stroke-width="2.5"/>
+  <text x="130" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">Order Service</text>
+  <text x="130" y="140" text-anchor="middle" font-size="11" fill="#333">status: PENDING</text>
+
+  <rect x="310" y="90" width="180" height="70" rx="8" fill="#e9f7ef" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="400" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">Inventory Service</text>
+  <text x="400" y="140" text-anchor="middle" font-size="11" fill="#333">reserves stock</text>
+
+  <rect x="580" y="90" width="180" height="70" rx="8" fill="#fff8e1" stroke="#c79a1e" stroke-width="2.5"/>
+  <text x="670" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">Payment Service</text>
+  <text x="670" y="140" text-anchor="middle" font-size="11" fill="#333">charges card</text>
+
+  <!-- Happy path -->
+  <path d="M220,110 L 305,110" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#arrowFwd)"/>
+  <text x="262" y="100" text-anchor="middle" font-size="10.5" fill="#2e7d32">1. OrderCreated</text>
+
+  <path d="M490,110 L 575,110" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#arrowFwd)"/>
+  <text x="532" y="100" text-anchor="middle" font-size="10.5" fill="#2e7d32">2. InventoryReserved</text>
+
+  <path d="M670,165 C 670,220 400,240 130,220 L 130,165" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#arrowFwd)"/>
+  <text x="400" y="235" text-anchor="middle" font-size="10.5" fill="#2e7d32">3. PaymentCompleted -&gt; Order CONFIRMED</text>
+
+  <!-- Compensation path -->
+  <rect x="580" y="290" width="180" height="55" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="670" y="315" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Payment FAILS</text>
+  <text x="670" y="332" text-anchor="middle" font-size="10.5" fill="#333">card declined</text>
+
+  <path d="M670,165 L 670,285" stroke="#c0392b" stroke-width="2" stroke-dasharray="5,4" fill="none"/>
+
+  <rect x="310" y="290" width="180" height="55" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="400" y="315" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Inventory Compensates</text>
+  <text x="400" y="332" text-anchor="middle" font-size="10.5" fill="#333">releases reserved stock</text>
+
+  <path d="M575,317 L 495,317" stroke="#c0392b" stroke-width="2.5" fill="none" marker-end="url(#arrowComp)"/>
+  <text x="535" y="307" text-anchor="middle" font-size="10" fill="#c0392b">4. PaymentFailed</text>
+
+  <rect x="40" y="290" width="180" height="55" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="130" y="315" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Order CANCELLED</text>
+  <text x="130" y="332" text-anchor="middle" font-size="10.5" fill="#333">compensating chain complete</text>
+
+  <path d="M305,317 L 225,317" stroke="#c0392b" stroke-width="2.5" fill="none" marker-end="url(#arrowComp)"/>
+  <text x="265" y="307" text-anchor="middle" font-size="10" fill="#c0392b">5. InventoryReleased</text>
+
+  <!-- Legend -->
+  <line x1="230" y1="410" x2="270" y2="410" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="278" y="414" font-size="12" fill="#333">happy path (forward events)</text>
+  <line x1="460" y1="410" x2="500" y2="410" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="508" y="414" font-size="12" fill="#333">compensating path (undo events)</text>
+
+  <text x="400" y="450" text-anchor="middle" font-size="12" fill="#555">Each service reacts to events independently (choreography) — no central coordinator.</text>
+  <text x="400" y="468" text-anchor="middle" font-size="12" fill="#555">Compensation walks backwards through already-completed steps, undoing each one explicitly.</text>
+</svg>

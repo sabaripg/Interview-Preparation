@@ -1,17 +1,10 @@
 # Microservice Patterns — Gap Analysis for a 10-Year-Experience Interview
 
-> Your source articles cover Service Discovery, Circuit Breaker, Load Balancing, and CQRS (with API Gateway filled in as a genuine gap in the first article, and the database-sync mechanism filled in as a genuine gap in the CQRS article). That's a solid set, but a 10-YOE interview — especially given your Spring Boot / Kafka / AWS / Microservices background — expects you to reason about the *other* patterns that come up once a system has more than a couple of services talking to each other. Here's what's not in the source material, ranked by how likely it is to come up given your resume.
+> Your source articles cover Service Discovery, Circuit Breaker, Load Balancing, and CQRS (with API Gateway filled in as a genuine gap in the first article, the database-sync mechanism filled in as a genuine gap in the CQRS article, and session affinity/sticky sessions added to Load Balancing after a real interview question). Saga — the pattern most candidates actually fail on — now has its own full write-up in **Part 6**, not just a summary here. That's a solid set, but a 10-YOE interview — especially given your Spring Boot / Kafka / AWS / Microservices background — expects you to reason about the *other* patterns that come up once a system has more than a couple of services talking to each other. Here's what's still not covered elsewhere in this folder, ranked by how likely it is to come up given your resume.
 
-## 1. Saga Pattern — distributed transactions (high priority, directly relevant)
+## 1. Saga Pattern — see Part 6 (high priority, directly relevant)
 
-**The problem:** a single business operation (e.g. "place an order") that used to be one local ACID transaction in a monolith now spans multiple services (Order, Inventory, Payment) with separate databases. You can't wrap that in one transaction anymore — there's no distributed 2PC in practice at this scale.
-
-**The fix — a Saga:** break the operation into a sequence of local transactions, each publishing an event that triggers the next step. If a step fails, run **compensating transactions** to undo the previous steps' effects (you can't roll back what's already committed elsewhere — you have to actively reverse it).
-
-- **Choreography** — each service listens for events and reacts independently; no central coordinator. Simple for a few steps, but the overall flow becomes hard to see from any one place as it grows.
-- **Orchestration** — a central orchestrator service explicitly tells each participant what to do next and handles failure/compensation logic itself. Easier to reason about and debug, at the cost of a new central component.
-
-> Given your Kafka background, this is very likely to come up as "how would you implement a Saga" — the expected answer is choreography via Kafka events (each service consumes an event, does its local transaction, publishes a result event) or an orchestrator (e.g. a dedicated saga-orchestrator service, or a framework like Axon/Camunda) coordinating via Kafka or direct calls.
+Moved to its own dedicated file: **`Part6-Saga-Pattern.md`** — covers local + compensating transactions, Choreography vs Orchestration, a full end-to-end Order/Inventory/Payment worked example with real compensation code, the isolation gap, stuck-saga/timeout handling, and a tricky-question bank. Given your Kafka background this is very likely to come up, and it's the single highest-value file in this folder to review closely.
 
 ## 2. Distributed Tracing (high priority, directly relevant)
 

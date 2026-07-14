@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Core Java — Interview Guide</title>
+<style>
+:root{
+  --navy:#0f172a; --blue:#1d4ed8; --blue-bg:#eef4ff;
+  --amber:#b45309; --amber-bg:#fff7ed; --amber-border:#f59e0b;
+  --card-border:#e2e8f0; --code-bg:#0f172a; --code-fg:#e2e8f0; --grey:#475569;
+}
+*{box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8fafc;color:#1e293b;margin:0;line-height:1.55;}
+.topbar{position:sticky;top:0;z-index:10;background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+.topbar h2{margin:0;font-size:17px;}
+.topbar .actions button{background:#1e293b;color:#fff;border:1px solid #334155;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;margin-left:8px;}
+.topbar .actions button:hover{background:#334155;}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 80px;}
+.file-section{margin-bottom:44px;}
+.file-title{
+  background:linear-gradient(90deg,var(--navy),#1e3a5f);color:#fff;padding:14px 18px;border-radius:10px;
+  font-size:20px;margin:0 0 14px 0;box-shadow:0 2px 4px rgba(0,0,0,.12);
+}
+.file-intro{color:var(--grey);font-size:14px;margin:0 0 16px 4px;font-style:italic;}
+.file-intro blockquote{margin:0;border-left:3px solid #94a3b8;padding-left:12px;}
+details.topic{
+  background:#fff;border:1px solid var(--card-border);border-radius:10px;margin-bottom:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,.03);overflow:hidden;
+}
+details.topic summary{
+  cursor:pointer;list-style:none;font-weight:700;font-size:15px;color:var(--navy);
+  padding:12px 16px;display:flex;align-items:center;user-select:none;
+}
+details.topic summary::before{content:"▸";display:inline-block;margin-right:10px;color:var(--blue);transition:transform .15s ease;font-size:13px;}
+details.topic[open] summary::before{transform:rotate(90deg);}
+details.topic summary::-webkit-details-marker{display:none;}
+details.topic summary:hover{background:#f1f5f9;}
+.topic-body{padding:4px 20px 16px 20px;font-size:14.5px;}
+.topic-body p{margin:10px 0;padding-left:10px;border-left:3px solid #e2e8f0;}
+.topic-body ul, .topic-body ol{margin:8px 0;padding-left:26px;}
+.topic-body li{margin-bottom:5px;}
+.topic-body h3{font-size:14.5px;color:var(--blue);margin:16px 0 6px 0;}
+.topic-body pre{
+  background:var(--code-bg);color:var(--code-fg);padding:12px 14px;border-radius:8px;
+  overflow-x:auto;font-size:12.8px;font-family:'Consolas','Courier New',monospace;line-height:1.45;margin:10px 0;
+}
+.topic-body code{font-family:'Consolas','Courier New',monospace;background:#e2e8f0;padding:1px 5px;border-radius:4px;font-size:.92em;}
+.topic-body pre code{background:none;padding:0;}
+.topic-body blockquote{
+  background:var(--amber-bg);border-left:4px solid var(--amber-border);color:#7c3d00;
+  margin:10px 0;padding:10px 14px;border-radius:6px;font-size:13.8px;
+}
+.topic-body blockquote p{border-left:none;padding-left:0;margin:0;}
+.topic-body table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px;}
+.topic-body th,.topic-body td{border:1px solid var(--card-border);padding:6px 10px;text-align:left;}
+.topic-body th{background:#f1f5f9;}
+.topic-body img{max-width:100%;border:1px solid var(--card-border);border-radius:8px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.topic-body hr{border:none;border-top:1px solid var(--card-border);margin:16px 0;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h2>Core Java — Interview Guide</h2>
+  <div class="actions">
+    <button onclick="toggleAll(true)">Expand all</button>
+    <button onclick="toggleAll(false)">Collapse all</button>
+  </div>
+</div>
+<div class="wrap">
+<section class="file-section" id="chapter-2-core-java-topic-wise">
+<h1 class="file-title">☕ Chapter 2 — Core Java (Topic-wise)</h1>
+<div class="file-intro"><blockquote>
+<p>Segregated from the original 59-question flat list into thematic sections for easier revision.
+<strong>Bold</strong> = key answer point. <code>⚠️ Pitfall</code> = interview trap / common mistake.</p>
+</blockquote><p><strong>Deep-dive companion files in this folder</strong> (same style — explanation, worked Java code, pitfalls):
+<a href="./Reflection.md">Reflection</a> · <a href="./Enums.md">Enum</a> · <a href="./Generics.md">Generics</a> · <a href="./Exception-Handling.md">Exception Handling</a> · <a href="./StringBuilder-Immutability.md">StringBuilder &amp; Immutability</a> · <a href="./OOP-Fundamentals.md">OOP Fundamentals</a></p><p><strong>See also:</strong> <a href="../Java8-Features/">Java8-Features/</a> — a dedicated folder for Streams API, Lambdas &amp; Functional Interfaces, and Method References (kept separate since it's substantial enough to warrant its own set of parts).</p><hr/></div>
+<details class="topic" open><summary>1. JVM Startup, Main Method & Program Execution</summary><div class="topic-body"><h3>Q1. Explain <code>System.out.println</code></h3><ul>
+<li><code>System.out</code> is a <strong><code>static final PrintStream</code></strong> field on <code>java.lang.System</code>, initialized by the JVM at startup wrapping standard output.</li>
+<li><code>println()</code> writes the string representation + platform line separator, and <strong>auto-flushes on newline</strong>.</li>
+<li>Ultimately routes through <code>FileOutputStream</code> → file descriptor 1 (stdout).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>System.out</code>/<code>err</code>/<code>in</code> <strong>can be reassigned at runtime</strong> via <code>System.setOut()</code> — relevant for redirecting output in tests.</p>
+</blockquote><h3>Q2. Why is <code>System.out</code> considered thread-safe?</h3><ul>
+<li><code>PrintStream</code> methods are <strong><code>synchronized</code> on the stream instance</strong> — a single <code>println()</code> call won't have its output garbled/interleaved.</li>
+<li>Does <strong>not</strong> guarantee ordering <em>between</em> separate calls from different threads.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> "Thread-safe" here = won't corrupt a single write, <strong>not</strong> deterministic multi-line ordering across threads.</p>
+</blockquote><h3>Q3. Can we execute a program without a <code>main()</code> method?</h3><ul>
+<li>Pre-Java 7: a static initializer block + <code>System.exit()</code> could run before the "no main" error — <strong>closed in Java 7+</strong>.</li>
+<li>Modern Java: <code>public static void main(String[] args)</code> is mandatory.</li>
+<li>Java 21+ preview "implicit classes/instance main methods" reduces boilerplate only, not the requirement itself.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Don't state the static-initializer trick as still working today.</p>
+</blockquote><h3>Q29. What happens when <code>main()</code> is run?</h3><ul>
+<li>JVM starts → loads main class (bootstrap → platform → application loader) → runs <strong>static initializers in declaration order</strong> → invokes <code>main(String[])</code> on the main thread.</li>
+<li>JVM stays alive as long as any <strong>non-daemon thread</strong> runs; shutdown hooks run before exit.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>main</code> returning ≠ JVM exiting immediately if other non-daemon threads are alive.</p>
+</blockquote><h3>Q30. What happens under the hood after <code>System.out.println("Hello")</code>?</h3><ul>
+<li><strong>Compile</strong> (<code>javac</code> → bytecode) → <strong>Class Load</strong> (classloader + verify + prepare/init) → <strong>Execute</strong> (interpret, then JIT hot paths to native code) → <code>println</code> writes via <code>PrintStream</code> → OS stdout fd.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Structure the answer in clear stages — interviewers check mental-model organization, not just facts.</p>
+</blockquote><h3>Q6. Can <code>throws</code> be used with <code>run()</code> or <code>main()</code>?</h3><ul>
+<li><code>main</code>: <strong>yes</strong> — <code>throws Exception</code> legal; uncaught exception → JVM prints stack trace, exits non-zero.</li>
+<li><code>Runnable.run()</code>: <strong>no</strong> — interface declares no <code>throws</code>; overriding method can't widen checked exceptions.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Ties directly to the "can't widen checked exceptions when overriding" OOPS rule.</p>
+</blockquote><h3>Q7. What happens if you call <code>Thread.wait()</code> in main?</h3><ul>
+<li><code>wait()</code> is on <code>Object</code>, requires holding the monitor lock.</li>
+<li>No lock held → <code>IllegalMonitorStateException</code>.</li>
+<li>Held correctly → <strong>the calling thread</strong> (main, here) blocks until notified/interrupted.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>someThread.wait()</code> doesn't make "the thread object" wait specially — it makes <strong>whichever thread calls it</strong> wait on that object's monitor.</p>
+</blockquote><h3>Q4. JDK 14-compiled program run on JDK 8 runtime?</h3><ul>
+<li><strong><code>UnsupportedClassVersionError</code></strong> at class-loading — bytecode version embedded in <code>.class</code> must be ≤ JVM's supported version.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Mention <code>--release</code>/<code>-source</code>/<code>-target</code> flags as the practical fix.</p>
+</blockquote><h3>Q5. Java 8-compiled app on JDK 11 runtime?</h3><ul>
+<li>Generally <strong>yes</strong>, backward compatible.</li>
+<li>Caveats: removed APIs (JAXB/Java EE modules removed from JDK 11+), internal API (<code>sun.*</code>) restrictions.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Don't say "always works unconditionally" — name the JAXB/Java EE removal explicitly.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>2. Object Class, Equality & Cloning</summary><div class="topic-body"><h3>Q9. What is the <code>Object</code> class?</h3><ul>
+<li><strong>Root of the class hierarchy</strong> — every class implicitly extends it.</li>
+<li>Provides <code>equals</code>, <code>hashCode</code>, <code>toString</code>, <code>getClass</code>, <code>wait</code>/<code>notify</code>/<code>notifyAll</code>.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> None of <code>Object</code>'s methods are abstract — default working implementations exist for every class.</p>
+</blockquote><h3>Q10. Important methods in <code>Object</code></h3><ul>
+<li><code>equals(Object)</code>, <code>hashCode()</code> — must be overridden <strong>together, consistently</strong>.</li>
+<li><code>toString()</code>, <code>getClass()</code>, <code>clone()</code> (protected, needs <code>Cloneable</code>), <code>wait/notify/notifyAll</code>, <code>finalize()</code> (<strong>deprecated since Java 9</strong>).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Listing <code>finalize()</code> without the deprecation caveat signals outdated knowledge.</p>
+</blockquote><h3>Q11. Default <code>hashCode()</code> of an object</h3><ul>
+<li>Implementation-specific, often identity-related — <strong>not guaranteed to be the literal memory address</strong>.</li>
+<li>Consistent for the same object across its lifetime.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Don't state "it's literally the memory address" as absolute fact.</p>
+</blockquote><h3>Q42. <code>==</code> vs <code>.equals()</code> — the real difference</h3><ul>
+<li><code>==</code> on primitives compares value; on references compares <strong>identity</strong>.</li>
+<li><code>.equals()</code> defines <strong>logical equality</strong> (defaults to identity unless overridden).</li>
+<li>Without override, <code>.equals()</code> behaves identically to <code>==</code>.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Pair with the <code>Integer</code> cache gotcha (Q48) — <code>Integer a=127,b=127; a==b</code> → <code>true</code>, but <code>200</code> → <code>false</code>.</p>
+</blockquote><h3>Q46. Full <code>equals()</code>/<code>hashCode()</code> contract</h3><pre><code>equals() contract:
+1. Reflexive   : x.equals(x) → true
+2. Symmetric   : x.equals(y) ⟺ y.equals(x)
+3. Transitive  : x.equals(y) ∧ y.equals(z) → x.equals(z)
+4. Consistent  : repeated calls return same result (no state change)
+5. Null-safe   : x.equals(null) → false (never throws)
+
+hashCode() contract:
+6. Same object       → same hashCode (within one JVM run)
+7. equals()==true     → hashCode() MUST also be equal (mandatory)
+8. Same hashCode      → equals() may be true OR false (collisions fine)
+</code></pre><pre><code class="language-java">@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Employee e)) return false; // null-safe + type check
+    return id == e.id &amp;&amp; Objects.equals(name, e.name);
+}
+@Override
+public int hashCode() { return Objects.hash(id, name); }
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — HIGH VALUE:</strong> Most candidates only know rule 7. Reciting <strong>all 5 equals() rules + both hashCode() rules</strong> unprompted is a strong depth signal. Also mention: <strong>Java 14+ Records auto-generate both correctly</strong>.</p>
+</blockquote><h3>Q26. Shallow copy vs deep copy (cloning)</h3><ul>
+<li><code>Object.clone()</code> default = <strong>shallow copy</strong> — primitives by value, references shared with original.</li>
+<li><strong>Deep copy</strong> recursively clones referenced mutable objects too.</li>
+<li>Shallow is safe for immutable fields only.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Concrete failure: <code>order2.getItems().add(x)</code> also mutates <code>order1</code>'s list under shallow copy.</p>
+</blockquote><h3>Q27. [Follow-up] Implementing a deep copy</h3><pre><code class="language-java">@Override
+public Order clone() {
+    Order copy = (Order) super.clone();
+    copy.items = new ArrayList&lt;&gt;(this.items);
+    return copy;
+}
+</code></pre><ul>
+<li>Alternatives: serialization-based deep copy, or (preferred by many) <strong>copy constructors / static factory methods</strong> instead of <code>clone()</code> entirely.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Voice the informed opinion — Effective Java calls <code>Cloneable</code>/<code>clone()</code> "largely broken."</p>
+</blockquote><h3>Q28. What is <code>CloneNotSupportedException</code>?</h3><ul>
+<li>Checked exception from <code>Object.clone()</code> if the class doesn't implement <code>Cloneable</code> (a <strong>marker interface</strong> with no methods, checked at runtime by native <code>clone()</code>).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> This is exactly why <code>Cloneable</code> is considered an awkward interface — it doesn't declare <code>clone()</code> itself, just gates <code>Object.clone()</code>'s runtime behavior.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>3. Strings, Memory & Security</summary><div class="topic-body"><h3>Q8. What is the String Pool?</h3><ul>
+<li>Special memory region (heap since Java 7, previously PermGen) caching unique <strong>String literals</strong>.</li>
+<li>Literals auto-interned at compile/class-load time; <code>new String(...)</code> bypasses the pool; <code>.intern()</code> manually pools.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Classic gotcha — <code>"a"+"b" == "ab"</code> → often <code>true</code> (constant folding), <code>new String("ab") == "ab"</code> → <code>false</code>. Have both examples ready.</p>
+</blockquote><h3>Q13. Why is <code>char[]</code> preferred over <code>String</code> for passwords?</h3><ul>
+<li>Strings are <strong>immutable + pooled</strong> — may live in memory indefinitely, invisible to app control.</li>
+<li><code>char[]</code> can be <strong>explicitly zeroed</strong> (<code>Arrays.fill(pw, '0')</code>) right after use.</li>
+<li>Strings show up more easily in heap dumps/logs/stack traces.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall — KEY POINT:</strong> The real reason is <strong>active zeroing capability</strong>, not "strings are immutable" alone.</p>
+</blockquote><h3>Q53. Floating point pitfalls — NaN, Infinity, 0.1+0.2</h3><pre><code class="language-java">0.1 + 0.2 == 0.3;     // FALSE — 0.30000000000000004
+Double.NaN == Double.NaN;  // FALSE! NaN never equals itself
+Double.isNaN(nan);         // TRUE — the ONLY correct check
+1.0 / 0.0;   // POSITIVE_INFINITY, no exception
+10 / 0;      // ArithmeticException (int division DOES throw)
+0.0 / 0.0;   // NaN
+</code></pre><p>For money: use <code>BigDecimal</code> with the <strong>String constructor</strong>, never the double constructor:</p><pre><code class="language-java">new BigDecimal("0.1").add(new BigDecimal("0.2")); // correct
+new BigDecimal(0.1);                               // WRONG — imprecision baked in
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — HIGH VALUE:</strong> <code>nan == nan</code> being <code>false</code> catches people off guard. <code>new BigDecimal(0.1)</code> "looking correct" while being wrong is a real production bug.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>4. Casting & Type Conversion</summary><div class="topic-body"><h3>Q35. Casting — two broad categories</h3><ul>
+<li><strong>Primitive casting</strong> (int/double/char etc.) vs <strong>reference/object casting</strong> (related class/interface types).</li>
+<li>Primitive casting can lose data; reference casting never touches the object's bytes.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Don't conflate the two categories in your answer.</p>
+</blockquote><h3>Q36. Widening (implicit) cast</h3><ul>
+<li><code>byte → short → int → long → float → double</code> (char folds into int side). Automatic, generally no data loss.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>int→float</code> / <code>long→float/double</code> <strong>can lose precision</strong> even though "widening" — not always lossless.</p>
+</blockquote><h3>Q37. Narrowing (explicit) cast &amp; overflow</h3><ul>
+<li>Requires explicit <code>(type)</code>. Overflow is <strong>defined</strong>: JLS specifies <strong>modular truncation</strong>, not clamping.</li>
+<li><code>(byte)(1000d)</code> → <code>-24</code> (wraps, doesn't clamp to <code>Byte.MAX_VALUE</code>).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Have the exact wrap-around number ready — reciting "might lose data" without a number is the weak answer.</p>
+</blockquote><h3>Q38. Reference (object) casting vs primitive casting</h3><ul>
+<li>Only changes <strong>how you refer to</strong> the object; heap object untouched.</li>
+<li>Only legal between inheritance-related types; unrelated classes → <strong>compile-time error</strong>.</li>
+</ul><h3>Q39. Upcasting</h3><ul>
+<li>Reference cast to a <strong>supertype</strong> — always safe, implicit, no <code>(Type)</code> needed.</li>
+<li><code>Integer i=7; Number num=i; Object obj=i;</code> all implicit.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> After upcasting, you can only call methods on the <strong>reference's static type</strong>, even though the real object is still the subtype underneath.</p>
+</blockquote><h3>Q40. Downcasting</h3><ul>
+<li>Reference cast to a <strong>subtype</strong> — requires explicit cast; compiler can't verify at compile time.</li>
+<li>Wrong assertion → <strong><code>ClassCastException</code></strong> at runtime.</li>
+<li>Sibling trick: <code>B b=new B(); A a=b; C c=(C)a;</code> (B, C both extend A, unrelated) — <strong>compiles</strong>, throws at runtime.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall — MEMORIZE THIS:</strong> The sibling-cast trick question — compiler only checks "plausible given declared type," not actual runtime correctness.</p>
+</blockquote><h3>Q51. <code>(byte)(128)</code> — walk-through</h3><pre><code class="language-java">byte b = (byte)(128); // -128
+</code></pre><p>128 = <code>10000000</code> (9 bits needed) → truncated to 8 bits → MSB=1 → two's complement → <code>-128</code>.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Follow-up: <code>(byte)(200)</code> → <code>200-256 = -56</code>. General rule: keep ±<code>2^N</code> until back in range.</p>
+</blockquote><h3>Q52. <code>(int)(-2.9)</code> — truncation vs rounding</h3><pre><code class="language-java">(int)(-2.9);  // -2, NOT -3
+</code></pre><p>Truncation moves <strong>toward zero</strong>, never toward negative infinity (<code>Math.floor()</code> differs).</p><blockquote>
+<p>⚠️ <strong>Pitfall — VERY COMMON MISTAKE:</strong> Confusing truncation with flooring; only diverges for negative numbers.</p>
+</blockquote><h3>Q54. <code>Integer.MIN_VALUE</code> negation — overflow trap</h3><pre><code class="language-java">Math.abs(Integer.MIN_VALUE) == Integer.MIN_VALUE; // TRUE — still negative!
+</code></pre><p>No positive counterpart exists for <code>-2147483648</code> in two's complement — negation <strong>silently overflows back to itself</strong>.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Use <code>Math.absExact()</code> (Java 15+) to throw <code>ArithmeticException</code> instead of silently wrong result.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>5. Wrapper Classes, Autoboxing & Boxing Performance</summary><div class="topic-body"><h3>Q41. Wrapper classes — why Java needs them</h3><ul>
+<li>Let primitives be treated as <code>Object</code> — needed for generics (<code>List&lt;Integer&gt;</code>), collections, reflection.</li>
+<li><strong>Autoboxing/unboxing</strong> (Java 5+) makes conversion mostly invisible, but each boxing = new heap object (except cached range).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>Long sum=0L; for(...) sum += i;</code> silently boxes/unboxes every iteration — use a primitive accumulator instead.</p>
+</blockquote><h3>Q47. How autoboxing actually works</h3><pre><code class="language-java">int → Integer : Integer.valueOf(int)   // compiler inserts this
+Integer → int : integerObj.intValue()  // and this
+</code></pre><p>No JVM magic — plain compiler-inserted method calls.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> It's <code>Integer.valueOf()</code>, <strong>not</strong> <code>new Integer()</code> — this is exactly what routes through the cache.</p>
+</blockquote><h3>Q48. Integer cache — exact rules</h3><pre><code>Integer   : -128 to 127 (default), tunable via -XX:AutoBoxCacheMax=N
+Boolean   : TRUE/FALSE singletons, always
+Byte      : -128 to 127 (ALL byte values — fixed)
+Short     : -128 to 127 (fixed)
+Long      : -128 to 127 (fixed, NOT configurable)
+Character : 0 to 127 (fixed)
+Double    : NO cache
+Float     : NO cache
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — SCOPE LIMITATION:</strong> Only <code>Integer.valueOf(int)</code> (autoboxing) uses the cache. <code>new Integer(5)</code> always creates new object. <code>Integer.parseInt("5")</code> returns a primitive, no boxing at all.</p>
+</blockquote><h3>Q49. Real memory overhead of boxing</h3><pre><code>int      : 4 bytes
+Integer  : 16 bytes (12-byte header + 4-byte field) → 4x overhead
+int[1000]     : ~4 KB
+Integer[1000] : ~20 KB → 5x overhead
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Have exact byte numbers ready — quantified answer beats "boxing has overhead."</p>
+</blockquote><h3>Q50. Silent NPE trap — ternary with boxed types</h3><pre><code class="language-java">Integer x = null;
+int y = x != null ? x : 0;  // NullPointerException!
+
+Integer y = x != null ? x : 0; // FIX — keep result type as Integer
+</code></pre><p>Ternary result type is determined from <strong>both branches at compile time</strong> — one branch <code>Integer</code>, other <code>int</code> → forces unboxing regardless of which branch runs.</p><blockquote>
+<p>⚠️ <strong>Pitfall — GENUINELY SURPRISING:</strong> The explicit null check makes it <em>look</em> safe; the bug is about static type determination, not runtime branch selection.</p>
+</blockquote><h3>Q55. Summing <code>List&lt;Integer&gt;</code> efficiently (avoiding boxing in streams)</h3><pre><code class="language-java">// BAD — boxes/unboxes every reduce step
+int sum = list.stream().reduce(0, Integer::sum);
+
+// GOOD — mapToInt converts once, upfront
+int sum = list.stream().mapToInt(Integer::intValue).sum();
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Connects directly to Q49 — <code>mapToInt</code>/<code>mapToLong</code>/<code>mapToDouble</code> exist specifically to avoid per-step boxing cost.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>6. Annotations</summary><div class="topic-body"><h3>Q15. How to create a custom annotation</h3><pre><code class="language-java">@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Loggable {
+    String value() default "";
+}
+</code></pre><p>Consumed via reflection at runtime or annotation processors at compile time.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> An annotation alone does nothing — it's inert until something actively reads it.</p>
+</blockquote><h3>Q16. Purpose of <code>@Retention</code></h3><ul>
+<li><code>SOURCE</code> (compiler-discarded), <code>CLASS</code> (default, kept in <code>.class</code> but not runtime-loaded), <code>RUNTIME</code> (reflection-visible).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall — REAL BUG:</strong> Forgetting <code>RUNTIME</code> retention → reflection-based lookup silently finds nothing, no error.</p>
+</blockquote><h3>Q17. What does <code>@Target</code> do?</h3><ul>
+<li>Restricts which element types an annotation applies to; enforced at <strong>compile time</strong>.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Can accept multiple types in an array: <code>@Target({METHOD, FIELD})</code>.</p>
+</blockquote><h3>Q58. Repeatable annotations</h3><pre><code class="language-java">@Repeatable(Roles.class)
+@interface Role  { String value(); }
+@interface Roles { Role[] value(); }
+
+@Role("admin")
+@Role("user")   // without @Repeatable → COMPILE ERROR
+class UserController { }
+</code></pre><p>Java 8+ lets the compiler auto-wrap repeated annotations into the container.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>getAnnotationsByType()</code> returns all instances transparently regardless of <code>@Repeatable</code> vs manual container syntax.</p>
+</blockquote><h3>Q59. Annotation processors vs reflection-based reading</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>Reflection-based reading</th>
+<th>Annotation Processor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>When it runs</td>
+<td>Runtime, every app start</td>
+<td>Compile time, once</td>
+</tr>
+<tr>
+<td>Output</td>
+<td>Behavior (proxies, wiring)</td>
+<td><strong>Generated source code</strong></td>
+</tr>
+<tr>
+<td>Runtime cost</td>
+<td>Real (reflection overhead)</td>
+<td><strong>Zero</strong></td>
+</tr>
+<tr>
+<td>Used by</td>
+<td>Spring (classic), Jackson</td>
+<td>Lombok, MapStruct, Dagger2, AutoValue</td>
+</tr>
+</tbody>
+</table><blockquote>
+<p>⚠️ <strong>Pitfall — KEY INSIGHT:</strong> Lombok rewrites the <strong>AST during compilation</strong> — zero runtime reflection footprint. This tension is why Spring AOT/GraalVM native image exist in Spring Boot 3.x.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>7. Class Loading, Reflection & Encapsulation</summary><div class="topic-body"><h3>Q18. <code>Class.forName()</code> vs <code>ClassLoader.loadClass()</code></h3><ul>
+<li><code>Class.forName(name)</code> loads <strong>and initializes</strong> (runs static initializer) by default.</li>
+<li><code>ClassLoader.loadClass(name)</code> only <strong>loads</strong>, no initialization until first use.</li>
+<li><code>Class.forName(name, initialize, loader)</code> overload can mimic lazy behavior.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> JDBC driver registration relies specifically on <code>Class.forName()</code> triggering the static initializer that self-registers with <code>DriverManager</code>.</p>
+</blockquote><h3>Q19. Types of class loaders</h3><ul>
+<li><strong>Bootstrap</strong> (core JDK, native code), <strong>Platform/Extension</strong>, <strong>Application/System</strong> (classpath, default for user code), <strong>Custom</strong> (app servers, plugins).</li>
+<li><strong>Parent-delegation model</strong>: request delegates up to parent first.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Explain <em>why</em> delegation exists — prevents a malicious/accidental <code>java.lang.String</code> on classpath from shadowing the real one.</p>
+</blockquote><h3>Q20. Can a class be loaded by two ClassLoaders?</h3><ul>
+<li><strong>Yes</strong> — same FQN loaded by two unrelated loaders → JVM treats as <strong>two distinct types</strong>.</li>
+<li>Causes <code>ClassCastException</code> with <strong>identical-looking class names on both sides</strong>.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall — STRONG SENIOR SIGNAL:</strong> Recognizing this exact symptom pattern instantly.</p>
+</blockquote><h3>Q44. Class loading — 3 phases in order</h3><pre><code>1. LOADING        — ClassLoader reads .class, creates Class object on heap
+2. LINKING
+   a. Verification — bytecode correctness check
+   b. Preparation   — static fields set to DEFAULTS (0/null), not real values
+   c. Resolution    — symbolic → direct references
+3. INITIALIZATION — static initializers + assignments, TEXTUAL ORDER, ONCE, thread-safe
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Preparation-vs-Initialization is the detail most collapse into one step — defaults happen first, real values later.</p>
+</blockquote><h3>Q45. When does class initialization trigger?</h3><pre><code>- First instance creation (new)
+- First static method call
+- First static field READ/WRITE (except compile-time constants)
+- When a subclass initializes (parent ALWAYS initializes first)
+- Class.forName() (reflection)
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Compile-time constants (<code>static final int X = 5</code>) are <strong>inlined</strong> by the compiler — accessing them does NOT trigger the owning class's initialization.</p>
+</blockquote><h3>Q21. Using Reflection to break encapsulation</h3><pre><code class="language-java">Field f = obj.getClass().getDeclaredField("privateField");
+f.setAccessible(true);
+Object value = f.get(obj);
+f.set(obj, newValue);
+</code></pre><p>Used legitimately by DI frameworks, ORMs, test frameworks — but can violate invariants.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Java 9+ module system can <strong>block</strong> this for non-<code>opens</code> packages — no longer an unconditional bypass.</p>
+</blockquote><h3>Q43. [Follow-up] Accessing a private constructor from outside</h3><pre><code class="language-java">Constructor&lt;Singleton&gt; constructor = Singleton.class.getDeclaredConstructor();
+constructor.setAccessible(true);
+Singleton instance = constructor.newInstance();
+</code></pre><p>Same mechanism as Q21 — a private constructor is a <strong>convention-level</strong> safeguard, not absolute.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Same Java 9+ module caveat applies.</p>
+</blockquote><h3>Q56. [Follow-up] Java 9+ module restriction on reflection &amp; bypass</h3><ul>
+<li>Strong encapsulation: classes in a named module aren't reflectively accessible from outside <strong>even with <code>setAccessible(true)</code></strong> → throws <code>InaccessibleObjectException</code>.</li>
+</ul><pre><code class="language-java">// module-info.java
+module com.example.myapp {
+    opens com.example.internal to spring.core, com.fasterxml.jackson.databind;
+}
+// Emergency JVM flag:
+// --add-opens java.base/java.lang=ALL-UNNAMED
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — WORTH MENTIONING UNPROMPTED:</strong> This is a primary reason most Spring Boot apps don't actually adopt JPMS for application code — reflection-heavy frameworks rely on exactly this access.</p>
+</blockquote><h3>Q57. [Follow-up] Real risk of breaking encapsulation via reflection</h3><pre><code class="language-java">Field f = String.class.getDeclaredField("value"); // Java 8, pre-module restriction
+f.setAccessible(true);
+char[] val = (char[]) f.get(internedHelloString);
+val[0] = 'X'; // MUTATES the shared, pooled "hello" String!
+</code></pre><p>Mutating an <strong>interned/pooled</strong> String corrupts it for <strong>every piece of code in the JVM</strong> referencing that literal.</p><blockquote>
+<p>⚠️ <strong>Pitfall — GENUINELY CATASTROPHIC, NOT THEORETICAL:</strong> Have this ready when asked "why does immutability matter" beyond thread-safety.</p>
+</blockquote><h3>Q23. Troubleshooting <code>ClassNotFoundException</code>/<code>NoClassDefFoundError</code> post-deploy</h3><ul>
+<li>Check classpath/dependency mismatches, fat-jar/shaded-jar misconfigurations.</li>
+<li><code>NoClassDefFoundError</code>: check if the class's <strong>static initializer failed earlier</strong> — search logs for an earlier <code>ExceptionInInitializerError</code>.</li>
+<li>Check classloader isolation (Q20) in app servers.</li>
+<li>Verify artifact contents: <code>jar tf app.jar | grep ClassName</code>.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall — MOST MISSED STEP:</strong> Searching backward in logs for the original triggering static-initializer failure, instead of staring at the current stack trace.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>8. Dynamic Proxies</summary><div class="topic-body"><h3>Q22. Dynamic proxies — what and how used</h3><pre><code class="language-java">MyInterface proxy = (MyInterface) Proxy.newProxyInstance(
+    classLoader,
+    new Class&lt;?&gt;[]{ MyInterface.class },
+    (proxyObj, method, args) -&gt; {
+        System.out.println("before " + method.getName());
+        Object result = method.invoke(realObject, args);
+        System.out.println("after");
+        return result;
+    });
+</code></pre><p><code>java.lang.reflect.Proxy</code> generates a runtime class implementing interfaces, routing calls through an <code>InvocationHandler</code>. Powers Spring AOP, Mockito interface mocks.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Only works for <strong>interfaces</strong> — proxying a concrete class needs CGLIB-style subclassing (what Spring falls back to for <code>@Transactional</code> without an interface).</p>
+</blockquote><h3>Q33. Role of <code>ClassLoader</code> in dynamic proxy creation</h3><ul>
+<li><code>Proxy.newProxyInstance()</code> needs a <code>ClassLoader</code> because it <strong>generates a new class at runtime</strong> that must be defined into a classloader's namespace.</li>
+<li>Typically pass the target interface's own classloader.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> The question as usually phrased compares Proxy to itself (confused framing) — the real meaningful contrast is <strong>JDK dynamic proxies (interface-based) vs. CGLIB/ByteBuddy (class subclassing)</strong>, which is what Spring's <code>@Transactional</code>/<code>@Cacheable</code> decision hinges on.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>9. I/O</summary><div class="topic-body"><h3>Q34. Role of <code>BufferedReader</code>; why preferred over <code>FileReader</code></h3><ul>
+<li><code>FileReader</code> reads char data directly — inefficient, near-per-char syscalls.</li>
+<li><code>BufferedReader</code> wraps another <code>Reader</code>, buffers larger chunks, drastically reduces I/O ops. Adds <code>readLine()</code>.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall — ARCHITECTURAL SIGNAL:</strong> Frame as the <strong>Decorator pattern</strong> applied to I/O — same pattern behind <code>BufferedOutputStream</code>/<code>BufferedInputStream</code> throughout <code>java.io</code>.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>10. Marker Interfaces & Design Concepts</summary><div class="topic-body"><h3>Q12. Marker interfaces</h3><ul>
+<li>Interfaces with <strong>no methods</strong> — tag a class for metadata other code checks via <code>instanceof</code>. E.g. <code>Serializable</code>, <code>Cloneable</code>, <code>RandomAccess</code>.</li>
+<li>Since Java 5, annotations have largely superseded them for new APIs.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> Explain <em>why</em> — annotation = pure metadata; marker interface = permanently affects the type hierarchy (<code>instanceof</code>), sometimes deliberately desired (like <code>Serializable</code>).</p>
+</blockquote><h3>Q31. Circular constructor dependency between two classes</h3><ul>
+<li>Plain constructors can't resolve — genuine chicken-and-egg problem.</li>
+<li>Fixes: setter/field injection for one side, introduce an abstraction, or (senior answer) treat it as a <strong>design smell</strong> — extract a coordinating third class.</li>
+<li>Spring: constructor-injection cycles fail context startup by default; setter injection is a workaround, not the real fix.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall — SENIOR ANSWER:</strong> The real fix is recognizing poor separation of concerns, not just reciting the wiring hack.</p>
+</blockquote><h3>Q32. "Ghost methods" — compiler optimization?</h3><ul>
+<li>Not a standard Java term — <strong>say so honestly</strong> rather than inventing a definition.</li>
+<li>Closest real concepts: <strong>bridge methods</strong> (generic type erasure / covariant returns) or <strong>synthetic methods</strong> (compiler-generated, e.g. nested-class private access).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> The right interview instinct — admit unfamiliarity, then pivot to the closest concept you do know.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>11. Debugging & Production Troubleshooting (Experience-Based)</summary><div class="topic-body"><h3>Q14. JUnit fails as expected, but step-over debugging doesn't reproduce it</h3><ul>
+<li>Timing-sensitive/concurrency bugs — debugger changes thread interleaving.</li>
+<li>JIT compilation differences — debugger may force interpreted mode.</li>
+<li>Stale shared static state between test runs.</li>
+<li>Non-deterministic dependencies (system time, random seed, filesystem order).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall — LEAD WITH THESE:</strong> Race conditions + JIT timing differences are the two most likely intended answers.</p>
+</blockquote><h3>Q24. Performance optimizations you've implemented</h3><ul>
+<li>Connection/thread pool tuning (HikariCP sized to real concurrency).</li>
+<li>Reducing N+1 in JPA/Hibernate (batch fetch, <code>@EntityGraph</code>, projection DTOs).</li>
+<li>Caching hot data (Redis/Caffeine, TTLs, cache-aside).</li>
+<li>JVM tuning (heap sizing, G1 vs ZGC, <code>-Xlog:gc</code>).</li>
+<li>Async/non-blocking I/O (<code>CompletableFuture</code> for parallel downstream calls).</li>
+<li>Profile before optimizing (async-profiler, JFR).</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> This is experience-based — have <strong>one concrete story with measurable before/after</strong> (e.g. P99 latency X→Y), not just a generic list.</p>
+</blockquote><h3>Q25. Production server stopped logging &amp; unresponsive — investigation steps</h3><ol>
+<li><strong>Thread dump first</strong> (<code>jstack &lt;pid&gt;</code> / <code>kill -3 &lt;pid&gt;</code>) — check deadlocks, all threads stuck on same resource.</li>
+<li>Check GC logs for a long/continuous full GC ("stop-the-world").</li>
+<li>Check OS resource exhaustion — disk full, fd limits, swapping.</li>
+<li>Check if request queue/thread pool is saturated (no timeout on</li>
+</ol></div></details>
+</section>
+<section class="file-section" id="reflection">
+<h1 class="file-title">Reflection</h1>
+<div class="file-intro"><blockquote>
+<p>What Reflection is, how to get a <code>Class</code> object three ways, inspecting/invoking methods, fields, and constructors — including private ones — plus the senior-level performance and security angles the basic walkthrough usually skips. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>What Reflection Is</summary><div class="topic-body"><p><strong>What it does:</strong> Reflection lets a running program inspect and manipulate its own classes, methods, fields, and constructors at runtime — including ones it couldn't reference directly at compile time. Concretely, it can tell you what methods a class has, what a method's return type and modifiers are, what interfaces a class implements, and it can read or write field values (even <code>private</code> ones) and invoke methods dynamically by name.</p><p><strong>Why it matters beyond "cool trick":</strong> almost every framework you use daily runs on reflection under the hood — Spring's dependency injection (<code>@Autowired</code> resolves and injects fields via reflection), Jackson/Gson (serializing objects by reflecting over their fields), JUnit (finding and invoking <code>@Test</code>-annotated methods), and Hibernate (populating entity fields without calling your constructors or setters). Understanding reflection well is understanding how these frameworks actually work, not just how to use them.</p></div></details>
+<details class="topic"><summary>The Class Object — the Foundation</summary><div class="topic-body"><p><strong>What it is:</strong> every loaded class has exactly one corresponding <code>java.lang.Class</code> instance, created by the JVM at class-loading time. This object is the entry point for all reflection — it carries the class's metadata (methods, fields, constructors, modifiers, superclass, interfaces).</p><p><strong>Three ways to get it:</strong></p><pre><code class="language-java">// 1. Class.forName() — loads the class dynamically by fully-qualified name, if not already loaded
+Class&lt;?&gt; c1 = Class.forName("com.example.Employee");
+
+// 2. .class literal — resolved at compile time, no class loading triggered beyond what's already needed
+Class&lt;?&gt; c2 = Employee.class;
+
+// 3. getClass() — from an existing instance, always returns the RUNTIME type, not the reference type
+Employee emp = new Manager(); // reference type Employee, runtime type Manager
+Class&lt;?&gt; c3 = emp.getClass(); // returns Manager, not Employee
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> these three are not interchangeable in every context. <code>Class.forName()</code> actively triggers class loading (running static initializers) if the class isn't loaded yet — this is exactly how JDBC drivers used to self-register before <code>ServiceLoader</code> became standard. <code>.class</code> and <code>getClass()</code> don't force loading beyond what's already happened. Also, <code>getClass()</code> returning the <em>runtime</em> type (not the declared reference type) is the detail interviewers check — it's why polymorphic dispatch and reflection-based type checks can disagree with what the code "looks like" it's doing.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Accessing Methods, Fields, and Constructors — Two Method Families</summary><div class="topic-body"><p><strong>The core distinction:</strong> every reflective lookup comes in a <code>get*()</code> and a <code>getDeclared*()</code> variant, and confusing them is the single most common reflection mistake.</p><table>
+<thead>
+<tr>
+<th></th>
+<th><code>getMethods()</code> / <code>getFields()</code> / <code>getConstructors()</code></th>
+<th><code>getDeclaredMethods()</code> / <code>getDeclaredFields()</code> / <code>getDeclaredConstructors()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Visibility</td>
+<td><strong>public only</strong></td>
+<td><strong>all</strong> — public, protected, package-private, private</td>
+</tr>
+<tr>
+<td>Inheritance</td>
+<td>Includes inherited public members from superclasses</td>
+<td><strong>Only</strong> members declared directly in this class — nothing inherited</td>
+</tr>
+</tbody>
+</table><pre><code class="language-java">class Base {
+    public void publicBaseMethod() {}
+    private void privateBaseMethod() {}
+}
+class Employee extends Base {
+    public void publicMethod() {}
+    private void privateMethod() {}
+}
+
+Method[] pub = Employee.class.getMethods();          // publicMethod + publicBaseMethod (inherited) + Object's methods
+Method[] all = Employee.class.getDeclaredMethods();   // publicMethod + privateMethod ONLY — no inherited methods at all, public or not
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>getDeclaredMethods()</code> does <strong>not</strong> give you "everything including inherited" — it's the opposite axis from <code>getMethods()</code>. To truly enumerate every member across a hierarchy (public and private, including inherited), you have to walk up the superclass chain yourself, calling <code>getDeclaredMethods()</code> at each level via <code>getSuperclass()</code>.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Invoking Methods Reflectively</summary><div class="topic-body"><pre><code class="language-java">import java.lang.reflect.Method;
+
+public class Employee {
+    private String name = "Sabari";
+    public String greet(String prefix) { return prefix + ", " + name; }
+    public static void main(String[] args) throws Exception {
+        Employee emp = new Employee();
+        Method greetMethod = Employee.class.getMethod("greet", String.class); // public, so getMethod() works
+        Object result = greetMethod.invoke(emp, "Hello"); // (target instance, args...)
+        System.out.println(result);
+    }
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Hello, Sabari
+</code></pre><p><code>invoke(target, args...)</code> is the universal call mechanism — the target instance is <code>null</code> for <code>static</code> methods. The return type is always <code>Object</code>, so callers must cast.</p></div></details>
+<details class="topic"><summary>Accessing Private Fields — setAccessible(true)</summary><div class="topic-body"><p><strong>What it does:</strong> by default, the JVM's normal access-control checks (<code>private</code>/<code>protected</code>/package-private) still apply during reflective access — attempting to read/write a private field without permission throws <code>IllegalAccessException</code>. <code>setAccessible(true)</code> tells the JVM to bypass that check for this specific <code>Field</code>/<code>Method</code>/<code>Constructor</code> object.</p><pre><code class="language-java">import java.lang.reflect.Field;
+
+class Account {
+    private double balance = 500.0;
+}
+
+public class PrivateFieldDemo {
+    public static void main(String[] args) throws Exception {
+        Account acc = new Account();
+        Field balanceField = Account.class.getDeclaredField("balance"); // getDeclaredField -- private, so getField() would throw NoSuchFieldException
+        // balanceField.get(acc); // would throw IllegalAccessException here without the next line
+        balanceField.setAccessible(true); // bypasses the private access check
+        System.out.println("Before: " + balanceField.get(acc));
+        balanceField.set(acc, 750.0); // mutating a private field from outside the class entirely
+        System.out.println("After: " + balanceField.get(acc));
+    }
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Before: 500.0
+After: 750.0
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — this is precisely the "encapsulation isn't a security boundary" gotcha:</strong> <code>private</code> in Java stops <em>accidental</em> misuse at compile time; it does not stop reflection at runtime. Frameworks rely on exactly this (Hibernate setting entity fields directly, Mockito injecting mocks into <code>@InjectMocks</code> fields) — but it also means a determined caller can always reach into any object's private state unless a <code>SecurityManager</code>/module boundary (Java 9+ strong encapsulation, <code>--illegal-access</code>) explicitly blocks it. As of Java 17+, the JDK's own internals are far more locked down against this than ordinary application code is.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Reflective Constructors</summary><div class="topic-body"><pre><code class="language-java">import java.lang.reflect.Constructor;
+
+class Point {
+    private int x, y;
+    public Point(int x, int y) { this.x = x; this.y = y; }
+    public String toString() { return "(" + x + "," + y + ")"; }
+}
+
+Constructor&lt;Point&gt; ctor = Point.class.getConstructor(int.class, int.class);
+Point p = ctor.newInstance(3, 4); // equivalent to new Point(3, 4), but resolved at runtime
+System.out.println(p);
+</code></pre><p><strong>Output:</strong></p><pre><code>(3,4)
+</code></pre><p>This is exactly how Spring instantiates beans and Jackson instantiates deserialized objects when a no-arg constructor isn't available — <code>getDeclaredConstructor()</code> + <code>setAccessible(true)</code> + <code>newInstance()</code> is the standard pattern for frameworks needing to construct objects whose constructors aren't public.</p></div></details>
+<details class="topic"><summary>The Real Costs of Reflection — Why It's Not Free</summary><div class="topic-body"><p><strong>Performance:</strong> every reflective call (<code>invoke()</code>, <code>get()</code>, <code>set()</code>) is dramatically slower than direct code — commonly cited at 10-100x overhead versus a direct method call or field access, because the JVM can't inline or optimize through the reflective indirection the way it can with normal bytecode. <code>Method.setAccessible(true)</code> also disables some JIT-level optimizations for that member. This is why performance-sensitive frameworks (modern Jackson, many DI containers) generate bytecode at startup (via ASM/ByteBuddy) to create direct accessor classes once, rather than paying the reflection cost on every single field access at runtime.</p><p><strong>Security and modularity:</strong> since Java 9's module system, <code>setAccessible(true)</code> can be blocked entirely for JDK-internal classes unless the target module explicitly <code>opens</code> that package — this is why some libraries that worked fine on Java 8 broke or needed <code>--add-opens</code> flags on Java 9+.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> "reflection is just a bit slower" understates it for hot-path code — reflectively invoking a method inside a tight loop processing millions of records is a real, measurable production performance issue, not a theoretical one. Cache the <code>Method</code>/<code>Field</code> object (looked up once) rather than re-resolving it on every call, and consider whether reflection is even necessary versus a direct call, an interface, or a generated accessor.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: What is reflection, and where does the JVM actually use it besides "my own code calling it"?</strong>
+Reflection is runtime inspection/manipulation of classes, methods, fields, and constructors. Nearly every framework (Spring, Hibernate, Jackson, JUnit, Mockito) is built on it — dependency injection, ORM field population, JSON (de)serialization, and test discovery all work by reflecting over your classes rather than you writing that wiring by hand.</p><p><strong>Q: <code>Class.forName()</code> vs <code>.class</code> vs <code>getClass()</code> — what's the actual difference?</strong>
+Covered above. <code>Class.forName()</code> can trigger class loading/static-initializer execution if not already loaded; <code>.class</code> is compile-time and doesn't force loading; <code>getClass()</code> returns the object's <em>runtime</em> type, which can differ from its declared reference type under polymorphism.</p><p><strong>Q: <code>getMethods()</code> vs <code>getDeclaredMethods()</code> — what's the precise difference?</strong>
+Covered above. It's a two-axis distinction: visibility (public-only vs all) crossed with inheritance (includes inherited public members vs. only this class's own declarations) — <code>getDeclaredMethods()</code> is not simply "the private version of getMethods()."</p><p><strong>Q: Why does accessing a private field via reflection need <code>setAccessible(true)</code>, and what does that actually bypass?</strong>
+It bypasses the JVM's normal Java-language access-control check for that specific reflective object — not a security sandbox, just the same <code>private</code>/<code>protected</code> enforcement the compiler normally does. This is why <code>private</code> fields are not a hard security boundary against a determined caller, only a compile-time discipline tool — module-system encapsulation (Java 9+) is the actual hard boundary for JDK internals.</p><p><strong>Q: What's the real performance cost of reflection, and how do high-performance frameworks avoid paying it repeatedly?</strong>
+Reflective calls run materially slower than direct calls (often cited 10-100x) because the JIT can't optimize through the indirection as well. Frameworks amortize this by caching resolved <code>Method</code>/<code>Field</code> objects instead of re-resolving by name on every call, or by generating real bytecode accessors once at startup (ASM/ByteBuddy) instead of using raw reflection on every access.</p></div></details>
+</section>
+<section class="file-section" id="enum">
+<h1 class="file-title">Enum</h1>
+<div class="file-intro"><blockquote>
+<p>What problem <code>enum</code> actually solves over constants, why it can't extend a class, constant-specific behavior, and the two enum-based design patterns (singleton, strategy) that come up most in senior interviews. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>What Problem enum Solves</summary><div class="topic-body"><p><strong>Before <code>enum</code> (pre-Java 5):</strong> developers modeled a fixed set of options with <code>int</code>/<code>String</code> constants.</p><pre><code class="language-java">public static final int PENDING = 1;
+public static final int APPROVED = 2;
+public static final int REJECTED = 3;
+
+void setStatus(int status) { ... }
+setStatus(100); // compiles fine — nothing stops an invalid value
+</code></pre><p><strong>What's actually wrong with this, precisely:</strong>
+1. <strong>No type safety</strong> — any <code>int</code> compiles, valid or not; the compiler can't help you.
+2. <strong>No namespace</strong> — <code>PENDING</code> could collide with an unrelated constant named the same thing elsewhere.
+3. <strong>No behavior</strong> — a constant is just a number; it can't carry logic.
+4. <strong>No compiler-enforced exhaustiveness</strong> — nothing forces you to handle every valid value anywhere you switch on it.</p><pre><code class="language-java">enum Status { PENDING, APPROVED, REJECTED }
+void setStatus(Status status) { ... }
+setStatus(100);  // compile-time error — not even a candidate
+</code></pre><p><code>enum</code> fixes all four: <code>Status</code> is its own type, <code>PENDING</code> lives in <code>Status</code>'s namespace (referenced as <code>Status.PENDING</code>), constants can have fields/methods, and modern <code>switch</code> expressions on enums can be checked for exhaustiveness by the compiler/IDE.</p></div></details>
+<details class="topic"><summary>Enums Are Real Classes — With Real Constraints</summary><div class="topic-body"><p><strong>What's actually happening under the hood:</strong> each enum constant is a <code>public static final</code> instance of the enum type itself, and the compiler implicitly makes every enum <code>extend java.lang.Enum&lt;E&gt;</code> — which is why an enum can never <code>extend</code> anything else (Java has single inheritance, and the slot is already taken). An enum <em>can</em>, however, implement interfaces freely.</p><pre><code class="language-java">interface Describable { String describe(); }
+
+enum Status implements Describable {
+    PENDING, APPROVED, REJECTED;
+    public String describe() { return "Status: " + name(); }
+}
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> "enums can't extend a class" is the shallow answer — the precise reason (<code>enum</code> implicitly extends <code>java.lang.Enum&lt;E&gt;</code>, a <code>final</code> class, so the single-inheritance slot is used up) is what separates a memorized rule from real understanding, and it's exactly why enums <em>can</em> still implement any number of interfaces.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Constant-Specific Behavior — the Genuinely Powerful Part</summary><div class="topic-body"><p><strong>What it does:</strong> each enum constant can override an abstract method with its own implementation — effectively giving every value in the enum its own tiny anonymous subclass.</p><pre><code class="language-java">enum PaymentStatus {
+    SUCCESS { public boolean isFinal() { return true; } },
+    FAILED  { public boolean isFinal() { return true; } },
+    PENDING { public boolean isFinal() { return false; } };
+
+    public abstract boolean isFinal();
+}
+</code></pre><p>Calling <code>PaymentStatus.PENDING.isFinal()</code> runs <code>PENDING</code>'s own override, not a shared <code>if/else</code> on <code>name()</code>. This is strictly better than a <code>switch</code> scattered across the codebase every time behavior needs to vary by constant — the behavior lives with the constant itself, and adding a new constant forces you to supply its behavior right there (the compiler won't let you forget the abstract method).</p></div></details>
+<details class="topic"><summary>Enum Singleton — the Recommended Way to Write a Singleton</summary><div class="topic-body"><pre><code class="language-java">public enum ConfigManager {
+    INSTANCE;
+    private final Map&lt;String, String&gt; settings = new ConcurrentHashMap&lt;&gt;();
+    public void set(String key, String value) { settings.put(key, value); }
+    public String get(String key) { return settings.get(key); }
+}
+
+// usage
+ConfigManager.INSTANCE.set("env", "prod");
+System.out.println(ConfigManager.INSTANCE.get("env"));
+</code></pre><p><strong>Output:</strong></p><pre><code>prod
+</code></pre><p><strong>Why this beats the classic <code>private static final INSTANCE</code> singleton pattern:</strong> the JVM guarantees enum constant creation happens exactly once, and it's inherently thread-safe with zero synchronization code needed — no double-checked locking, no <code>volatile</code>, none of the ceremony Part 4 of the multithreading notes covers for the classic lazy singleton. It's also <strong>serialization-safe by construction</strong>: Java's serialization mechanism special-cases enums to serialize only the constant's <code>name()</code> and resolve it back to the same singleton instance on the other side — the classic singleton pattern needs an explicit <code>readResolve()</code> to get this same guarantee (see the Serialization notes), enum singletons get it for free.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> this is the <em>Effective Java</em> (Joshua Bloch) recommended way to implement a singleton in modern Java, specifically because it closes the two hardest-to-get-right classic singleton failure modes (broken by reflection calling a private constructor directly, and broken by deserialization creating a second instance) automatically, without the developer having to remember any defensive code.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Enum Strategy Pattern</summary><div class="topic-body"><pre><code class="language-java">public enum Operation {
+    ADD { public int apply(int a, int b) { return a + b; } },
+    SUBTRACT { public int apply(int a, int b) { return a - b; } },
+    MULTIPLY { public int apply(int a, int b) { return a * b; } };
+
+    public abstract int apply(int a, int b);
+}
+
+System.out.println(Operation.ADD.apply(3, 4));       // 7
+System.out.println(Operation.MULTIPLY.apply(3, 4));  // 12
+</code></pre><p>This is the same constant-specific-behavior mechanism as <code>PaymentStatus</code> above, applied deliberately as the Strategy design pattern — each constant <em>is</em> a strategy, selected by name instead of by constructing a separate strategy object per case.</p></div></details>
+<details class="topic"><summary>Iterating and the Enum<E extends Enum<E>> Declaration</summary><div class="topic-body"><pre><code class="language-java">for (Status s : Status.values()) {
+    System.out.println(s + " ordinal=" + s.ordinal());
+}
+</code></pre><p><code>values()</code> is a compiler-synthesized static method (not inherited from <code>Enum</code>) returning a defensive copy of the constants array in declaration order — this is why <code>ordinal()</code> reflects <em>declaration order</em>, not any semantic ranking, and why reordering enum constants is a silent behavior change if code relies on ordinal comparisons.</p><p><strong>Why <code>Enum&lt;E extends Enum&lt;E&gt;&gt;</code> looks so strange:</strong> it's a self-referential generic bound (<code>E</code> must be a subtype of <code>Enum&lt;E&gt;</code> itself) — this is what lets <code>Enum</code> provide type-safe methods like <code>compareTo(E)</code> that only accept the <em>same</em> enum type, rather than accepting any arbitrary <code>Enum</code>.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the ordinal trap:</strong> never persist an enum's <code>ordinal()</code> to a database or serialize it as the source of truth for "which constant was this." Inserting a new constant in the middle of the declaration list shifts every ordinal after it, silently corrupting previously stored data. Persist <code>name()</code> (a stable string) instead, or an explicit custom code field.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Why are enums better than <code>int</code>/<code>String</code> constants?</strong>
+Type safety (invalid values are compile errors, not runtime surprises), namespacing (<code>Status.APPROVED</code>, not a bare global constant), and the ability to carry fields/methods/behavior — none of which plain constants can do.</p><p><strong>Q: Can an enum extend another class? Why or why not?</strong>
+No — every enum implicitly extends <code>java.lang.Enum&lt;E&gt;</code>, a final class, and Java has single class inheritance. It can implement any number of interfaces, though, since that's unrestricted.</p><p><strong>Q: How would you implement a Singleton using enum, and why is this considered the best approach?</strong>
+<code>enum Singleton { INSTANCE; ... }</code> — the JVM guarantees single instantiation, thread-safety with no extra code, and automatic correctness under both reflection-based attacks and serialization/deserialization, which the classic singleton pattern needs explicit defensive code to achieve.</p><p><strong>Q: What's constant-specific method behavior, and when would you reach for it over a switch statement?</strong>
+Each enum constant can override an abstract method with its own body — behavior lives with the constant rather than being centralized in one big switch scattered (and duplicated) across the codebase. Reach for it when different constants need genuinely different logic, especially when you want the compiler to force every new constant to supply that logic.</p><p><strong>Q: Why shouldn't you persist <code>ordinal()</code> as a stored value?</strong>
+<code>ordinal()</code> reflects declaration order, which shifts if constants are reordered or a new one is inserted in the middle — silently corrupting any previously persisted ordinal-based data. Use <code>name()</code> or an explicit stable code field instead.</p></div></details>
+</section>
+<section class="file-section" id="generics">
+<h1 class="file-title">Generics</h1>
+<div class="file-intro"><blockquote>
+<p>Generic classes/methods, bounded types, wildcards and the PECS principle, type erasure and everything it breaks (arrays, overloading, instanceof), heap pollution, and the restrictions erasure imposes. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>Why Generics Exist</summary><div class="topic-body"><p><strong>Before Java 5</strong>, collections stored <code>Object</code> — no compile-time type safety, and every read needed an explicit cast:</p><pre><code class="language-java">ArrayList list = new ArrayList();
+list.add("Java");
+list.add(10); // compiles — the list has no idea what it's "supposed" to hold
+String s = (String) list.get(1); // compiles, throws ClassCastException at RUNTIME
+</code></pre><p>Generics move that failure from a runtime <code>ClassCastException</code> (discovered by a user, in production) to a compile-time error (discovered by the developer, immediately):</p><pre><code class="language-java">List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("Java");
+list.add(10); // compile-time error — caught before the code ever runs
+</code></pre></div></details>
+<details class="topic"><summary>Generic Classes and Generic Methods — Different Scopes</summary><div class="topic-body"><pre><code class="language-java">// Generic CLASS — type parameter belongs to the whole class, fixed at instantiation
+class Box&lt;T&gt; {
+    private T value;
+    void set(T value) { this.value = value; }
+    T get() { return value; }
+}
+Box&lt;String&gt; box = new Box&lt;&gt;(); // T is bound to String for THIS box, forever
+
+// Generic METHOD — type parameter belongs only to this method, inferred per call
+public &lt;T&gt; void print(T value) { System.out.println(value); }
+print("Java"); // T = String for this call
+print(10);     // T = Integer for this call, independently
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> a generic class's type parameter is fixed once at object creation; a generic method's type parameter is resolved fresh on every individual call. Mixing these up leads to confusion about why a "generic" class instance can't suddenly hold a different type on a later call — it was never meant to.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Bounded Types</summary><div class="topic-body"><pre><code class="language-java">class Calculator&lt;T extends Number&gt; {  // T must be Number or a subtype
+    private T num;
+    double asDouble() { return num.doubleValue(); } // legal -- Number guarantees doubleValue()
+}
+// Calculator&lt;String&gt; calc; // compile error -- String is not a Number
+</code></pre><p><strong>Multiple bounds:</strong> <code>&lt;T extends Number &amp; Comparable&lt;T&gt;&gt;</code> — at most one <em>class</em> bound, and it must come first; any number of <em>interface</em> bounds after it.</p><pre><code class="language-java">class RankedItem&lt;T extends Number &amp; Comparable&lt;T&gt;&gt; {
+    T value;
+    boolean isBetterThan(T other) { return value.compareTo(other) &gt; 0; } // needs Comparable
+    double magnitude() { return value.doubleValue(); }                   // needs Number
+}
+</code></pre></div></details>
+<details class="topic"><summary>Wildcards and the PECS Principle</summary><div class="topic-body"><p><strong>Three wildcard forms</strong>, each answering "what can I do with this collection of unknown-but-related type":</p><pre><code class="language-java">List&lt;?&gt; anyList;                  // unbounded -- read as Object only, effectively read-only (only null can be added)
+List&lt;? extends Number&gt; readable;  // upper-bounded -- accepts List&lt;Integer&gt;, List&lt;Double&gt;... can READ as Number, can't add
+List&lt;? super Integer&gt; writable;   // lower-bounded -- accepts List&lt;Integer&gt;, List&lt;Number&gt;, List&lt;Object&gt;... can ADD Integer, reads only as Object
+</code></pre><p><strong>PECS — Producer Extends, Consumer Super</strong>, the mnemonic for choosing between them:</p><pre><code class="language-java">// Producer of T (you only READ values out) -&gt; use ? extends T
+void printAll(List&lt;? extends Number&gt; numbers) {
+    for (Number n : numbers) System.out.println(n); // safe: everything in there IS-A Number
+}
+
+// Consumer of T (you only WRITE values in) -&gt; use ? super T
+void addIntegers(List&lt;? super Integer&gt; list) {
+    list.add(1);
+    list.add(2); // safe: whatever the real list type is, it accepts Integer
+}
+</code></pre><p><strong>Why <code>List&lt;? extends Number&gt;</code> refuses <code>.add()</code>:</strong></p><pre><code class="language-java">List&lt;? extends Number&gt; list = new ArrayList&lt;Integer&gt;();
+list.add(10); // compile error
+</code></pre><p>The compiler only knows "some subtype of Number" — it could actually be a <code>List&lt;Double&gt;</code> behind that reference. Allowing <code>add(10)</code> (an <code>Integer</code>) into what might really be a <code>List&lt;Double&gt;</code> would silently corrupt it. Only <code>add(null)</code> is ever allowed, since <code>null</code> is valid for every reference type.</p><p><strong>Why reading from <code>List&lt;? super Integer&gt;</code> only gives you <code>Object</code>:</strong></p><pre><code class="language-java">List&lt;? super Integer&gt; list = new ArrayList&lt;Number&gt;();
+Integer i = list.get(0); // compile error -- the compiler can't promise the real type IS Integer, only that it's SOME supertype
+Object o = list.get(0);  // fine -- Object is the only guaranteed common ground
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> PECS isn't an arbitrary mnemonic to memorize — it's a direct consequence of what the compiler can actually <em>prove</em> about an unknown related type. If you can't articulate <em>why</em> <code>extends</code> blocks writes and <code>super</code> blocks precise reads, you have the rule memorized but not understood — and that's exactly the follow-up senior interviewers ask.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Type Erasure — the Foundational Mechanism Behind Every Generics Quirk</summary><div class="topic-body"><p><strong>What it is:</strong> Java generics are a <strong>compile-time-only</strong> feature. The compiler enforces type safety at compile time, then erases the generic type information, replacing type parameters with their bound (or <code>Object</code> if unbounded) in the compiled bytecode.</p><pre><code class="language-java">List&lt;String&gt; list = new ArrayList&lt;&gt;();
+// compiles down to, effectively:
+List list = new ArrayList(); // raw type at the bytecode level -- List&lt;String&gt; and List&lt;Integer&gt; are IDENTICAL after compilation
+</code></pre><p><strong>Every one of the following restrictions is a direct consequence of erasure — not an arbitrary language rule:</strong></p><pre><code class="language-java">// 1. Can't create a generic array -- there's no runtime type to make the array of
+T[] arr = new T[10]; // compile error
+
+// 2. Can't check instanceof against a parameterized type -- the parameter doesn't exist at runtime
+if (list instanceof List&lt;String&gt;) { } // compile error
+if (list instanceof List&lt;?&gt;) { }      // fine -- unbounded wildcard has nothing to check
+
+// 3. Can't overload methods that only differ by generic parameter -- they have the SAME erased signature
+void method(List&lt;String&gt; list) { }
+void method(List&lt;Integer&gt; list) { } // compile error -- both erase to method(List)
+
+// 4. Can't instantiate a type parameter directly
+T obj = new T(); // compile error -- erasure means the JVM has no idea what class T actually is at runtime
+
+// 5. Can't have a static field of the type parameter
+class Box&lt;T&gt; { static T value; } // compile error -- static belongs to the class, but T differs per-instance-type conceptually
+
+// 6. Can't catch a generic type as an exception
+catch (T e) { } // compile error
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> every one of these six restrictions is frequently tested as an isolated "gotcha," but they all reduce to the <em>same</em> root cause: by the time the JVM runs the code, <code>T</code> simply isn't there anymore. Leading with "because of type erasure" for any of these, rather than treating each as an unrelated arbitrary rule, is what demonstrates real understanding versus memorized trivia.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Heap Pollution — What Erasure Actually Puts at Risk</summary><div class="topic-body"><p><strong>What it is:</strong> a situation where a variable of a parameterized type ends up referring to an object that isn't actually an instance of that parameterization — usually via mixing raw types with generics.</p><pre><code class="language-java">List&lt;String&gt; list = new ArrayList&lt;&gt;();
+List raw = list;      // raw type reference to the same object -- legal, but dangerous
+raw.add(10);           // compiles (raw types skip generic checks entirely) -- silently corrupts 'list'
+
+String s = list.get(0); // ClassCastException at RUNTIME -- the Integer is really there, disguised as String
+</code></pre><p>This is exactly the failure mode generics were introduced to prevent — and it can only resurface when raw types are deliberately or accidentally mixed back in with parameterized code (a common source: old pre-generics libraries, or careless casting).</p></div></details>
+<details class="topic"><summary>Bridge Methods — the Compiler's Patch for Erasure vs. Polymorphism</summary><div class="topic-body"><pre><code class="language-java">class Parent&lt;T&gt; { T get() { return null; } }
+class Child extends Parent&lt;String&gt; { @Override String get() { return "hi"; } }
+</code></pre><p>After erasure, <code>Parent.get()</code> has signature <code>Object get()</code>, but <code>Child.get()</code> has signature <code>String get()</code> — these don't match at the bytecode level, which would break polymorphic dispatch (<code>Parent p = new Child(); p.get();</code> needs to call <code>Child</code>'s override). The compiler silently generates a synthetic <strong>bridge method</strong> — <code>Object get()</code> in <code>Child</code> that just calls the real <code>String get()</code> and returns its result — invisible in source code, purely there to keep override resolution working correctly despite erasure.</p></div></details>
+<details class="topic"><summary>Why Arrays Are Covariant but Generics Are Not</summary><div class="topic-body"><pre><code class="language-java">Object[] arr = new String[10]; // legal -- arrays are covariant
+arr[0] = 10;                    // compiles, throws ArrayStoreException at RUNTIME -- array remembers its real component type
+
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+List&lt;Object&gt; objList = list; // compile error -- generics are invariant, deliberately
+</code></pre><p>Arrays carry their component type at runtime and check it on every store (allowing this unsafe-looking assignment to compile, but failing loudly later). Generics carry no such runtime information (erasure), so the language closes the hole entirely at compile time instead — generic type parameters are invariant unless a wildcard explicitly says otherwise (which is the entire reason wildcards with PECS exist).</p></div></details>
+<details class="topic"><summary>The Diamond Operator (Java 7+)</summary><div class="topic-body"><pre><code class="language-java">List&lt;String&gt; list = new ArrayList&lt;String&gt;(); // pre-Java 7, redundant
+List&lt;String&gt; list = new ArrayList&lt;&gt;();       // Java 7+, type inferred from the left side
+</code></pre><p>Pure verbosity reduction — no behavior change, no erasure implications.</p><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: What problem do generics solve, concretely?</strong>
+They move type-mismatch failures from a runtime <code>ClassCastException</code> (discovered in production, by a user) to a compile-time error (discovered immediately, by the developer) — plus eliminating the need for explicit casts on every read.</p><p><strong>Q: State the PECS principle and explain <em>why</em> it holds, not just what it says.</strong>
+Producer (read-only source) → <code>? extends T</code>; Consumer (write-only target) → <code>? super T</code>. It holds because the compiler can only guarantee what's <em>actually knowable</em> about an unknown related type: with <code>extends</code>, it knows every element IS-A T (safe to read as T, unsafe to add since the concrete subtype is unknown); with <code>super</code>, it knows the list accepts T (safe to add T), but can only guarantee reads are Object (the real type could be any supertype of T).</p><p><strong>Q: What is type erasure, and name three concrete restrictions it causes.</strong>
+Generic type parameters exist only at compile time and are erased (replaced by their bound or <code>Object</code>) in compiled bytecode. This is why you can't create a generic array, can't <code>instanceof</code> against a parameterized type, can't overload methods differing only by type parameter, can't <code>new T()</code>, can't have a <code>static</code> field of type <code>T</code>, and can't <code>catch (T e)</code>.</p><p><strong>Q: What is heap pollution, and how does it actually happen given that generics are supposed to prevent exactly this?</strong>
+It happens when a raw-type reference to the same underlying object bypasses generic type checking (e.g., <code>List raw = someGenericList;</code>), letting an incompatible element get added without a compile error — the resulting <code>ClassCastException</code> surfaces later, on read, exactly like pre-generics code. It's a deliberate escape hatch (for legacy interop) that reintroduces the exact risk generics exist to close.</p><p><strong>Q: Why are arrays covariant while generics are invariant — isn't that inconsistent?</strong>
+Arrays carry runtime type information and enforce it on every store, throwing <code>ArrayStoreException</code> if violated — so allowing the covariant assignment to compile is "safe" in the sense that a violation is caught immediately, just at runtime instead of compile time. Generics have no such runtime information after erasure, so the language closes the equivalent hole at compile time instead by making generics invariant by default — wildcards are the deliberate, explicit escape hatch when covariance/contravariance is actually needed.</p></div></details>
+</section>
+<section class="file-section" id="exception-handling">
+<h1 class="file-title">Exception Handling</h1>
+<div class="file-intro"><blockquote>
+<p>The full exception model from the ground up: hierarchy and <code>Throwable</code> internals, exact <code>try/catch/finally</code> mechanics, try-with-resources, designing custom exceptions, the overriding rules, production debugging (OOM variants, heap dumps, NPEs), Spring/stream/concurrency integration points, and how exceptions actually work at the JVM bytecode level. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>The Hierarchy, and What Throwable Actually Stores</summary><div class="topic-body"><pre><code>java.lang.Throwable
+├── java.lang.Error                          -- JVM/environment failures, not application logic
+│   ├── OutOfMemoryError
+│   ├── StackOverflowError
+│   ├── NoClassDefFoundError
+│   ├── AssertionError
+│   └── VirtualMachineError
+└── java.lang.Exception
+    ├── RuntimeException (unchecked)         -- programming errors, compiler doesn't enforce handling
+    │   ├── NullPointerException
+    │   ├── ArrayIndexOutOfBoundsException
+    │   ├── ClassCastException
+    │   ├── IllegalArgumentException
+    │   ├── IllegalStateException
+    │   └── ConcurrentModificationException
+    └── Checked Exceptions                   -- compiler forces you to catch or declare
+        ├── IOException → FileNotFoundException, SocketException
+        ├── SQLException
+        ├── ClassNotFoundException
+        └── InterruptedException
+</code></pre><p><strong>What every <code>Throwable</code> carries as internal state:</strong> <code>detailMessage</code> (the message string), <code>cause</code> (the wrapped original exception — the chaining mechanism), <code>stackTrace</code> (an array of <code>StackTraceElement</code>, captured at <em>construction</em> time, not throw time), and <code>suppressedExceptions</code> (populated by try-with-resources, Java 7+).</p><p><strong>Why creating an exception is expensive:</strong> the <code>Throwable</code> constructor calls the native method <code>fillInStackTrace()</code>, which walks the <em>entire current call stack</em> right there at construction — in a deep layered Spring app (controller → service → repository → ...), that's real, non-trivial work. This single fact is the root cause of two other rules later in this doc: why exceptions must never be used for routine control flow, and why the <em>actual</em> expensive part of "throwing an exception" is capturing the trace, not the catch-block lookup itself.</p></div></details>
+<details class="topic"><summary>Errors vs Exceptions — the Real Distinction</summary><div class="topic-body"><p><strong>Errors</strong> represent conditions the <em>JVM itself</em> can't recover from — environment/runtime failures, not application logic (<code>OutOfMemoryError</code>, <code>StackOverflowError</code>, <code>NoClassDefFoundError</code>). <strong>Exceptions</strong> represent conditions the <em>application</em> can reasonably anticipate and potentially recover from.</p><p>Technically you <em>can</em> <code>catch (OutOfMemoryError e)</code> — it compiles and runs, since <code>Error extends Throwable</code>. You almost never should:
+1. The JVM may already be in an unstable state, with more failures likely.
+2. For OOM specifically, the catch block's own allocations can throw a second OOM.
+3. Catching broadly hides catastrophic failures from monitoring that should be alerting on them.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> the one legitimate exception is catching <code>OutOfMemoryError</code> at the very top level <em>specifically</em> to log and trigger a graceful shutdown — some enterprise frameworks do this deliberately as a last resort, but it's not general practice.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Checked vs Unchecked — the Actual Design Guidance</summary><div class="topic-body"><p>Checked exceptions force callers to consider failure, at the cost of boilerplate. Unchecked exceptions give a cleaner API but let callers silently ignore failure modes. The precise guidance (<em>Effective Java</em>, Item 71) is sharper than "always use unchecked": <strong>use checked exceptions when a caller can reasonably recover</strong> — retry, fall back, prompt the user — <strong>use unchecked for programming errors</strong> (an unexpected null, an invalid argument) the immediate caller usually can't meaningfully act on. Most modern Spring codebases lean unchecked-by-default specifically because checked exceptions on every method pollute every caller's signature across a deep call chain.</p></div></details>
+<details class="topic"><summary>throw vs throws, and the Three Ways to Rethrow</summary><div class="topic-body"><pre><code class="language-java">void process(String input) throws IOException {
+    if (input == null) {
+        throw new IllegalArgumentException("Input must not be null"); // throw -- actually raises it, in the body
+    }
+    readFile(input); // may throw IOException, declared via throws in the signature
+}
+</code></pre><p>A method <em>can</em> declare more exceptions in <code>throws</code> than it actually ever throws — legal, but bad practice, since it forces every caller to handle failure modes that can never occur.</p><p><strong>Does <code>throw null;</code> compile?</strong> Yes — but it throws <code>NullPointerException</code> at runtime; the JVM checks the throw target is non-null immediately before the throw happens.</p><p><strong>Three ways to rethrow:</strong></p><pre><code class="language-java">catch (IOException e) { throw e; }                                    // 1. same exception, unchanged
+catch (IOException e) { throw new ServiceException("Failed", e); }    // 2. wrapped/chained -- the default pattern
+catch (Exception e) { throw e; }  // only ONE type actually thrown inside try -- precise rethrow (Java 7+): compiler infers the real type
+</code></pre></div></details>
+<details class="topic"><summary>The Exact Mechanics of try/catch/finally</summary><div class="topic-body"><p><strong>When does <code>finally</code> get skipped?</strong> Exactly four cases: <code>System.exit()</code> inside the <code>try</code>; a fatal JVM crash; an infinite loop/deadlock inside <code>try</code> (control never leaves it); the OS kills the process externally (<code>kill -9</code>).</p><p><strong>What happens when <code>finally</code> itself throws?</strong> It silently destroys whatever exception was already propagating:</p><pre><code class="language-java">try {
+    throw new IOException("original");
+} finally {
+    throw new RuntimeException("from finally"); // the IOException is GONE -- not chained, not suppressed, permanently lost
+}
+// caller sees ONLY the RuntimeException
+</code></pre><p><strong>What happens when <code>finally</code> contains a <code>return</code>?</strong> It silently overrides the <code>try</code> block's return value:</p><pre><code class="language-java">int compute() {
+    try { return 1; } finally { return 2; } // caller receives 2, not 1
+}
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> both of the above are why <code>finally</code> should be used <strong>only for cleanup</strong>, never for control flow (<code>return</code>/<code>throw</code>). The correct resource-cleanup pattern:</p>
+</blockquote><pre><code class="language-java">Connection conn = null;
+try {
+    conn = getConnection();
+    return doWork(conn);
+} finally {
+    if (conn != null) conn.close(); // cleanup only -- no return, no throw
+}
+</code></pre></div></details>
+<details class="topic"><summary>Multi-Catch and Catch Ordering</summary><div class="topic-body"><pre><code class="language-java">catch (IOException | SQLException ex) {
+    log(ex); // ex is implicitly final -- cannot be reassigned
+}
+</code></pre><p>Multi-catch types cannot be in a parent-child relationship — <code>catch (Exception | IOException ex)</code> is a compile error, since <code>IOException</code> already <em>is</em> an <code>Exception</code>.</p><p><strong>Catch blocks must be ordered specific-to-general</strong> — listing a broader type before a narrower one is a compile error (<code>unreachable catch block</code>), not just a style nit. This maps directly onto how the JVM actually resolves exceptions at runtime (see the exception table section below) — table entries are matched in order, so an out-of-order broad entry would silently shadow the narrower one beneath it.</p></div></details>
+<details class="topic"><summary>try-with-resources — What It Actually Compiles Into</summary><div class="topic-body"><pre><code class="language-java">BufferedReader br = new BufferedReader(new FileReader("file.txt"));
+Throwable primaryException = null;
+try {
+    // try body
+} catch (Throwable t) {
+    primaryException = t;
+    throw t;
+} finally {
+    if (br != null) {
+        if (primaryException != null) {
+            try { br.close(); }
+            catch (Throwable suppressed) { primaryException.addSuppressed(suppressed); } // the key mechanism
+        } else {
+            br.close();
+        }
+    }
+}
+</code></pre><p><strong>What happens when both the try body and <code>close()</code> throw?</strong> The <code>close()</code> exception is <strong>not lost</strong> — it's attached via <code>addSuppressed()</code>, retrievable later via <code>e.getSuppressed()</code>. This is precisely the fix for the "exception from <code>finally</code> destroys the original" failure mode above — try-with-resources exists specifically to avoid that.</p><p><strong>Multiple resources close in reverse declaration order (LIFO):</strong></p><pre><code class="language-java">try (Connection conn = getConn();
+     PreparedStatement stmt = conn.prepareStatement(sql);
+     ResultSet rs = stmt.executeQuery()) {
+    // use rs
+}
+// closed: rs -&gt; stmt -&gt; conn
+</code></pre><p><strong>Java 9+:</strong> effectively-final variables declared <em>outside</em> the <code>try</code> can be referenced directly, without redeclaring: <code>try (conn) { ... }</code>.</p></div></details>
+<details class="topic"><summary>Designing Custom Exceptions</summary><div class="topic-body"><p><strong>A well-formed custom exception</strong> — unchecked, constructors matching <code>RuntimeException</code> conventions, and critically, always providing a cause-accepting constructor so chaining survives:</p><pre><code class="language-java">public class ProductNotFoundException extends RuntimeException {
+    private final String productId;
+    public ProductNotFoundException(String message) { super(message); this.productId = null; }
+    public ProductNotFoundException(String productId, String message) { super(message); this.productId = productId; }
+    public ProductNotFoundException(String message, Throwable cause) { super(message, cause); this.productId = null; } // never skip this
+    public String getProductId() { return productId; }
+}
+</code></pre><p><strong>An enterprise error-code hierarchy</strong> — scales far better once you have dozens of exception types needing consistent client-facing error responses:</p><pre><code class="language-java">public class AppException extends RuntimeException {
+    private final ErrorCode errorCode;
+    public enum ErrorCode {
+        PRODUCT_NOT_FOUND("PROD-001", "Product not found"),
+        PAYMENT_FAILED("PAY-001", "Payment processing failed");
+        private final String code; private final String defaultMessage;
+        ErrorCode(String code, String defaultMessage) { this.code = code; this.defaultMessage = defaultMessage; }
+        public String getDefaultMessage() { return defaultMessage; }
+    }
+    public AppException(ErrorCode errorCode, String details, Throwable cause) {
+        super(errorCode.getDefaultMessage() + ": " + details, cause);
+        this.errorCode = errorCode;
+    }
+}
+</code></pre><p><strong>Decision framework:</strong> checked when the caller can realistically recover (a timeout worth retrying); unchecked for programming errors, or when designing a library API where checked exceptions on every method would pollute every caller.</p><blockquote>
+<p>⚠️ <strong>Pitfall — exceptions as control flow:</strong></p>
+</blockquote><pre><code class="language-java">// BAD -- pays fillInStackTrace() cost just to branch on a parse failure
+try { int value = Integer.parseInt(input); } catch (NumberFormatException e) { value = 0; }
+// GOOD -- explicit check, no exception machinery at all
+int value = input.matches("\\d+") ? Integer.parseInt(input) : 0;
+</code></pre></div></details>
+<details class="topic"><summary>Overriding Rules for Checked Exceptions</summary><div class="topic-body"><p>An overriding method <strong>cannot</strong> throw new or broader checked exceptions than the parent declares — it can throw the same, a narrower one, or none. Unchecked exceptions are entirely unrestricted.</p><pre><code class="language-java">class Parent { void show() throws IOException { } }
+class Child extends Parent {
+    void show() throws IOException { }            // same -- OK
+    void show() throws FileNotFoundException { }  // narrower -- OK
+    void show() { }                                // none -- OK
+    void show() throws Exception { }               // broader -- COMPILE ERROR
+    void show() throws SQLException { }             // new, unrelated checked -- COMPILE ERROR
+}
+</code></pre><p><strong>Why:</strong> direct consequence of polymorphism / Liskov substitution — <code>Parent p = new Child(); p.show();</code> — the caller only knows <code>Parent</code>'s declared exceptions; if <code>Child</code> could throw something broader, calling code prepared only for <code>Parent</code>'s contract would be caught off guard by a type it never accounted for. If <code>Parent</code> declares <em>no</em> checked exception at all, <code>Child</code> can't introduce one either. A child <strong>can</strong> legally drop a <code>throws</code> entirely — that's a strictly narrower, safe contract.</p></div></details>
+<details class="topic"><summary>NoClassDefFoundError vs ClassNotFoundException</summary><div class="topic-body"><p><code>ClassNotFoundException</code> is <strong>checked</strong>, thrown by application-level APIs (<code>Class.forName()</code>, <code>ClassLoader.loadClass()</code>) when a class genuinely can't be located during an <em>explicit</em> dynamic load. <code>NoClassDefFoundError</code> is an <code>Error</code> (<code>LinkageError</code>), thrown by the JVM itself when a class that <em>was</em> available and verified at compile time is missing at runtime while the JVM is implicitly resolving a reference.</p><p><strong>Failed static initializer cascade:</strong> the <strong>first</strong> access throws <code>ExceptionInInitializerError</code>; <strong>every subsequent</strong> attempt to use that class in that classloader throws <code>NoClassDefFoundError</code> — the JVM marks the class permanently broken after one failed init.</p><pre><code class="language-java">class Broken { static { if (true) throw new RuntimeException("init failed!"); } }
+// 1st access: ExceptionInInitializerError
+// every access after: NoClassDefFoundError
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — the "it worked yesterday" playbook:</strong> check for a recent deployment removing/changing a JAR, check the classpath itself, and scroll <strong>up</strong> in the logs above the <code>NoClassDefFoundError</code> for an earlier <code>ExceptionInInitializerError</code> — that's very often the real root cause hiding above the symptom. <code>java -verbose:class</code> and <code>jdeps</code> help confirm what's actually loading.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Production Debugging — OutOfMemoryError</summary><div class="topic-body"><p><strong>The variants have completely different root causes</strong> — knowing which one you have changes the entire investigation:
+- <code>Java heap space</code> — heap full, objects can't be collected (real leak, or genuinely oversized working set).
+- <code>GC overhead limit exceeded</code> — JVM spending &gt;98% of time in GC reclaiming &lt;2% of heap.
+- <code>Metaspace</code> — class metadata exhausted, typically from excessive dynamic class generation (CGLIB proxies, Groovy).
+- <code>Direct buffer memory</code> — <code>ByteBuffer.allocateDirect()</code> pool exhausted; common with NIO/Netty/Kafka clients.
+- <code>Unable to create new native thread</code> — OS thread limit hit, usually unbounded thread creation rather than pooling.</p><p><strong>Step one after an OOM alert: capture diagnostics before restarting</strong> — restarting destroys the evidence.</p><pre><code>jmap -dump:format=b,file=heap.hprof &lt;pid&gt;
+jstack &lt;pid&gt; &gt; threads.txt
+</code></pre><p>Ideally automated proactively: <code>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/log/app/heapdump.hprof</code></p><p><strong>Analyzing the dump:</strong> Eclipse Memory Analyzer (MAT) — the <strong>Dominator Tree</strong> shows which objects retain the most memory, the <strong>Leak Suspects Report</strong> auto-detects likely culprits, <strong>OQL</strong> lets you query the heap directly.</p><p><strong>Most common leak patterns to check first:</strong> a <code>static</code> collection used as an unbounded cache; loading an entire table into memory (<code>repo.findAll()</code> on a huge table); HTTP sessions never invalidated; <code>ThreadLocal.set()</code> without a matching <code>remove()</code> in a pooled-thread environment (the thread — and the leaked value — outlives any individual request); classloader leaks from hot-redeploy app servers; an unbounded Kafka consumer queue where commits can't keep pace with intake.</p><p><strong>The Kubernetes-specific gotcha:</strong> <code>-Xmx</code> must be set <strong>below</strong>, not equal to, the container memory limit — the JVM needs headroom for metaspace, thread stacks, native memory. Rule of thumb: <code>-Xmx</code> ≈ 75% of the container limit, with <code>-XX:+UseContainerSupport</code> (default since Java 10) so the JVM correctly reads cgroup limits. An <code>OOMKilled</code> pod status is the <strong>OS/cgroup</strong> killing the container for exceeding its limit — a different failure from a Java-level <code>OutOfMemoryError</code>; <code>kubectl describe pod</code> tells you which one actually happened.</p><p><strong>Confirming a real leak via GC logs:</strong> enable with <code>-Xlog:gc*:file=/var/log/gc.log:time,uptime,level,tags:filecount=10,filesize=20m</code>. The signal: heap usage <strong>after full GC</strong> should stay roughly stable over time. A steadily climbing post-GC baseline (200MB → 300MB → 450MB) is the clearest signature of a real leak, versus a temporarily busy period that a full GC successfully reclaims back down.</p></div></details>
+<details class="topic"><summary>Production Debugging — NullPointerException</summary><div class="topic-body"><p><strong>Playbook for an NPE that only happens in production:</strong> first hypothesize the dev/prod mismatch — production data with nulls dev's seed data doesn't have; a prod-only config resolving to null; a race condition only manifesting under real load; an external service returning null under a timeout that never happens against a stable dev mock. Then: read the stack trace precisely, check for a specific triggering input/ID, pull live diagnostics without redeploying (Actuator log-level changes, distributed tracing), grab a thread dump if concurrency is suspected, and apply defensive fixes:</p><pre><code class="language-java">Objects.requireNonNull(user, "User must not be null for operation X");
+Optional&lt;User&gt; user = userRepository.findById(id);
+user.orElseThrow(() -&gt; new UserNotFoundException("User " + id + " not found"));
+</code></pre><p><strong>Java 14+ helpful NPE messages</strong> (default since Java 15, <code>-XX:+ShowCodeDetailsInExceptionMessages</code>) name the exact null variable:</p><pre><code>Old:  NullPointerException at UserService.java:42
+New:  Cannot invoke "User.getName()" because "user" is null at UserService.java:42
+</code></pre><p>Worth confirming this flag is actually enabled on older deployments.</p></div></details>
+<details class="topic"><summary>Spring Integration</summary><div class="topic-body"><p><strong>How <code>@ControllerAdvice</code> works internally:</strong> scanned/registered as a Spring bean at startup, wired into <code>ExceptionHandlerExceptionResolver</code> — one of the <code>HandlerExceptionResolver</code>s <code>DispatcherServlet</code> chains through when a controller throws.</p><pre><code class="language-java">@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleProductNotFound(ProductNotFoundException ex, HttpServletRequest req) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse("PROD-001", ex.getMessage(), req.getRequestURI()));
+    }
+    @ExceptionHandler(Exception.class) // last-resort catch-all
+    public ResponseEntity&lt;ErrorResponse&gt; handleGeneral(Exception ex, HttpServletRequest req) {
+        log.error("Unexpected error at {}", req.getRequestURI(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(new ErrorResponse("SYS-001", "An unexpected error occurred", req.getRequestURI()));
+    }
+}
+</code></pre><p><strong>Resolution priority:</strong> the most specific exception type wins; an <code>@ExceptionHandler</code> defined directly inside the throwing controller beats a global <code>@ControllerAdvice</code> handler, even if the advice targets a more specific type.</p><blockquote>
+<p>⚠️ <strong>Pitfall — three places <code>@ControllerAdvice</code> does NOT catch anything:</strong> (1) <strong>Servlet <code>Filter</code>s</strong> — run before <code>DispatcherServlet</code> is even involved; need their own try-catch. (2) <strong><code>@Async</code> methods</strong> — run on a separate thread, outside the request's exception path entirely; need a dedicated <code>AsyncUncaughtExceptionHandler</code> (see below). (3) <strong>Spring Security filters</strong> — auth failures happen in the security filter chain, ahead of <code>DispatcherServlet</code>; handled via <code>AuthenticationEntryPoint</code>/<code>AccessDeniedHandler</code>. Teams that only wire up <code>@ControllerAdvice</code> typically discover these gaps the hard way, as an unformatted stack trace leaking straight to a client.</p>
+</blockquote><p><strong>Does <code>@Transactional</code> roll back on checked exceptions by default?</strong> No — by default Spring rolls back only on unchecked <code>RuntimeException</code>/<code>Error</code>, not checked exceptions, regardless of how serious they conceptually are. Override with <code>@Transactional(rollbackFor = SomeCheckedException.class)</code>.</p><p><strong>Lombok's <code>@SneakyThrows</code>:</strong> uses bytecode manipulation to throw a checked exception without declaring it in <code>throws</code> — tricking only <code>javac</code>'s compile-time check (the JVM itself never enforced checked-exception declarations). Genuinely controversial: some teams ban it as breaking the checked-exception contract; others use it deliberately to cut boilerplate.</p></div></details>
+<details class="topic"><summary>Checked Exceptions Inside Streams</summary><div class="topic-body"><p><code>Function</code>/<code>Predicate</code>/<code>Consumer</code> declare no checked exceptions in their abstract methods, so a checked-exception-throwing call can't sit directly inside a lambda passed to <code>.map()</code>. Three real patterns:</p><pre><code class="language-java">// 1. Optional wrapper -- "skip and continue on individual failures"
+private Optional&lt;Integer&gt; safeParseInt(String s) {
+    try { return Optional.of(Integer.parseInt(s)); } catch (NumberFormatException e) { return Optional.empty(); }
+}
+
+// 2. checked-to-unchecked wrapper -- "this should never fail, treat it as a bug if it does"
+@FunctionalInterface interface CheckedFunction&lt;T, R&gt; { R apply(T t) throws Exception; }
+static &lt;T, R&gt; Function&lt;T, R&gt; wrap(CheckedFunction&lt;T, R&gt; fn) {
+    return t -&gt; { try { return fn.apply(t); } catch (Exception e) { throw new RuntimeException(e); } };
+}
+
+// 3. partition successes/failures -- process everything, report both outcomes
+Map&lt;Boolean, List&lt;String&gt;&gt; partitioned = items.stream()
+    .collect(Collectors.partitioningBy(item -&gt; { try { process(item); return true; } catch (Exception e) { return false; } }));
+</code></pre></div></details>
+<details class="topic"><summary>Exception Chaining — the One Non-Negotiable Rule</summary><div class="topic-body"><pre><code class="language-java">// BAD -- the original SQLException and its whole stack trace is gone forever
+catch (SQLException e) { throw new ServiceException("DB error"); }
+// GOOD -- cause is preserved, appears in the full chain
+catch (SQLException e) { throw new ServiceException("Failed to load user", e); }
+</code></pre><p><strong>The most common violation in real codebases</strong> is exactly the "BAD" version above — a "lost cause," where the log shows only the symptom with zero indication of what actually failed underneath. <strong>Swallowing <code>InterruptedException</code></strong> is a related, specifically dangerous version of this:</p><pre><code class="language-java">catch (InterruptedException e) { /* ignore */ }                                       // BAD -- interrupted status permanently lost
+catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new RuntimeException(e); } // GOOD -- restore the flag
+</code></pre><p><code>ExecutorService</code> shutdown logic and other cooperative-cancellation code (Part 2 of the multithreading notes) depends on that interrupt flag actually being set — silently swallowing it breaks graceful shutdown elsewhere in the system that has nothing obviously to do with where you swallowed it.</p></div></details>
+<details class="topic"><summary>Exceptions and Concurrency</summary><div class="topic-body"><p><strong><code>execute(Runnable)</code> vs <code>submit()</code> — where does the exception actually go?</strong> An exception in <code>execute()</code> propagates to the pool's worker thread, killing it — the uncaught exception handler fires (default: <code>System.err</code>), and the pool silently replaces the dead worker. <strong>No direct failure signal</strong> unless you're watching stderr. An exception in <code>submit()</code> is caught internally and stored inside the returned <code>Future</code> — the worker survives — and only resurfaces (wrapped in <code>ExecutionException</code>) when you call <code>future.get()</code>.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the dangerous trap:</strong> call <code>submit()</code> and never call <code>.get()</code> (common in fire-and-forget code), and the exception is captured, stored, and <strong>silently discarded forever</strong> — no log line, nothing. Counterintuitively, for true fire-and-forget work, <code>execute()</code> is <em>safer</em> than an ignored <code>submit()</code>, precisely because it doesn't hide the failure. If using <code>submit()</code>, always consume the <code>Future</code>.</p>
+</blockquote><p><strong>Exception propagation through <code>CompletableFuture</code>:</strong> short-circuits every subsequent <code>thenApply</code>/<code>thenAccept</code>/<code>thenRun</code> stage, jumping straight to the nearest exception-handling stage:</p><pre><code class="language-java">CompletableFuture&lt;Integer&gt; result = CompletableFuture.supplyAsync(() -&gt; riskyOperation()) // throws here
+    .thenApply(x -&gt; x * 2)   // SKIPPED
+    .thenApply(x -&gt; x + 1)   // SKIPPED
+    .exceptionally(ex -&gt; { log.error("Pipeline failed", ex); return -1; }); // recovery value, pipeline continues
+</code></pre><p><code>exceptionally</code> only fires on failure (like <code>catch</code>); <code>handle</code> runs unconditionally and can transform the result either way; <code>whenComplete</code> runs unconditionally but is side-effect-only — it <strong>cannot</strong> change the outcome, the exception is still propagating after it runs.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the silent <code>instanceof</code> failure:</strong> exceptions from <code>*Async</code> stages get wrapped in <code>CompletionException</code> before reaching <code>exceptionally</code>/<code>handle</code>. <code>if (ex instanceof MyCustomException)</code> never matches; you need <code>ex.getCause() instanceof MyCustomException</code>. Relatedly, <code>get()</code> throws checked <code>ExecutionException</code> while <code>join()</code> throws unchecked <code>CompletionException</code> — same underlying cause, different wrapper depending purely on which terminal call you used.</p>
+</blockquote><p><strong><code>AsyncUncaughtExceptionHandler</code> only fires for <code>void</code>-returning <code>@Async</code> methods.</strong> If the method returns a <code>Future</code>/<code>CompletableFuture</code>, the handler is <strong>never invoked</strong> — the exception is captured in the returned future exactly like the <code>submit()</code> case above, and it's entirely the caller's job to <code>.get()</code> it or chain <code>.exceptionally()</code>. Also: a saturated <code>@Async</code> thread pool's queue can throw <code>TaskRejectedException</code> <strong>synchronously on the calling thread</strong>, at invocation time — the one failure mode here needing an ordinary try-catch rather than <code>exceptionally()</code>. And <code>SecurityContext</code> does <strong>not</strong> auto-propagate into <code>@Async</code> threads without an explicit <code>TaskDecorator</code> — an auth check failing inside <code>@Async</code> code that assumed inherited context is a classic confusing-only-when-async bug.</p></div></details>
+<details class="topic"><summary>How Exceptions Actually Work at the JVM Level</summary><div class="topic-body"><p><strong>The exception table:</strong> the compiler emits a table alongside each method's bytecode — each entry has <code>start_pc</code>/<code>end_pc</code> (the bytecode range covered), <code>handler_pc</code> (jump target), and <code>catch_type</code>.</p><pre><code>Exception table:
+   from    to  target  type
+     0     8      11   java/io/IOException
+     0     8      20   java/sql/SQLException
+</code></pre><p><strong>Finding the right handler:</strong> there's no "searching through nested try blocks" the way source-level nesting visually suggests. On a throw, the JVM checks the <em>current method's</em> table for an entry covering the current program counter whose <code>catch_type</code> matches — checked <strong>in table order</strong>, exactly why catch ordering must be specific-first (see above). No match → the JVM <strong>pops the entire current stack frame</strong> and repeats the lookup in the caller's frame. That frame-popping repeat is <strong>stack unwinding</strong>.</p><p><strong>How <code>finally</code> compiles</strong>, given it isn't a real bytecode construct: modern <code>javac</code> adds an extra catch-all table entry (<code>catch_type</code> = "matches anything") covering the try/catch region, whose handler runs the <code>finally</code> code and then <strong>rethrows</strong> whatever was caught — guaranteeing <code>finally</code> runs on the exceptional path without literally duplicating the bytecode at every exit (which is what older compilers actually did).</p><blockquote>
+<p>⚠️ <strong>Pitfall — why exception-based control flow is expensive, precisely:</strong> the table lookup itself is fast; it's genuinely not the bottleneck. The real cost is <code>fillInStackTrace()</code> running inside the <code>Throwable</code> constructor <em>before</em> the throw even begins propagating — a native call walking every stack frame, paid regardless of how cheap the subsequent table-based unwinding is. People assume unwinding is the slow part; it's actually the earlier trace-capture step.</p>
+</blockquote><p><strong>Does the JVM guarantee locks are released during unwinding?</strong> For <code>synchronized</code> — <strong>yes</strong>, structurally: the <code>monitorenter</code> bytecode is always paired with both a normal-path and an exception-path <code>monitorexit</code>, via an implicit exception-table entry covering the block. For <code>ReentrantLock</code> — <strong>no</strong>. <code>unlock()</code> is just an ordinary method call; unwinding past it without an explicit <code>finally</code> leaves the lock held forever:</p><pre><code class="language-java">lock.lock();
+riskyCall(); // if this throws with no finally, the lock is held FOREVER
+lock.unlock();
+</code></pre><p>This is exactly why <code>ReentrantLock</code> needs the <code>try { } finally { lock.unlock(); }</code> discipline that <code>synchronized</code> gets automatically at the JVM level — a direct callback to Part 4 of the multithreading notes.</p><blockquote>
+<p>⚠️ <strong>Pitfall — cleanup is not guaranteed in general:</strong> only <code>synchronized</code> monitors get this structural JVM-level protection. Everything else (file handles, DB connections, explicit locks) is cleaned up only if a programmer wired it into <code>finally</code>/try-with-resources — and even that can be defeated: during a <code>StackOverflowError</code>, the stack is already exhausted, and if a <code>finally</code> block itself does anything stack-intensive, it can throw a <em>second</em> <code>StackOverflowError</code> mid-cleanup, defeating the original cleanup entirely. "Gracefully recover from <code>StackOverflowError</code>" deserves the same skepticism as recovering from <code>OutOfMemoryError</code>.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>Interview Q&A — Rapid Fire</summary><div class="topic-body"><p><strong>Q: Why is throwing an exception expensive, and is it the <code>catch</code> lookup that's slow?</strong>
+No — the exception-table lookup is fast. The expense is <code>fillInStackTrace()</code> in the <code>Throwable</code> constructor walking the entire call stack at <em>construction</em> time, before the throw even propagates.</p><p><strong>Q: <code>finally</code> contains a <code>return</code> — what happens to the <code>try</code> block's return value?</strong>
+It's silently discarded; the <code>finally</code> block's <code>return</code> wins. Same failure category as an exception thrown inside <code>finally</code> destroying whatever was already propagating — <code>finally</code> should only ever do cleanup, never control flow.</p><p><strong>Q: How does try-with-resources avoid the "exception in finally destroys the original" problem?</strong>
+It uses <code>addSuppressed()</code> — if both the try body and <code>close()</code> throw, the <code>close()</code> exception is attached to the primary one (retrievable via <code>getSuppressed()</code>), never silently lost.</p><p><strong>Q: <code>execute()</code> vs <code>submit()</code> on an <code>ExecutorService</code> — where do their exceptions go, and which is actually safer for fire-and-forget work?</strong>
+<code>execute()</code>'s exception kills the worker thread and fires the uncaught-exception handler (visible on stderr); <code>submit()</code>'s exception is captured inside the <code>Future</code> and surfaces only via <code>.get()</code>. Counterintuitively <code>execute()</code> is safer for pure fire-and-forget work, because an ignored <code>submit()</code> silently swallows the failure forever.</p><p><strong>Q: Does <code>synchronized</code> guarantee lock release if the block throws? Does <code>ReentrantLock</code>?</strong>
+<code>synchronized</code> — yes, structurally, via the JVM's exception-table handling of <code>monitorenter</code>/<code>monitorexit</code>. <code>ReentrantLock.unlock()</code> is an ordinary method call with no such guarantee — it requires an explicit <code>finally</code> or the lock is held forever.</p><p><strong>Q: Your <code>NoClassDefFoundError</code> started appearing after a deployment that changed nothing you can find — what's the first thing to check?</strong>
+Scroll up in the logs for an earlier <code>ExceptionInInitializerError</code> on that same class — a static initializer failing once permanently marks the class unusable, and every access after the first throws <code>NoClassDefFoundError</code> with no obvious link back to the real root cause.</p></div></details>
+</section>
+<section class="file-section" id="stringbuilder-stringbuffer-string-immutability">
+<h1 class="file-title">StringBuilder, StringBuffer & String Immutability</h1>
+<div class="file-intro"><blockquote>
+<p>Why <code>String</code> is immutable by design (not just "because it's a Java rule"), <code>StringBuilder</code> vs <code>StringBuffer</code>, and the real performance cost of string concatenation in loops. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>Why String Is Immutable — the Design Reasons, Not Just "It Is"</summary><div class="topic-body"><p><strong>The shallow answer</strong> ("Strings are immutable") is table stakes. <strong>The reasons that actually demonstrate understanding:</strong></p><ol>
+<li><strong>String pool safety.</strong> The JVM interns string literals to save memory — <code>String a = "hello"; String b = "hello";</code> share the <em>same</em> underlying object. If <code>String</code> were mutable, mutating <code>a</code> would silently corrupt <code>b</code> and every other reference to that pooled literal anywhere else in the JVM — a catastrophic, action-at-a-distance bug.</li>
+<li><strong><code>hashCode()</code> caching.</strong> <code>String</code> caches its computed hash code the first time it's needed (<code>private int hash;</code> field, computed lazily, cached forever after). This is only safe because the string can never change — a mutable string used as a <code>HashMap</code> key could silently move to the wrong bucket after being mutated, becoming permanently unfindable via <code>get()</code> even though <code>containsKey()</code> on the original reference might still (confusingly) work depending on timing.</li>
+<li><strong>Security.</strong> Strings are used pervasively for security-sensitive values — file paths, class names in <code>Class.forName()</code>, database connection URLs, network hostnames. If <code>String</code> were mutable, code could pass a <code>String</code> to a security check, then mutate it <em>after</em> the check but <em>before</em> it's actually used — a classic time-of-check-to-time-of-use (TOCTOU) vulnerability. Immutability closes this class of attack structurally.</li>
+<li><strong>Thread-safety by default.</strong> An immutable object can be freely shared across threads with zero synchronization — there's no mutable state that could ever be concurrently modified, so there's nothing to race on.</li>
+</ol><pre><code class="language-java">String s1 = "hello";
+String s2 = "hello";
+System.out.println(s1 == s2); // true -- same pooled object
+
+String s3 = s1.concat(" world"); // does NOT mutate s1 -- returns a brand-new String
+System.out.println(s1);          // still "hello"
+System.out.println(s3);          // "hello world"
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> every <code>String</code> method that looks like it "modifies" a string (<code>concat()</code>, <code>replace()</code>, <code>toUpperCase()</code>, <code>trim()</code>, <code>substring()</code>) actually <strong>returns a new <code>String</code> object</strong>, leaving the original completely untouched. Calling <code>s.trim();</code> on its own line without reassigning (<code>s = s.trim();</code>) is a genuinely common bug — the trimmed result is silently discarded, and <code>s</code> is unchanged.</p>
+</blockquote></div></details>
+<details class="topic"><summary>StringBuilder vs StringBuffer — Mutability With a Synchronization Choice</summary><div class="topic-body"><p>Both are <strong>mutable</strong> sequences of characters, existing specifically to make repeated string modification efficient without generating a new object on every single change.</p><pre><code>| | StringBuilder | StringBuffer |
+|---|---|---|
+| Mutable | Yes | Yes |
+| Thread-safe | No | Yes -- methods are synchronized |
+| Performance | Faster (no locking overhead) | Slower (locking overhead, even single-threaded) |
+| Introduced | Java 5 | Java 1.0 |
+| When to use | Almost always -- single-threaded or externally-synchronized use | Only when multiple threads genuinely mutate the SAME instance concurrently |
+</code></pre><pre><code class="language-java">StringBuilder sb = new StringBuilder();
+sb.append("Hello").append(", ").append("World").append("!");
+System.out.println(sb.toString()); // "Hello, World!"
+sb.insert(0, "&gt;&gt; ");
+sb.reverse();
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — <code>StringBuffer</code> is rarely the right answer today, and knowing why matters more than picking it correctly:</strong> <code>StringBuffer</code> predates <code>java.util.concurrent</code> entirely (Java 1.0) — its per-method <code>synchronized</code> locking protects against corruption from concurrent access to <em>the same instance</em>, but that's a narrow, unusual scenario (most <code>StringBuilder</code>/<code>StringBuffer</code> usage is local to one method, one thread, building up a result no other thread ever touches). Reaching for <code>StringBuffer</code> "to be safe" when the instance is never actually shared across threads pays real, unnecessary synchronization overhead for a guarantee nothing needs. Default to <code>StringBuilder</code>; only use <code>StringBuffer</code> if you can articulate the specific concurrent-shared-instance scenario that requires it — and even then, consider whether building the string differently (each thread builds its own, results merged once) avoids needing shared mutable state at all.</p>
+</blockquote></div></details>
+<details class="topic"><summary>String Concatenation Performance — the Loop Trap</summary><div class="topic-body"><pre><code class="language-java">// BAD -- creates a NEW String object on every iteration
+String result = "";
+for (int i = 0; i &lt; 10000; i++) {
+    result += i + ","; // desugars to: result = new StringBuilder().append(result).append(i).append(",").toString();
+}
+</code></pre><pre><code class="language-java">// GOOD -- one mutable buffer, no intermediate String garbage
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i &lt; 10000; i++) {
+    sb.append(i).append(",");
+}
+String result = sb.toString();
+</code></pre><p><strong>Why the first version is genuinely expensive, precisely:</strong> the compiler actually <em>does</em> rewrite <code>result += ...</code> into a <code>StringBuilder</code> internally per statement — but that's exactly the problem: it creates a <strong>brand-new</strong> <code>StringBuilder</code> on <strong>every single iteration</strong>, appends into it, then immediately converts it to a <code>String</code> and discards the builder. Across 10,000 iterations, that's 10,000 short-lived <code>StringBuilder</code> objects and 10,000 intermediate <code>String</code> objects, each holding a progressively longer copy of the accumulating text — quadratic-ish memory churn, not the linear cost the "just append" mental model suggests.</p><blockquote>
+<p>⚠️ <strong>Pitfall — this specific compiler behavior is easy to over-generalize:</strong> the JVM/compiler's implicit <code>StringBuilder</code> rewrite for a <strong>single</strong> <code>+=</code>/<code>+</code> expression (not in a loop) is genuinely fine and idiomatic — <code>String msg = "User " + userId + " logged in";</code> is not a performance problem, it's one <code>StringBuilder</code>, used once. The problem is specifically <strong>repeated concatenation across loop iterations</strong>, where each iteration pays the new-builder-plus-new-string cost again. Know the distinction: one-shot concatenation, fine; loop-accumulated concatenation, use an explicit <code>StringBuilder</code> declared <em>outside</em> the loop.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Why is <code>String</code> immutable — give the real design reasons, not just "it is."</strong>
+Four reasons: string-pool safety (a mutable pooled literal would corrupt every reference sharing it), safe <code>hashCode()</code> caching (a mutable string used as a <code>HashMap</code> key could silently become unfindable), security (prevents time-of-check-to-time-of-use bugs on security-sensitive string values like file paths or class names), and free thread-safety (an immutable object needs no synchronization to share across threads).</p><p><strong>Q: <code>StringBuilder</code> vs <code>StringBuffer</code> — what's the actual difference, and which should you default to?</strong>
+<code>StringBuffer</code>'s methods are <code>synchronized</code>, <code>StringBuilder</code>'s are not — otherwise functionally identical. Default to <code>StringBuilder</code>; only use <code>StringBuffer</code> when multiple threads genuinely mutate the <em>same</em> instance concurrently, which is uncommon, since most builder usage is local to one method on one thread.</p><p><strong>Q: Why is <code>result += x</code> inside a loop a performance problem, if the compiler already turns <code>+=</code> into a <code>StringBuilder</code> internally?</strong>
+Because the compiler creates a <strong>new</strong> <code>StringBuilder</code> on every iteration of the loop, appends once, converts to <code>String</code>, and discards it — not one builder reused across the whole loop. A single <code>+=</code>/<code>+</code> expression outside a loop is fine (one builder, used once); the cost is specifically from repeating that pattern across iterations, where an explicitly declared <code>StringBuilder</code> outside the loop avoids the repeated builder/String churn entirely.</p><p><strong>Q: Does calling <code>s.trim()</code> or <code>s.replace(...)</code> modify the original <code>String</code>?</strong>
+No — every apparent "mutating" method on <code>String</code> (<code>trim</code>, <code>replace</code>, <code>concat</code>, <code>toUpperCase</code>, <code>substring</code>, etc.) returns a brand-new <code>String</code> and leaves the original completely unchanged. Calling one of these without reassigning the result (<code>s = s.trim();</code>) is a common bug where the transformed value is silently discarded.</p></div></details>
+</section>
+<section class="file-section" id="oop-fundamentals-abstract-classes-interfaces-polymorphism">
+<h1 class="file-title">OOP Fundamentals — Abstract Classes, Interfaces, Polymorphism</h1>
+<div class="file-intro"><blockquote>
+<p>Abstract class vs interface (including the post-Java-8 default-method overlap and where the two still genuinely differ), the two kinds of polymorphism, and the precise overloading vs overriding resolution rules. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>Abstract Class vs Interface — What's Actually Still Different</summary><div class="topic-body"><p><strong>Before Java 8</strong>, the distinction was simple: abstract classes could have state and concrete method implementations; interfaces were pure contracts (only abstract method signatures, plus constants). <strong>Since Java 8</strong> (<code>default</code>/<code>static</code> interface methods) and <strong>Java 9</strong> (<code>private</code> interface methods), interfaces can carry real implementation code too — which is exactly why "interfaces can't have implementation" is now an outdated answer, and why the real distinction is subtler than it used to be.</p><pre><code class="language-java">abstract class Vehicle {
+    protected String registrationNumber; // abstract classes CAN hold instance state
+    public Vehicle(String reg) { this.registrationNumber = reg; } // and constructors
+    abstract void start(); // must be implemented by concrete subclasses
+    void displayRegistration() { System.out.println("Reg: " + registrationNumber); } // concrete method, inherited as-is
+}
+
+interface Payable {
+    double calculatePay(); // abstract -- implicitly public
+    default double calculateBonus() { return calculatePay() * 0.1; } // default method -- CAN have a body
+    static Payable zero() { return () -&gt; 0.0; } // static factory method
+    // NO instance fields with state allowed -- only public static final constants
+}
+</code></pre><p><strong>What genuinely still differs, precisely:</strong></p><pre><code>| | Abstract Class | Interface |
+|---|---|---|
+| Instance state (non-constant fields) | Yes | No -- only `public static final` constants |
+| Constructors | Yes | No |
+| Multiple inheritance | No -- single inheritance only | Yes -- a class can implement many interfaces |
+| Access modifiers on methods | Any (`public`/`protected`/`private`) | Implicitly `public` for abstract methods (`private` allowed since Java 9, but only for internal helper methods used by default methods) |
+| "Is-a" vs "can-do" | Models a genuine type hierarchy | Models a capability/contract, often across unrelated types |
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — the outdated answer that signals stale knowledge:</strong> "interfaces can't have method bodies" was true before Java 8 but is a dated statement today — an interviewer asking this in 2026 is checking whether you know about <code>default</code>/<code>static</code>/<code>private</code> interface methods, not testing the pre-Java-8 rule. The real, still-current distinction is about <strong>state</strong> (interfaces can't hold instance fields) and <strong>multiple inheritance</strong> (a class can implement unlimited interfaces but extend only one class) — lead with those, not "no method bodies."</p>
+</blockquote></div></details>
+<details class="topic"><summary>Why Multiple Inheritance of Classes Is Disallowed, But Multiple Interfaces Are Fine</summary><div class="topic-body"><p><strong>The Diamond Problem, precisely:</strong> if a class could extend two classes that both define a field or concrete method with the same name, the compiler would have no unambiguous way to decide which one "wins" when accessed through the subclass — a genuine structural ambiguity, not just a style concern.</p><pre><code class="language-java">interface A { default String greet() { return "Hello from A"; } }
+interface B { default String greet() { return "Hello from B"; } }
+class C implements A, B {
+    // MUST override greet() explicitly -- the compiler refuses to guess which default wins
+    @Override public String greet() { return A.super.greet(); } // explicit disambiguation syntax
+}
+</code></pre><p>Interfaces sidestep the <em>field</em>-collision half of the diamond problem entirely (no instance state to collide over), but a <code>default</code>-method name collision across two implemented interfaces still requires <strong>explicit</strong> disambiguation — the compiler forces you to override and choose, via the <code>InterfaceName.super.method()</code> syntax, rather than silently picking one.</p></div></details>
+<details class="topic"><summary>The Two Kinds of Polymorphism</summary><div class="topic-body"><p><strong>Compile-time (static) polymorphism — method overloading:</strong> multiple methods with the same name, different parameter lists, resolved by the compiler based on the <strong>declared/static types</strong> of the arguments at the call site.</p><pre><code class="language-java">void process(int x) { System.out.println("int version"); }
+void process(String x) { System.out.println("String version"); }
+process(5);       // "int version" -- resolved at COMPILE TIME
+process("hello"); // "String version"
+</code></pre><p><strong>Runtime (dynamic) polymorphism — method overriding:</strong> a subclass provides its own implementation of a method already defined in its superclass/interface; which implementation actually runs is resolved by the <strong>actual runtime type</strong> of the object, not the reference's declared type.</p><pre><code class="language-java">class Animal { String sound() { return "..."; } }
+class Dog extends Animal { @Override String sound() { return "Woof"; } }
+class Cat extends Animal { @Override String sound() { return "Meow"; } }
+
+Animal a = new Dog(); // declared type Animal, runtime type Dog
+System.out.println(a.sound()); // "Woof" -- resolved at RUNTIME via the object's actual type, NOT the reference's declared type
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — the precise mechanism behind runtime polymorphism, worth naming explicitly:</strong> overriding works via the JVM's <strong>virtual method table (vtable)</strong> — every object carries a reference to its actual class's method table, and a call through an overridden method is dispatched via that table at runtime, not resolved statically at compile time the way overloading is. This is exactly why <code>a.sound()</code> above calls <code>Dog</code>'s version despite <code>a</code>'s <em>declared</em> type being <code>Animal</code> — the compiler only checks that <code>Animal</code> has a <code>sound()</code> method to call at all; <em>which</em> implementation actually runs is a runtime decision based on the vtable of the real object.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Method Overloading vs Overriding — the Rules That Actually Get Checked</summary><div class="topic-body"><pre><code class="language-java">class Parent {
+    void show(int x) { System.out.println("Parent int: " + x); }
+}
+class Child extends Parent {
+    @Override void show(int x) { System.out.println("Child int: " + x); } // OVERRIDE -- same signature
+    void show(String x) { System.out.println("Child String: " + x); }     // OVERLOAD -- different signature, new method
+}
+</code></pre><p><strong>Overriding requires:</strong> same method name, same parameter list (exact types, exact order), covariant or identical return type, and — for checked exceptions specifically — the overriding method cannot throw new or broader checked exceptions than the parent declared (see <code>core-java/Exception-Handling.md</code> for the full rule and why it follows directly from Liskov substitution). Access modifier can only stay the same or become <strong>more</strong> visible in the override, never less (<code>protected</code> → <code>public</code> is fine; <code>protected</code> → <code>private</code> is a compile error).</p><p><strong>Overloading requires:</strong> same method name, but a <strong>different</strong> parameter list (different count, different types, or different order) — return type alone is <strong>not</strong> enough to distinguish an overload.</p><pre><code class="language-java">int compute(int a) { return a; }
+double compute(int a) { return a; } // COMPILE ERROR -- return type alone doesn't create a distinct overload
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — the classic overload-resolution trap with autoboxing and varargs:</strong> when multiple overloads could match a given call, Java's resolution order is: (1) exact match with no boxing/unboxing and no varargs, (2) match allowing autoboxing/unboxing, (3) match allowing varargs — checked in that strict order, most-specific-first.</p>
+</blockquote><pre><code class="language-java">void call(int x) { System.out.println("int"); }
+void call(Integer x) { System.out.println("Integer"); }
+void call(int... x) { System.out.println("varargs"); }
+call(5); // "int" -- exact primitive match wins over both boxing AND varargs, even though all three technically apply
+</code></pre><p>Getting this resolution order wrong (assuming autoboxing or varargs would be preferred over an exact match) is a common source of "why did it call <em>that</em> overload" confusion.</p><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Since Java 8 interfaces can have method bodies via <code>default</code> methods — so what's actually still different from an abstract class?</strong>
+Interfaces still can't hold instance state (only <code>public static final</code> constants) and can't have constructors. The bigger structural difference is multiple inheritance: a class can implement any number of interfaces but extend only one class — interfaces model a capability/contract that can apply across unrelated type hierarchies, abstract classes model a genuine "is-a" hierarchy with shared state.</p><p><strong>Q: If a class implements two interfaces that both define the same default method, what happens?</strong>
+Compile error unless the class explicitly overrides the method and disambiguates which one to use (or provides its own), via <code>InterfaceName.super.method()</code> syntax. The compiler refuses to silently pick one — this is the interface-level echo of the classic multiple-inheritance diamond problem, though narrower since interfaces hold no state to collide over.</p><p><strong>Q: Overloading vs overriding — how is each actually resolved, compile-time or runtime?</strong>
+Overloading (same name, different parameter list) is resolved at compile time based on the declared/static types of the arguments. Overriding (subclass redefining a superclass/interface method with an identical signature) is resolved at runtime via the object's actual type, dispatched through the JVM's virtual method table — this is why a reference declared as the supertype still calls the subtype's overridden implementation.</p><p><strong>Q: Can two methods differ only by return type and count as valid overloads?</strong>
+No — return type alone doesn't distinguish an overload; the parameter list (count, types, or order) must differ. A method differing only in return type with an identical parameter list is a compile error, not a valid overload.</p><p><strong>Q: Given overloads for <code>int</code>, <code>Integer</code>, and <code>int...</code> (varargs) all matching a call like <code>call(5)</code>, which one runs?</strong>
+The exact primitive match (<code>int</code>) — Java's overload resolution checks exact matches (no boxing, no varargs) first, then autoboxing/unboxing matches, then varargs matches, in that strict most-specific-first order, regardless of declaration order in the source file.</p></div></details>
+</section>
+</div>
+<script>
+function toggleAll(open){
+  document.querySelectorAll('details.topic').forEach(d => d.open = open);
+}
+</script>
+</body>
+</html>

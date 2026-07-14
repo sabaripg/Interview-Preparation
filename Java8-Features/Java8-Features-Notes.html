@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Java 8+ Functional Programming — Interview Guide</title>
+<style>
+:root{
+  --navy:#0f172a; --blue:#1d4ed8; --blue-bg:#eef4ff;
+  --amber:#b45309; --amber-bg:#fff7ed; --amber-border:#f59e0b;
+  --card-border:#e2e8f0; --code-bg:#0f172a; --code-fg:#e2e8f0; --grey:#475569;
+}
+*{box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8fafc;color:#1e293b;margin:0;line-height:1.55;}
+.topbar{position:sticky;top:0;z-index:10;background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+.topbar h2{margin:0;font-size:17px;}
+.topbar .actions button{background:#1e293b;color:#fff;border:1px solid #334155;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;margin-left:8px;}
+.topbar .actions button:hover{background:#334155;}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 80px;}
+.file-section{margin-bottom:44px;}
+.file-title{
+  background:linear-gradient(90deg,var(--navy),#1e3a5f);color:#fff;padding:14px 18px;border-radius:10px;
+  font-size:20px;margin:0 0 14px 0;box-shadow:0 2px 4px rgba(0,0,0,.12);
+}
+.file-intro{color:var(--grey);font-size:14px;margin:0 0 16px 4px;font-style:italic;}
+.file-intro blockquote{margin:0;border-left:3px solid #94a3b8;padding-left:12px;}
+details.topic{
+  background:#fff;border:1px solid var(--card-border);border-radius:10px;margin-bottom:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,.03);overflow:hidden;
+}
+details.topic summary{
+  cursor:pointer;list-style:none;font-weight:700;font-size:15px;color:var(--navy);
+  padding:12px 16px;display:flex;align-items:center;user-select:none;
+}
+details.topic summary::before{content:"▸";display:inline-block;margin-right:10px;color:var(--blue);transition:transform .15s ease;font-size:13px;}
+details.topic[open] summary::before{transform:rotate(90deg);}
+details.topic summary::-webkit-details-marker{display:none;}
+details.topic summary:hover{background:#f1f5f9;}
+.topic-body{padding:4px 20px 16px 20px;font-size:14.5px;}
+.topic-body p{margin:10px 0;padding-left:10px;border-left:3px solid #e2e8f0;}
+.topic-body ul, .topic-body ol{margin:8px 0;padding-left:26px;}
+.topic-body li{margin-bottom:5px;}
+.topic-body h3{font-size:14.5px;color:var(--blue);margin:16px 0 6px 0;}
+.topic-body pre{
+  background:var(--code-bg);color:var(--code-fg);padding:12px 14px;border-radius:8px;
+  overflow-x:auto;font-size:12.8px;font-family:'Consolas','Courier New',monospace;line-height:1.45;margin:10px 0;
+}
+.topic-body code{font-family:'Consolas','Courier New',monospace;background:#e2e8f0;padding:1px 5px;border-radius:4px;font-size:.92em;}
+.topic-body pre code{background:none;padding:0;}
+.topic-body blockquote{
+  background:var(--amber-bg);border-left:4px solid var(--amber-border);color:#7c3d00;
+  margin:10px 0;padding:10px 14px;border-radius:6px;font-size:13.8px;
+}
+.topic-body blockquote p{border-left:none;padding-left:0;margin:0;}
+.topic-body table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px;}
+.topic-body th,.topic-body td{border:1px solid var(--card-border);padding:6px 10px;text-align:left;}
+.topic-body th{background:#f1f5f9;}
+.topic-body img{max-width:100%;border:1px solid var(--card-border);border-radius:8px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.topic-body hr{border:none;border-top:1px solid var(--card-border);margin:16px 0;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h2>Java 8+ Functional Programming — Interview Guide</h2>
+  <div class="actions">
+    <button onclick="toggleAll(true)">Expand all</button>
+    <button onclick="toggleAll(false)">Collapse all</button>
+  </div>
+</div>
+<div class="wrap">
+<section class="file-section" id="java-8-functional-programming-interview-preparation">
+<h1 class="file-title">Java 8+ Functional Programming — Interview Preparation</h1>
+<div class="file-intro"><blockquote>
+<p>Stream API depth (creation, intermediate/terminal operations, collectors, parallel streams), lambdas and the built-in functional interfaces, and method references — the modern-Java fluency a 10-YOE interview expects beyond just "I use streams sometimes." Every section has a worked Java example and an explicit pitfall.</p>
+</blockquote></div>
+<details class="topic" open><summary>Contents</summary><div class="topic-body"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Part</th>
+<th>Covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="./Part1-Streams-API.md">Streams API</a></td>
+<td>Stream creation, intermediate vs terminal ops, laziness, <code>flatMap</code>, Collectors (<code>groupingBy</code>/<code>partitioningBy</code>/<code>joining</code>), <code>Optional</code>, parallel streams and when not to use them</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="./Part2-Lambdas-Functional-Interfaces.md">Lambdas &amp; Functional Interfaces</a></td>
+<td>What a lambda actually compiles to (<code>invokedynamic</code>, not an anonymous class), <code>@FunctionalInterface</code>, the core <code>java.util.function</code> interfaces, effectively-final variable capture</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="./Part3-Method-References.md">Method References</a></td>
+<td>The four kinds of method references, when they're clearer than a lambda and when they're not, ambiguous-overload gotchas</td>
+</tr>
+</tbody>
+</table></div></details>
+<details class="topic"><summary>How to use this</summary><div class="topic-body"><ul>
+<li>Part 1 is the one most interviews actually probe — know it cold, especially the laziness model and the Collectors toolkit.</li>
+<li>Every part ends with an <strong>Interview Q&amp;A</strong> section.</li>
+<li>Cross-references: <code>core-java/Generics.md</code> (functional interfaces are themselves generic types), <code>Multhithreading/</code> (parallel streams share a common ForkJoinPool with <code>parallelStream()</code> — see the Multhithreading notes on <code>ForkJoinPool.commonPool()</code> before reaching for parallel streams in production).</li>
+</ul><hr/><p><em>Last updated: July 2026</em></p></div></details>
+</section>
+<section class="file-section" id="part-1-streams-api">
+<h1 class="file-title">Part 1 — Streams API</h1>
+<div class="file-intro"><blockquote>
+<p>What a Stream actually is (not a data structure), creating streams, intermediate vs terminal operations and lazy evaluation, <code>flatMap</code>, the Collectors toolkit (<code>groupingBy</code>/<code>partitioningBy</code>/<code>joining</code>), <code>Optional</code>, and parallel streams — including exactly when not to reach for them. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>What a Stream Actually Is</summary><div class="topic-body"><p><strong>What it does:</strong> a <code>Stream</code> is a one-time-use pipeline for processing a sequence of elements declaratively — you describe <em>what</em> transformation you want (map, filter, sum), not <em>how</em> to loop and accumulate it yourself. It is <strong>not</strong> a data structure: a stream holds no elements of its own, doesn't store anything, and can't be reused once a terminal operation has consumed it.</p><pre><code class="language-java">List&lt;String&gt; names = List.of("Alice", "Bob", "Charlie", "Dave");
+List&lt;String&gt; longNames = names.stream()
+    .filter(n -&gt; n.length() &gt; 3)
+    .map(String::toUpperCase)
+    .collect(Collectors.toList());
+System.out.println(longNames);
+</code></pre><p><strong>Output:</strong></p><pre><code>[ALICE, CHARLIE, DAVE]
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> a stream can only be consumed <strong>once</strong>. Calling a second terminal operation on an already-consumed stream throws <code>IllegalStateException: stream has already been operated upon or closed</code> — a stream is a single-pass pipeline, not something you can iterate twice like a <code>List</code>. If you need the same data processed two different ways, either build two separate stream pipelines from the source collection, or collect the intermediate result into a <code>List</code> first.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Creating Streams</summary><div class="topic-body"><pre><code class="language-java">Stream.of("a", "b", "c");                          // from varargs
+List.of(1, 2, 3).stream();                          // from any Collection
+Arrays.stream(new int[]{1, 2, 3});                   // from an array -- returns IntStream
+IntStream.range(0, 5);                               // 0,1,2,3,4 -- exclusive upper bound
+IntStream.rangeClosed(0, 5);                         // 0,1,2,3,4,5 -- inclusive
+Stream.iterate(1, n -&gt; n * 2).limit(5);               // 1,2,4,8,16 -- infinite, must be bounded
+Stream.generate(Math::random).limit(3);               // infinite, must be bounded
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>Stream.iterate()</code> and <code>Stream.generate()</code> produce <strong>infinite</strong> streams — forgetting <code>.limit(n)</code> on one hangs the program (or eventually throws <code>OutOfMemoryError</code> if a terminal operation like <code>collect()</code> tries to exhaust it). Always pair an infinite source with a bounding intermediate operation.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Intermediate vs Terminal Operations — and Why Laziness Matters</summary><div class="topic-body"><p><strong>Intermediate operations</strong> (<code>map</code>, <code>filter</code>, <code>sorted</code>, <code>distinct</code>, <code>limit</code>, <code>skip</code>, <code>flatMap</code>, <code>peek</code>) return a new <code>Stream</code> and are <strong>lazy</strong> — they don't actually run anything, they just build up a pipeline description. <strong>Terminal operations</strong> (<code>collect</code>, <code>reduce</code>, <code>forEach</code>, <code>count</code>, <code>anyMatch</code>/<code>allMatch</code>/<code>noneMatch</code>, <code>findFirst</code>/<code>findAny</code>) trigger the actual execution, and only then does the pipeline run, element by element, through every intermediate stage.</p><pre><code class="language-java">Stream&lt;String&gt; pipeline = names.stream()
+    .filter(n -&gt; { System.out.println("filtering " + n); return n.length() &gt; 3; })
+    .map(n -&gt; { System.out.println("mapping " + n); return n.toUpperCase(); });
+System.out.println("Pipeline built, nothing has printed yet.");
+pipeline.collect(Collectors.toList()); // ONLY NOW does filtering/mapping actually run
+</code></pre><p><strong>Output:</strong></p><pre><code>Pipeline built, nothing has printed yet.
+filtering Alice
+filtering Bob
+filtering Charlie
+mapping Charlie
+filtering Dave
+mapping Dave
+</code></pre><p>Notice the order: it's not "filter everything, then map everything" — each element flows through the <strong>entire</strong> pipeline (filter → map) before the next element starts. This is why streams can short-circuit efficiently: <code>findFirst()</code> after a <code>filter()</code> can stop at the very first match without evaluating the rest of the source at all.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the classic "why didn't my code run" bug:</strong> building a stream pipeline with no terminal operation at the end does <strong>nothing</strong> — no exception, no output, just silently no-op code, because nothing ever triggered execution. This is the single most common stream mistake for developers new to the API: forgetting the terminal operation entirely and wondering why <code>peek()</code>/<code>map()</code> side effects never happened.</p>
+</blockquote></div></details>
+<details class="topic"><summary>flatMap — Flattening Nested Structures</summary><div class="topic-body"><p><strong>What it does:</strong> <code>map()</code> transforms each element 1-to-1; <code>flatMap()</code> transforms each element into its <strong>own stream</strong>, then flattens all those streams into a single stream — essential when each input element itself produces a collection.</p><pre><code class="language-java">List&lt;List&lt;Integer&gt;&gt; nested = List.of(List.of(1, 2, 3), List.of(4, 5), List.of(6));
+List&lt;Integer&gt; flat = nested.stream()
+    .flatMap(List::stream)
+    .collect(Collectors.toList());
+System.out.println(flat);
+</code></pre><p><strong>Output:</strong></p><pre><code>[1, 2, 3, 4, 5, 6]
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> using <code>map()</code> where <code>flatMap()</code> was needed produces a <code>Stream&lt;List&lt;Integer&gt;&gt;</code> (a stream <em>of lists</em>) instead of the flattened <code>Stream&lt;Integer&gt;</code> you actually wanted — a very common early mistake, and the compiler won't catch it since <code>Stream&lt;List&lt;Integer&gt;&gt;</code> is a perfectly valid type, just not the one you meant.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Collectors — the Real Toolkit Beyond toList()</summary><div class="topic-body"><pre><code class="language-java">record Employee(String name, String department, double salary) {}
+List&lt;Employee&gt; employees = List.of(
+    new Employee("Alice", "Engineering", 95000),
+    new Employee("Bob", "Engineering", 87000),
+    new Employee("Charlie", "Sales", 72000),
+    new Employee("Dave", "Sales", 68000)
+);
+
+// groupingBy -- Map&lt;K, List&lt;V&gt;&gt;
+Map&lt;String, List&lt;Employee&gt;&gt; byDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::department));
+
+// groupingBy + downstream collector -- Map&lt;K, D&gt;
+Map&lt;String, Double&gt; avgSalaryByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::department, Collectors.averagingDouble(Employee::salary)));
+
+// partitioningBy -- always exactly TWO groups, keyed by boolean
+Map&lt;Boolean, List&lt;Employee&gt;&gt; aboveAvg = employees.stream()
+    .collect(Collectors.partitioningBy(e -&gt; e.salary() &gt; 80000));
+
+// joining -- building a delimited String
+String names = employees.stream().map(Employee::name).collect(Collectors.joining(", ", "[", "]"));
+// "[Alice, Bob, Charlie, Dave]"
+
+// toMap -- careful with duplicate keys
+Map&lt;String, Double&gt; nameToSalary = employees.stream()
+    .collect(Collectors.toMap(Employee::name, Employee::salary));
+
+// counting, summarizing
+Map&lt;String, Long&gt; countByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::department, Collectors.counting()));
+DoubleSummaryStatistics stats = employees.stream()
+    .collect(Collectors.summarizingDouble(Employee::salary)); // min/max/avg/sum/count in one pass
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — <code>toMap()</code> with duplicate keys:</strong> <code>Collectors.toMap(keyFn, valueFn)</code> throws <code>IllegalStateException: Duplicate key</code> at runtime if two elements produce the same key — not a compile-time-visible risk, and easy to miss until production data has a collision dev data didn't. Fix by supplying a third <strong>merge function</strong> argument: <code>Collectors.toMap(keyFn, valueFn, (existing, replacement) -&gt; existing)</code> to explicitly decide what happens on collision, rather than letting it throw.</p>
+</blockquote><p><strong><code>groupingBy</code> vs <code>partitioningBy</code> — the real distinction:</strong> <code>groupingBy</code> can produce any number of groups, keyed by whatever the classifier function returns. <code>partitioningBy</code> is a specialized, more efficient case that <strong>always</strong> produces exactly two groups (<code>true</code>/<code>false</code>), because the classifier is a <code>Predicate</code>, not an arbitrary function — reach for <code>partitioningBy</code> specifically when the split is genuinely binary, since it's a clearer signal of intent than <code>groupingBy</code> with a boolean-returning classifier.</p></div></details>
+<details class="topic"><summary>Optional — Avoiding Null Checks in a Stream Pipeline</summary><div class="topic-body"><pre><code class="language-java">Optional&lt;Employee&gt; highestPaid = employees.stream()
+    .max(Comparator.comparingDouble(Employee::salary));
+
+String result = highestPaid
+    .map(Employee::name)
+    .orElse("No employees found");
+</code></pre><p><code>Optional</code> represents "a value that might not be present" as a real type the compiler forces you to handle, rather than a <code>null</code> that silently propagates until some unrelated line throws <code>NullPointerException</code>. Key methods: <code>isPresent()</code>/<code>isEmpty()</code> (check without extracting), <code>orElse(default)</code> (eager default, always evaluated even if not used), <code>orElseGet(supplier)</code> (lazy default, only evaluated if actually needed), <code>orElseThrow()</code> (convert absence into an explicit exception), <code>map()</code>/<code>filter()</code> (chain transformations that short-circuit to empty if the Optional is already empty).</p><blockquote>
+<p>⚠️ <strong>Pitfall — <code>orElse()</code> vs <code>orElseGet()</code> is not just style:</strong> <code>orElse(expensiveDefaultValue())</code> <strong>always</strong> evaluates <code>expensiveDefaultValue()</code> eagerly, even when the <code>Optional</code> already has a value and the default is never used — a real, easy-to-miss performance cost if the default involves a database call or heavy computation. <code>orElseGet(() -&gt; expensiveDefaultValue())</code> only evaluates the supplier lazily, when actually needed. Also: <code>Optional.get()</code> without checking presence first defeats the entire purpose of <code>Optional</code> — it throws <code>NoSuchElementException</code>, which is exactly the unchecked-null-access problem <code>Optional</code> exists to prevent, just with a different exception name.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Parallel Streams — and Why You Probably Don't Want One by Default</summary><div class="topic-body"><pre><code class="language-java">long count = employees.parallelStream()
+    .filter(e -&gt; e.salary() &gt; 80000)
+    .count();
+</code></pre><p><strong>What it actually does:</strong> splits the source into chunks and processes them concurrently using the <strong>common <code>ForkJoinPool</code></strong> (<code>ForkJoinPool.commonPool()</code>, sized to <code>Runtime.getRuntime().availableProcessors() - 1</code> by default) — the same shared pool used by parallel <code>Arrays.parallelSort()</code> and, unless explicitly configured otherwise, <code>CompletableFuture.supplyAsync()</code> too.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the real reasons parallel streams are not a free performance win:</strong> (1) <strong>Shared pool contention</strong> — because <code>parallelStream()</code> uses the JVM-wide common pool by default, a CPU-heavy parallel stream running in one part of the application can starve unrelated <code>CompletableFuture</code> work elsewhere in the same JVM competing for the same threads (see the Multhithreading notes' <code>ForkJoinPool.commonPool()</code> section for the full mechanics). (2) <strong>Overhead for small or I/O-bound workloads</strong> — splitting, coordinating, and merging has real cost; for anything but genuinely large, CPU-bound, easily-partitionable workloads, a sequential stream is often faster. (3) <strong>Ordering and shared mutable state</strong> — using <code>forEach</code> with a shared, non-thread-safe collection inside a parallel stream is a silent data-race waiting to happen; if order matters, <code>forEachOrdered</code> gives it back but also removes most of the parallelism benefit. The senior-level answer to "would you use <code>parallelStream()</code> here" is not a reflexive yes — it's "only after measuring, on a large CPU-bound collection, with awareness of what else is sharing the common pool."</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Why can't a stream be reused after a terminal operation?</strong>
+A stream isn't a data structure — it's a single-pass pipeline description with no backing storage. Once a terminal operation consumes it, the pipeline is spent; calling another terminal operation throws <code>IllegalStateException</code>. Build a fresh stream from the source collection if you need to process the same data a second way.</p><p><strong>Q: Explain why streams are lazy, and what breaks if you forget the terminal operation.</strong>
+Intermediate operations (<code>map</code>, <code>filter</code>, etc.) only build up a description of the pipeline; nothing executes until a terminal operation (<code>collect</code>, <code>forEach</code>, <code>count</code>, etc.) is called. Forgetting the terminal operation means the pipeline silently never runs — no error, just no-op code, which is one of the most common early mistakes with the API.</p><p><strong>Q: <code>map()</code> vs <code>flatMap()</code> — when do you need <code>flatMap</code>?</strong>
+<code>map()</code> is a 1-to-1 transformation. <code>flatMap()</code> is for when each input element itself produces a collection/stream of its own (e.g., a <code>List&lt;List&lt;T&gt;&gt;</code>) — it transforms each element into its own stream, then flattens all of them into one combined stream, rather than leaving you with a stream of streams.</p><p><strong>Q: <code>groupingBy</code> vs <code>partitioningBy</code> — what's the actual difference?</strong>
+<code>groupingBy</code> can produce any number of groups based on an arbitrary classifier function. <code>partitioningBy</code> is specialized for exactly two groups (<code>true</code>/<code>false</code>) because it takes a <code>Predicate</code> — reach for it specifically when the split is genuinely binary, as a clearer signal of intent.</p><p><strong>Q: <code>orElse()</code> vs <code>orElseGet()</code> on an <code>Optional</code> — is there a real difference?</strong>
+Yes — <code>orElse(value)</code> always evaluates its argument eagerly, even when the Optional already holds a value and the default is discarded. <code>orElseGet(supplier)</code> only invokes the supplier lazily, when the Optional is actually empty. If the default is expensive to compute (a DB call, heavy work), using <code>orElse()</code> pays that cost unconditionally.</p><p><strong>Q: Would you use <code>parallelStream()</code> for a given piece of code — how do you decide?</strong>
+Not reflexively. Parallel streams share the JVM-wide common <code>ForkJoinPool</code>, so CPU-heavy parallel stream work can starve unrelated concurrent work (including <code>CompletableFuture</code> tasks) competing for the same pool. They pay real coordination overhead, so they only help on large, CPU-bound, easily-partitioned workloads — and using shared mutable state inside one via <code>forEach</code> is a real data-race risk. Measure before reaching for it.</p></div></details>
+</section>
+<section class="file-section" id="part-2-lambdas-functional-interfaces">
+<h1 class="file-title">Part 2 — Lambdas & Functional Interfaces</h1>
+<div class="file-intro"><blockquote>
+<p>What a lambda expression actually compiles to (not a hidden anonymous class), <code>@FunctionalInterface</code>, the core <code>java.util.function</code> interfaces you're expected to know cold, and the effectively-final variable-capture rule with the reason behind it. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>What a Lambda Actually Is</summary><div class="topic-body"><p><strong>The shallow answer:</strong> "syntactic sugar for an anonymous inner class implementing a single-method interface." <strong>The precise answer, and the one that shows real understanding:</strong> a lambda is compiled using the <code>invokedynamic</code> bytecode instruction and <code>LambdaMetafactory</code>, <strong>not</strong> desugared into a real anonymous class at compile time the way pre-Java-8 code required. The actual implementation class is generated <strong>at runtime</strong>, lazily, the first time that particular lambda site executes — not one-per-lambda-expression at compile time.</p><pre><code class="language-java">Runnable r = () -&gt; System.out.println("Hello from lambda");
+</code></pre><pre><code class="language-java">// Pre-Java-8 equivalent IN BEHAVIOR, but NOT in how it's actually compiled:
+Runnable r = new Runnable() {
+    @Override public void run() { System.out.println("Hello from lambda"); }
+};
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — why this distinction actually matters, not just trivia:</strong> anonymous classes each generate a separate <code>.class</code> file at compile time (<code>Outer$1.class</code>, <code>Outer$2.class</code>, ...), bloating the JAR and requiring a real classloading + object-instantiation cost for each one, every time. Lambdas avoid this — no extra <code>.class</code> file per lambda expression, and the JVM can reuse the generated implementation across invocations. This is a genuine performance and startup-time difference at scale, not just a stylistic one, and interviewers ask this specifically to separate "used lambdas" from "understands what a lambda is."</p>
+</blockquote></div></details>
+<details class="topic"><summary>@FunctionalInterface — What It Actually Enforces</summary><div class="topic-body"><p><strong>What it does:</strong> marks an interface as having <strong>exactly one abstract method</strong> (a "SAM" — Single Abstract Method interface) — the shape a lambda expression can implement. The annotation is optional (any interface with exactly one abstract method already qualifies), but applying it makes the compiler <strong>enforce</strong> the constraint, turning an accidental second abstract method into a compile error instead of a confusing runtime surprise.</p><pre><code class="language-java">@FunctionalInterface
+interface Calculator {
+    int calculate(int a, int b);
+    // default and static methods DON'T count against the "single abstract method" rule
+    default int calculateTriple(int a, int b, int c) { return calculate(calculate(a, b), c); }
+}
+
+Calculator add = (a, b) -&gt; a + b;
+Calculator multiply = (a, b) -&gt; a * b;
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> <code>default</code> and <code>static</code> methods on an interface do <strong>not</strong> count toward the "single abstract method" requirement — only genuinely abstract methods do. This is precisely why <code>Comparator&lt;T&gt;</code> (which has several <code>default</code> methods like <code>reversed()</code>, <code>thenComparing()</code>) is still a valid functional interface usable with a lambda — it has exactly one abstract method (<code>compare</code>), and everything else is a default method providing extra behavior on top.</p>
+</blockquote></div></details>
+<details class="topic"><summary>The Core java.util.function Interfaces</summary><div class="topic-body"><pre><code>| Interface           | Abstract Method       | Takes    | Returns | Typical Use                          |
+|----------------------|------------------------|----------|---------|----------------------------------------|
+| Supplier&lt;T&gt;          | T get()                | nothing  | T       | lazy value production, factories       |
+| Consumer&lt;T&gt;          | void accept(T t)       | T        | nothing | side effects (forEach, logging)        |
+| Function&lt;T, R&gt;       | R apply(T t)            | T        | R       | transformation (map)                   |
+| Predicate&lt;T&gt;         | boolean test(T t)       | T        | boolean | filtering conditions                   |
+| UnaryOperator&lt;T&gt;     | T apply(T t)             | T        | T       | Function&lt;T,T&gt; specialization           |
+| BinaryOperator&lt;T&gt;    | T apply(T t1, T t2)      | T, T     | T       | reduce operations (sum, max)           |
+| BiFunction&lt;T, U, R&gt;  | R apply(T t, U u)        | T, U     | R       | two-argument transformation            |
+</code></pre><pre><code class="language-java">Supplier&lt;LocalDateTime&gt; now = LocalDateTime::now;               // called lazily, each get() re-evaluates
+Consumer&lt;String&gt; logger = msg -&gt; System.out.println("[LOG] " + msg);
+Function&lt;String, Integer&gt; length = String::length;
+Predicate&lt;String&gt; isEmpty = String::isEmpty;
+UnaryOperator&lt;Integer&gt; square = n -&gt; n * n;
+BinaryOperator&lt;Integer&gt; max = Integer::max;
+BiFunction&lt;String, String, String&gt; concat = (a, b) -&gt; a + b;
+</code></pre><p><strong>Composing functional interfaces</strong> — several ship with default methods specifically for chaining:</p><pre><code class="language-java">Function&lt;Integer, Integer&gt; addOne = n -&gt; n + 1;
+Function&lt;Integer, Integer&gt; square = n -&gt; n * n;
+Function&lt;Integer, Integer&gt; addThenSquare = addOne.andThen(square); // apply addOne, THEN square the result
+Function&lt;Integer, Integer&gt; squareThenAdd = addOne.compose(square); // apply square FIRST, then addOne
+System.out.println(addThenSquare.apply(3)); // (3+1)^2 = 16
+System.out.println(squareThenAdd.apply(3)); // (3^2)+1 = 10
+
+Predicate&lt;String&gt; notEmpty = ((Predicate&lt;String&gt;) String::isEmpty).negate();
+Predicate&lt;Integer&gt; isPositive = n -&gt; n &gt; 0;
+Predicate&lt;Integer&gt; isEven = n -&gt; n % 2 == 0;
+Predicate&lt;Integer&gt; positiveAndEven = isPositive.and(isEven);
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — <code>andThen()</code> vs <code>compose()</code> direction, a genuinely easy mix-up:</strong> <code>f.andThen(g)</code> runs <code>f</code> <strong>first</strong>, then feeds its result into <code>g</code>. <code>f.compose(g)</code> runs <code>g</code> <strong>first</strong>, then feeds its result into <code>f</code> — the naming can feel backwards relative to reading order until you internalize that <code>compose</code> mirrors mathematical function composition notation (<code>f(g(x))</code>), while <code>andThen</code> mirrors left-to-right pipeline reading (<code>f</code>, and then, <code>g</code>).</p>
+</blockquote></div></details>
+<details class="topic"><summary>Effectively-Final Variable Capture</summary><div class="topic-body"><p><strong>The rule:</strong> a lambda (or anonymous class) can only capture a local variable from its enclosing scope if that variable is <strong>effectively final</strong> — assigned exactly once, never reassigned after initialization, even if not explicitly marked <code>final</code>.</p><pre><code class="language-java">int counter = 0;
+Runnable r = () -&gt; System.out.println(counter); // fine -- counter never reassigned, effectively final
+counter = 5; // uncomment this and the lambda above becomes a COMPILE ERROR
+</code></pre><pre><code class="language-java">List&lt;Runnable&gt; tasks = new ArrayList&lt;&gt;();
+for (int i = 0; i &lt; 3; i++) {
+    int taskId = i; // a NEW effectively-final variable each iteration -- this is the fix
+    tasks.add(() -&gt; System.out.println("Task " + taskId));
+}
+tasks.forEach(Runnable::run); // prints Task 0, Task 1, Task 2 -- each captured its own value correctly
+</code></pre><p><strong>Why this restriction exists, precisely:</strong> a lambda can genuinely <strong>outlive</strong> the method call that created it (it might be stored, passed to another thread, or invoked much later). The JVM handles this by having the lambda capture a <strong>copy</strong> of the local variable's value at creation time, not a live reference to the stack slot (which may no longer even exist by the time the lambda runs). If reassignment were allowed, the lambda's captured copy and the enclosing method's live variable would silently diverge — which value should the lambda actually see? Making the variable effectively final removes the ambiguity by construction: there's only ever one value to capture, so there's nothing to diverge.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the classic "closure over a mutable loop variable" trap, and why Java doesn't have it:</strong> in some languages, closures created inside a loop all end up sharing the <em>same</em> underlying loop variable, so all of them see its <em>final</em> value after the loop ends (a well-known bug class). Java's effectively-final rule makes this specific bug <strong>impossible</strong> — you're forced to introduce a fresh variable per iteration (as <code>taskId</code> does above) precisely because the loop variable <code>i</code> itself is reassigned every iteration and therefore isn't effectively final, so the compiler refuses to let a lambda capture it directly.</p>
+</blockquote><p><strong>Capturing <code>this</code> inside a lambda vs an anonymous class — a real, different-behavior gotcha:</strong></p><pre><code class="language-java">class Handler {
+    private String name = "outer";
+    void register() {
+        Runnable lambdaVersion = () -&gt; System.out.println(this.name);       // 'this' = the ENCLOSING Handler instance
+        Runnable anonymousVersion = new Runnable() {
+            private String name = "inner"; // shadows nothing from Runnable, just this anonymous class's own field
+            public void run() { System.out.println(this.name); }            // 'this' = the ANONYMOUS CLASS instance itself
+        };
+    }
+}
+</code></pre><p>A lambda does <strong>not</strong> introduce its own <code>this</code> — it's lexically scoped, so <code>this</code> inside a lambda always refers to the enclosing instance, exactly like any other code in that method. An anonymous class <strong>does</strong> introduce its own <code>this</code>, referring to the anonymous class instance itself. This is a real, observable behavioral difference, not just a style preference between the two syntaxes.</p><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Is a lambda "just syntactic sugar for an anonymous class"?</strong>
+Behaviorally similar, but not how it's actually compiled. Lambdas use <code>invokedynamic</code> and <code>LambdaMetafactory</code> to generate the implementation class lazily at runtime, avoiding a separate compile-time <code>.class</code> file per lambda expression — a real difference in JAR size and classloading cost versus anonymous classes, not just a syntax difference.</p><p><strong>Q: What does <code>@FunctionalInterface</code> actually enforce, and do <code>default</code> methods count against it?</strong>
+It enforces exactly one abstract method, turning an accidental second abstract method into a compile error. <code>default</code> and <code>static</code> methods do not count — which is why interfaces like <code>Comparator&lt;T&gt;</code> (one abstract method, several default methods) are still valid functional interfaces.</p><p><strong>Q: <code>Function.andThen()</code> vs <code>Function.compose()</code> — what's the actual execution order for each?</strong>
+<code>f.andThen(g)</code> runs <code>f</code> first, then passes its result to <code>g</code>. <code>f.compose(g)</code> runs <code>g</code> first, then passes its result to <code>f</code> — <code>compose</code> mirrors mathematical <code>f(g(x))</code> notation, which is the opposite order from how it reads left to right.</p><p><strong>Q: Why must a variable captured by a lambda be effectively final?</strong>
+A lambda can outlive the method that created it, so it captures a copy of the variable's value at creation time rather than a live reference to a stack slot that might not exist later. If the variable could be reassigned after that copy was taken, the lambda's captured value and the enclosing method's current value could silently diverge — effectively-final removes that ambiguity by guaranteeing there's only ever one value to capture.</p><p><strong>Q: Does <code>this</code> inside a lambda refer to the same thing as <code>this</code> inside an anonymous class implementing the same interface?</strong>
+No. A lambda is lexically scoped and doesn't introduce its own <code>this</code> — it refers to the enclosing instance, same as any other code in that method. An anonymous class does introduce its own <code>this</code>, referring to the anonymous class instance itself. This is a real behavioral difference, not just style.</p></div></details>
+</section>
+<section class="file-section" id="part-3-method-references">
+<h1 class="file-title">Part 3 — Method References</h1>
+<div class="file-intro"><blockquote>
+<p>The four kinds of method references, when they genuinely read clearer than the equivalent lambda (and when they don't), and the ambiguous-overload-resolution gotcha that trips people up. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>What a Method Reference Is</summary><div class="topic-body"><p><strong>What it does:</strong> a method reference is shorthand for a lambda that does nothing but call one existing method — <code>Class::method</code> instead of <code>x -&gt; Class.method(x)</code> (or <code>x -&gt; x.method()</code>). It's not a different mechanism from a lambda under the hood; it still targets a functional interface and still compiles via the same <code>invokedynamic</code>/<code>LambdaMetafactory</code> path — it's purely a more concise way to express "call this existing method" instead of writing a new lambda body that just forwards its arguments.</p></div></details>
+<details class="topic"><summary>The Four Kinds</summary><div class="topic-body"><pre><code class="language-java">// 1. Static method reference -- Class::staticMethod
+Function&lt;String, Integer&gt; parse = Integer::parseInt;
+// equivalent lambda: s -&gt; Integer.parseInt(s)
+
+// 2. Instance method reference on a PARTICULAR, already-existing object -- instance::method
+String greeting = "Hello";
+Supplier&lt;Integer&gt; length = greeting::length;
+// equivalent lambda: () -&gt; greeting.length()
+
+// 3. Instance method reference on an ARBITRARY object of a type, supplied later -- Class::instanceMethod
+Function&lt;String, Integer&gt; lengthFn = String::length;
+// equivalent lambda: s -&gt; s.length()   -- the argument BECOMES the receiver
+
+// 4. Constructor reference -- Class::new
+Supplier&lt;ArrayList&lt;String&gt;&gt; listFactory = ArrayList::new;
+Function&lt;Integer, ArrayList&lt;String&gt;&gt; sizedListFactory = ArrayList::new; // overload resolved by target functional interface's shape
+</code></pre><p><strong>Kind 2 vs Kind 3 — the distinction that actually gets tested:</strong> in kind 2, the object already exists at the point the method reference is created, and the functional interface's parameter(s) become the method's <em>arguments</em>. In kind 3, there's no object yet — the functional interface's <em>first</em> parameter becomes the <em>receiver</em> the method is called on, and any remaining parameters become the method's arguments.</p><pre><code class="language-java">List&lt;String&gt; names = List.of("Charlie", "alice", "Bob");
+names.stream().sorted(String::compareToIgnoreCase); // kind 3: first arg becomes receiver, second is compareToIgnoreCase's argument
+// equivalent lambda: (a, b) -&gt; a.compareToIgnoreCase(b)
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> this is precisely why <code>String::compareToIgnoreCase</code> works as a two-argument <code>Comparator&lt;String&gt;</code> even though <code>compareToIgnoreCase</code> is declared as a <strong>one-argument instance method</strong> (<code>int compareToIgnoreCase(String str)</code>) — the <em>first</em> parameter the <code>Comparator</code> interface supplies becomes the receiver (<code>a.compareToIgnoreCase(...)</code>), and the <em>second</em> becomes the actual method argument. Miscounting which parameter becomes the receiver versus an argument is the most common source of confusion between kinds 2 and 3.</p>
+</blockquote></div></details>
+<details class="topic"><summary>When a Method Reference Is Genuinely Clearer — and When It Isn't</summary><div class="topic-body"><pre><code class="language-java">// GOOD -- method reference reads cleanly, no added logic
+names.forEach(System.out::println);
+names.stream().map(String::toUpperCase);
+
+// QUESTIONABLE -- the lambda would have needed extra logic anyway, so the method reference saves little
+names.stream().map(n -&gt; processName(n, someExtraConfig)); // can't be a plain method reference -- extra argument doesn't fit
+</code></pre><p>The rule of thumb: reach for a method reference when the lambda body would do <strong>nothing except call one existing method with the exact arguments already available</strong> — the moment you need to add logic, reorder arguments, or supply an extra fixed argument the target method doesn't already expect in the right position, a lambda is clearer than contorting the code to force a method reference to fit.</p><blockquote>
+<p>⚠️ <strong>Pitfall — ambiguous overload resolution:</strong> if a class has multiple overloaded methods with the same name, <code>Class::method</code> can be genuinely ambiguous to the compiler depending on the target functional interface's shape, occasionally producing a confusing compile error that a plain lambda would have sidestepped entirely (because a lambda's parameter types are explicit in its body, disambiguating immediately). When a method reference produces an unclear compiler error about ambiguity, falling back to an explicit lambda is a legitimate, pragmatic fix — not a failure to "do it the modern way."</p>
+</blockquote></div></details>
+<details class="topic"><summary>Constructor References With Streams — a Common Real Pattern</summary><div class="topic-body"><pre><code class="language-java">record Employee(String name) {}
+List&lt;String&gt; names = List.of("Alice", "Bob");
+List&lt;Employee&gt; employees = names.stream()
+    .map(Employee::new) // constructor reference -- one arg (name) matches Employee's single-arg constructor
+    .collect(Collectors.toList());
+</code></pre><p>This is one of the most common real-world uses of constructor references — converting a stream of raw data into a stream of domain objects without writing <code>n -&gt; new Employee(n)</code> for a mapping that's otherwise purely mechanical.</p><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Are method references a different mechanism from lambdas, or just shorthand?</strong>
+Just shorthand — a method reference still targets a functional interface and compiles through the same <code>invokedynamic</code>/<code>LambdaMetafactory</code> path as a lambda. It's purely a more concise way to write a lambda whose entire body is "call this one existing method."</p><p><strong>Q: What's the actual difference between <code>instance::method</code> and <code>Class::instanceMethod</code>?</strong>
+<code>instance::method</code> (kind 2) targets an object that already exists — the functional interface's parameters map directly to the method's arguments. <code>Class::instanceMethod</code> (kind 3) has no object yet — the functional interface's <em>first</em> parameter becomes the receiver the method is called on, and any remaining parameters become the method's actual arguments. This is why <code>String::compareToIgnoreCase</code> can serve as a two-argument <code>Comparator&lt;String&gt;</code> despite being declared as a one-argument instance method.</p><p><strong>Q: When would you prefer a lambda over a method reference, even though method references are considered more "modern"?</strong>
+When the lambda needs to do anything beyond forwarding its arguments directly to one existing method — extra logic, reordered arguments, an additional fixed parameter not in the right position, or when a method reference produces an ambiguous-overload compile error a lambda would avoid by making parameter types explicit.</p></div></details>
+</section>
+</div>
+<script>
+function toggleAll(open){
+  document.querySelectorAll('details.topic').forEach(d => d.open = open);
+}
+</script>
+</body>
+</html>

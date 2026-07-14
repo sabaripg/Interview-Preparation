@@ -8,10 +8,11 @@ Deepened from your Medium article on Microservice Patterns — Service Discovery
 |---|---|---|
 | 1 | [Service Discovery](./Part1-Service-Discovery.md) | Client-side vs server-side discovery, Eureka server/client setup, self-preservation mode, AP vs CP tradeoff |
 | 2 | [Circuit Breaker](./Part2-Circuit-Breaker.md) | Closed/Open/Half-Open states, Hystrix (legacy) vs Resilience4j (modern), Bulkhead isolation |
-| 3 | [Load Balancing](./Part3-Load-Balancing.md) | Client-side vs server-side, algorithms, Ribbon (legacy) vs Spring Cloud LoadBalancer (modern) |
+| 3 | [Load Balancing](./Part3-Load-Balancing.md) | Client-side vs server-side, algorithms, Ribbon (legacy) vs Spring Cloud LoadBalancer (modern), **session affinity / sticky sessions** |
 | 4 | [API Gateway](./Part4-API-Gateway.md) | Spring Cloud Gateway routing/predicates/filters, Zuul (legacy), cross-cutting concerns |
 | 5 | [CQRS](./Part5-CQRS.md) | Commands vs Queries, materialized views, the real database-sync mechanisms (event sourcing, CDC, outbox), the dual-write trap, eventual consistency, when it's overkill |
-| — | [Gap Analysis — 10 YOE](./Gap-Analysis-10YOE.md) | Patterns a senior interview expects that the source articles don't cover: Saga, Config Server, distributed tracing, service mesh, and more |
+| 6 | [Saga Pattern](./Part6-Saga-Pattern.md) | Local + compensating transactions, Choreography vs Orchestration, an end-to-end Order/Inventory/Payment worked example, the isolation gap, and why most candidates fail this question |
+| — | [Gap Analysis — 10 YOE](./Gap-Analysis-10YOE.md) | Patterns a senior interview expects that the source articles don't cover: Config Server, distributed tracing, service mesh, and more |
 
 ## How to use this
 

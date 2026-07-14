@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JVM Internals — Interview Guide</title>
+<style>
+:root{
+  --navy:#0f172a; --blue:#1d4ed8; --blue-bg:#eef4ff;
+  --amber:#b45309; --amber-bg:#fff7ed; --amber-border:#f59e0b;
+  --card-border:#e2e8f0; --code-bg:#0f172a; --code-fg:#e2e8f0; --grey:#475569;
+}
+*{box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8fafc;color:#1e293b;margin:0;line-height:1.55;}
+.topbar{position:sticky;top:0;z-index:10;background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+.topbar h2{margin:0;font-size:17px;}
+.topbar .actions button{background:#1e293b;color:#fff;border:1px solid #334155;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;margin-left:8px;}
+.topbar .actions button:hover{background:#334155;}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 80px;}
+.file-section{margin-bottom:44px;}
+.file-title{
+  background:linear-gradient(90deg,var(--navy),#1e3a5f);color:#fff;padding:14px 18px;border-radius:10px;
+  font-size:20px;margin:0 0 14px 0;box-shadow:0 2px 4px rgba(0,0,0,.12);
+}
+.file-intro{color:var(--grey);font-size:14px;margin:0 0 16px 4px;font-style:italic;}
+.file-intro blockquote{margin:0;border-left:3px solid #94a3b8;padding-left:12px;}
+details.topic{
+  background:#fff;border:1px solid var(--card-border);border-radius:10px;margin-bottom:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,.03);overflow:hidden;
+}
+details.topic summary{
+  cursor:pointer;list-style:none;font-weight:700;font-size:15px;color:var(--navy);
+  padding:12px 16px;display:flex;align-items:center;user-select:none;
+}
+details.topic summary::before{content:"▸";display:inline-block;margin-right:10px;color:var(--blue);transition:transform .15s ease;font-size:13px;}
+details.topic[open] summary::before{transform:rotate(90deg);}
+details.topic summary::-webkit-details-marker{display:none;}
+details.topic summary:hover{background:#f1f5f9;}
+.topic-body{padding:4px 20px 16px 20px;font-size:14.5px;}
+.topic-body p{margin:10px 0;padding-left:10px;border-left:3px solid #e2e8f0;}
+.topic-body ul, .topic-body ol{margin:8px 0;padding-left:26px;}
+.topic-body li{margin-bottom:5px;}
+.topic-body h3{font-size:14.5px;color:var(--blue);margin:16px 0 6px 0;}
+.topic-body pre{
+  background:var(--code-bg);color:var(--code-fg);padding:12px 14px;border-radius:8px;
+  overflow-x:auto;font-size:12.8px;font-family:'Consolas','Courier New',monospace;line-height:1.45;margin:10px 0;
+}
+.topic-body code{font-family:'Consolas','Courier New',monospace;background:#e2e8f0;padding:1px 5px;border-radius:4px;font-size:.92em;}
+.topic-body pre code{background:none;padding:0;}
+.topic-body blockquote{
+  background:var(--amber-bg);border-left:4px solid var(--amber-border);color:#7c3d00;
+  margin:10px 0;padding:10px 14px;border-radius:6px;font-size:13.8px;
+}
+.topic-body blockquote p{border-left:none;padding-left:0;margin:0;}
+.topic-body table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px;}
+.topic-body th,.topic-body td{border:1px solid var(--card-border);padding:6px 10px;text-align:left;}
+.topic-body th{background:#f1f5f9;}
+.topic-body img{max-width:100%;border:1px solid var(--card-border);border-radius:8px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.topic-body hr{border:none;border-top:1px solid var(--card-border);margin:16px 0;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h2>JVM Internals — Interview Guide</h2>
+  <div class="actions">
+    <button onclick="toggleAll(true)">Expand all</button>
+    <button onclick="toggleAll(false)">Collapse all</button>
+  </div>
+</div>
+<div class="wrap">
+<section class="file-section" id="jvm-internals-interview-preparation">
+<h1 class="file-title">JVM Internals — Interview Preparation</h1>
+<div class="file-intro"><blockquote>
+<p>Architecture, class loading, JIT compilation, and garbage collection — with worked Java examples, pitfalls, and interview Q&amp;A in every section.</p>
+</blockquote></div>
+<details class="topic" open><summary>Contents</summary><div class="topic-body"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Part</th>
+<th>Covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="./Part1-Architecture-ClassLoading.md">Architecture &amp; Class Loading</a></td>
+<td>JDK/JRE/JVM, bytecode, the four architecture components, Heap vs Stack, class loading phases, classloader delegation, custom classloaders, JIT (C1/C2/AOT), tuning flags</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="./Part2-Garbage-Collection.md">Garbage Collection</a></td>
+<td>Reachability &amp; GC roots, minor vs major GC, the four core algorithms, why generational GC combines them, survivor space design, modern collector lineup (G1/ZGC/Shenandoah), Stop-The-World &amp; safepoints, the four reference types</td>
+</tr>
+</tbody>
+</table></div></details>
+<details class="topic"><summary>How to use this</summary><div class="topic-body"><ul>
+<li>Every section follows the same pattern: what it is/does, a worked Java example with expected output, then an explicit <code>⚠️ Pitfall</code>.</li>
+<li>Each part ends with an <strong>Interview Q&amp;A</strong> section for a fast pre-interview pass.</li>
+<li>Cross-references to <code>core-java/Exception-Handling.md</code> (OOM debugging, class-loading errors) and the <code>Multhithreading/</code> notes (lock guarantees, thread pools) are called out inline where the topics connect.</li>
+</ul><hr/><p><em>Last updated: July 2026</em></p></div></details>
+</section>
+<section class="file-section" id="part-1-jvm-architecture-class-loading">
+<h1 class="file-title">Part 1 — JVM Architecture & Class Loading</h1>
+<div class="file-intro"><blockquote>
+<p>JDK vs JRE vs JVM, bytecode and real platform independence, the four JVM architecture components, runtime data areas, class loading phases, the classloader delegation model and custom classloaders, JIT compilation, and JVM tuning/monitoring. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>JDK vs JRE vs JVM</summary><div class="topic-body"><ul>
+<li><strong>JDK</strong> — compiler (<code>javac</code>), debugger, and the full set of development tools + libraries.</li>
+<li><strong>JRE</strong> — a subset of the JDK: only what's needed to <em>run</em> compiled Java, no compiler.</li>
+<li><strong>JVM</strong> — the actual runtime engine inside the JRE that executes bytecode, manages memory, and runs garbage collection.</li>
+</ul><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> "JVM is platform-independent" is imprecise and a common interview trap. The <strong>JVM itself is platform-specific</strong> — there's a distinct Windows JVM, Linux JVM, macOS JVM binary. What's actually platform-independent is the <strong>bytecode</strong> (<code>.class</code> files) — the same bytecode runs unmodified on any OS that has a compatible JVM installed. Platform independence is achieved <em>through</em> the JVM acting as a translation layer, not by the JVM somehow transcending platforms itself.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Bytecode and Execution</summary><div class="topic-body"><p><code>javac</code> compiles source into platform-independent bytecode. The JVM loads and verifies it, then executes it two ways simultaneously: an <strong>interpreter</strong> runs it line-by-line immediately (fast startup, slower steady-state), while the <strong>JIT compiler</strong> watches for "hot" methods executed repeatedly and compiles <em>those specific methods</em> into native machine code, caching the result so future calls skip interpretation entirely.</p></div></details>
+<details class="topic"><summary>The Four JVM Architecture Components</summary><div class="topic-body"><pre><code>┌─────────────────────────────────────────────┐
+│              Class Loader Subsystem          │  -- loads .class files into memory
+├─────────────────────────────────────────────┤
+│              Runtime Data Areas              │  -- Heap, Stack, Method Area, PC Register, Native Stack
+├─────────────────────────────────────────────┤
+│              Execution Engine                │  -- Interpreter + JIT Compiler
+├─────────────────────────────────────────────┤
+│              Garbage Collector                │  -- reclaims unreachable heap memory (Part 2)
+└─────────────────────────────────────────────┘
+</code></pre></div></details>
+<details class="topic"><summary>Runtime Data Areas — Heap vs Stack, Precisely</summary><div class="topic-body"><table>
+<thead>
+<tr>
+<th></th>
+<th>Heap</th>
+<th>Stack</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stores</td>
+<td>Objects, class instances</td>
+<td>Method call frames, local variables, references</td>
+</tr>
+<tr>
+<td>Shared across threads?</td>
+<td><strong>Yes</strong> — one heap for the whole JVM</td>
+<td><strong>No</strong> — one stack <strong>per thread</strong></td>
+</tr>
+<tr>
+<td>Managed by</td>
+<td>Garbage Collector</td>
+<td>LIFO push/pop on method call/return</td>
+</tr>
+<tr>
+<td>Speed</td>
+<td>Slower (GC overhead, fragmentation)</td>
+<td>Faster (simple push/pop)</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>Large, configurable (<code>-Xms</code>/<code>-Xmx</code>)</td>
+<td>Smaller, per-thread (<code>-Xss</code>)</td>
+</tr>
+</tbody>
+</table><p><strong>Other runtime areas</strong>, less commonly asked but worth naming precisely: the <strong>Method Area</strong> (Metaspace since Java 8, replacing PermGen) stores class metadata, method bytecode, and the runtime constant pool. The <strong>PC (Program Counter) Register</strong> is per-thread, tracking the address of the currently executing instruction — necessary because each thread can be at a different point in execution. The <strong>Native Method Stack</strong> supports native (JNI, C/C++) method calls, separate from the Java stack.</p><p><strong>What happens when you write <code>new Employee()</code>:</strong>
+1. <code>new</code> allocates memory for the object <strong>on the heap</strong>.
+2. The JVM initializes fields (default values, then constructor logic) and assigns a memory address.
+3. The <strong>reference</strong> to that heap object is stored on the <strong>stack</strong> (a local variable or field slot).
+4. Once no reference path from a GC root reaches the object, it becomes eligible for garbage collection (Part 2).</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> the object itself is never "on the stack" — only the reference to it is, and only for local variables. This is the precise mechanical answer behind "why do stack overflows and heap OOMs have completely different causes" — a <code>StackOverflowError</code> is unbounded recursion filling per-thread stack frames; a heap OOM is too many live <em>objects</em>, an entirely separate memory region.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Class Loading — Phases and Loaders</summary><div class="topic-body"><p><strong>Three phases, in order:</strong>
+1. <strong>Loading</strong> — the class file is located and read into memory.
+2. <strong>Linking</strong> — verification (bytecode safety checks), preparation (default values for static fields), and (optionally) resolution of symbolic references.
+3. <strong>Initialization</strong> — static variables get their actual assigned values, and static initializer blocks run, in declaration order.</p><p><strong>Three standard classloaders, forming a hierarchy:</strong></p><pre><code>Bootstrap ClassLoader   (loads java.lang.*, core JDK classes — written in native code, has no Java parent)
+        │
+Extension/Platform ClassLoader   (loads extension libraries)
+        │
+Application ClassLoader   (loads YOUR classes, from the classpath)
+</code></pre><p><strong>The delegation model:</strong> when a class is requested, the request is delegated <strong>up</strong> to the parent first — a child ClassLoader only actually searches itself if every ancestor above it fails to find the class. This prevents duplicate class definitions and stops application code from accidentally shadowing core JDK classes (you cannot define your own <code>java.lang.String</code> and have it silently replace the real one, because the request for <code>java.lang.String</code> always resolves via the Bootstrap loader first, before your Application loader ever gets a chance).</p><p><strong>A minimal custom ClassLoader</strong>, overriding <code>findClass()</code> — the pattern behind plugin systems and hot-reload frameworks:</p><pre><code class="language-java">public class FileSystemClassLoader extends ClassLoader {
+    private final String rootDir;
+    public FileSystemClassLoader(String rootDir) { this.rootDir = rootDir; }
+
+    @Override
+    protected Class&lt;?&gt; findClass(String name) throws ClassNotFoundException {
+        try {
+            byte[] bytes = Files.readAllBytes(Path.of(rootDir, name.replace('.', '/') + ".class"));
+            return defineClass(name, bytes, 0, bytes.length); // hands raw bytecode bytes to the JVM
+        } catch (IOException e) {
+            throw new ClassNotFoundException(name, e);
+        }
+    }
+}
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> overriding <code>loadClass()</code> directly (rather than <code>findClass()</code>) is how you'd <em>break</em> the delegation model on purpose — some frameworks (Tomcat's per-webapp classloaders, OSGi) deliberately do this for isolation, but it's an unusual, deliberate override, not the default extension point.</p>
+</blockquote><p><strong><code>ClassNotFoundException</code> vs <code>NoClassDefFoundError</code>:</strong> covered in full in <code>core-java/Exception-Handling.md</code> — briefly, <code>ClassNotFoundException</code> is checked, thrown by explicit dynamic-load APIs (<code>Class.forName()</code>); <code>NoClassDefFoundError</code> is a JVM-thrown <code>Error</code> when a class available at compile time is missing at runtime during implicit resolution — and a failed static initializer permanently converts every future access of that class into a <code>NoClassDefFoundError</code>.</p></div></details>
+<details class="topic"><summary>The Execution Engine — Interpreter and JIT</summary><div class="topic-body"><p><strong>Interpreter</strong> — executes bytecode instruction-by-instruction. Fast to start (no compilation delay), slow for code that runs millions of times (re-interprets every time).</p><p><strong>JIT (Just-In-Time) Compiler</strong> — detects "hotspot" methods (hence "HotSpot JVM") via execution counters, then compiles <em>those specific methods</em> to native machine code, applying real optimizations: <strong>method inlining</strong> (replacing a call with the callee's body to remove call overhead), <strong>loop unrolling</strong>, <strong>dead code elimination</strong>, <strong>constant folding</strong>.</p><pre><code>C1 (Client Compiler)  — optimizes fast, less aggressively; good for quick startup, short-lived processes
+C2 (Server Compiler)  — optimizes slower, far more aggressively; good for long-running, throughput-sensitive services
+-XX:+TieredCompilation — uses BOTH: C1 first for fast warm-up, then re-compiles genuinely hot methods with C2
+</code></pre><p><strong>JIT vs AOT (Ahead-of-Time):</strong> JIT compiles during execution using real runtime profiling data, giving excellent peak performance for long-running processes at the cost of a warm-up period. AOT compiles to native code <em>before</em> execution (GraalVM native-image is the modern example) — faster startup and lower memory, but no runtime-profile-driven optimization, which is why AOT suits serverless/containerized short-lived workloads and JIT suits long-running application servers.</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> "JIT makes Java as fast as C++" oversells it — JIT closes a large part of the interpreted-vs-compiled gap for hot paths specifically, after a warm-up period; it does nothing for code paths that only run once or twice, and the warm-up itself is a real cost for short-lived processes (a classic pain point AOT/GraalVM specifically targets).</p>
+</blockquote></div></details>
+<details class="topic"><summary>Tuning and Monitoring</summary><div class="topic-body"><p><strong>Common flags:</strong></p><pre><code>-Xms512m               initial heap size
+-Xmx2g                 maximum heap size
+-XX:NewRatio=2         ratio between young and old generation
+-XX:+UseG1GC           select the G1 garbage collector (Part 2)
+-XX:+PrintGCDetails    verbose GC logging
+-XX:+HeapDumpOnOutOfMemoryError   auto-capture a heap dump on OOM (see Exception-Handling.md)
+</code></pre><p><strong>Monitoring tools:</strong> <code>jconsole</code>/<code>VisualVM</code> for real-time heap/CPU/GC visibility, <strong>Java Flight Recorder (JFR)</strong> + <strong>Java Mission Control (JMC)</strong> for low-overhead production profiling, <code>jstack</code>/<code>jcmd Thread.print</code> for thread dumps, <code>jmap -dump</code> for heap dumps.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the most common tuning mistake:</strong> treating <code>-Xmx</code> in isolation without considering the deployment environment. In containers/Kubernetes specifically, <code>-Xmx</code> must sit comfortably <strong>below</strong> the container's memory limit (roughly 75% is a common rule of thumb) — the JVM needs headroom beyond the heap for Metaspace, thread stacks, and native buffers, or the container gets OOMKilled by the OS/cgroup regardless of what the JVM's own heap usage looks like. Full detail in <code>core-java/Exception-Handling.md</code>.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Is the JVM platform-independent?</strong>
+No — the JVM binary itself is platform-specific (a Windows JVM, a Linux JVM, etc.). What's platform-independent is the <em>bytecode</em> it executes; the JVM is the translation layer that makes the same bytecode runnable everywhere.</p><p><strong>Q: What's the difference between Heap and Stack memory, precisely?</strong>
+Heap holds objects and is shared JVM-wide, managed by the garbage collector; Stack holds method call frames/local variables/references, is per-thread, and follows simple LIFO push/pop — no GC involvement at all.</p><p><strong>Q: Explain the classloader delegation model, and why it matters.</strong>
+A load request is delegated to the parent classloader first; a child only searches itself if every ancestor fails. This prevents application code from silently shadowing core JDK classes and avoids duplicate class definitions across the hierarchy.</p><p><strong>Q: JIT vs AOT compilation — when would you prefer each?</strong>
+JIT compiles hot methods at runtime using real execution profiling, giving excellent peak throughput for long-running processes after a warm-up period. AOT compiles before execution for fast startup and low memory, at the cost of missing runtime-profile-driven optimizations — better suited to short-lived, serverless, or fast-cold-start workloads.</p><p><strong>Q: A container running your Spring Boot app keeps getting OOMKilled even though your JVM never logs a heap OOM — why?</strong>
+<code>-Xmx</code> was likely set too close to (or above) the container's memory limit. The JVM's heap isn't the only memory it uses — Metaspace, thread stacks, and native buffers all sit outside <code>-Xmx</code> — so the OS/cgroup kills the container for total memory usage, a distinct failure mode from a Java-level <code>OutOfMemoryError</code>. Fix: lower <code>-Xmx</code> to leave real headroom, and confirm <code>-XX:+UseContainerSupport</code> is active.</p></div></details>
+</section>
+<section class="file-section" id="part-2-garbage-collection">
+<h1 class="file-title">Part 2 — Garbage Collection</h1>
+<div class="file-intro"><blockquote>
+<p>How the JVM decides an object is garbage, minor vs major GC, the four core GC algorithms and why generational collection combines them, why the survivor space exists (and is split into two), the modern collector lineup (Serial/Parallel/G1/ZGC/Shenandoah), Stop-The-World and safepoints, and the four Java reference types with real code. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>How the JVM Decides an Object Is Garbage</summary><div class="topic-body"><p><strong>What it is:</strong> Garbage Collection automatically identifies and reclaims heap memory occupied by objects no longer reachable, so new objects can be allocated without the program ever calling <code>free()</code>.</p><p><strong>Reachability, precisely:</strong> an object becomes eligible for GC the moment there's no reference path from any <strong>GC Root</strong> to it. GC Roots include: active thread stack variables, static variables, JNI references, and objects still referenced from an active method's call frame.</p><pre><code class="language-java">public void test() {
+    User u = new User(); // object created, reachable via local variable 'u' -&gt; GC Root (stack)
+    u = null;             // no reference path remains -&gt; now eligible for GC
+}
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> "eligible for GC" does not mean "collected immediately." The GC runs on its own schedule (or when triggered by memory pressure) — an unreachable object can sit in the heap for an arbitrary amount of time before an actual collection cycle reclaims it. <code>System.gc()</code> only <em>suggests</em> a collection; the JVM is free to ignore it entirely.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Minor GC vs Major GC</summary><div class="topic-body"><table>
+<thead>
+<tr>
+<th></th>
+<th>Minor (Young) GC</th>
+<th>Major (Old) GC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Region</td>
+<td>Young Generation (Eden + Survivor)</td>
+<td>Old Generation</td>
+</tr>
+<tr>
+<td>Triggered by</td>
+<td>Eden fills up</td>
+<td>Old Gen fills up, or promotion failure from Young Gen</td>
+</tr>
+<tr>
+<td>Collects</td>
+<td>Short-lived, newly created objects</td>
+<td>Long-lived objects that survived multiple minor GCs</td>
+</tr>
+<tr>
+<td>Frequency</td>
+<td>Frequent</td>
+<td>Infrequent</td>
+</tr>
+<tr>
+<td>Pause time</td>
+<td>Short</td>
+<td>Longer, more expensive</td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>Copying/scavenging live objects out of Eden</td>
+<td>Mark → Sweep → Compact (collector-dependent)</td>
+</tr>
+</tbody>
+</table></div></details>
+<details class="topic"><summary>The Four Core Algorithms</summary><div class="topic-body"><p><strong>1. Mark and Sweep</strong> — walk from GC Roots, <strong>mark</strong> every reachable object; <strong>sweep</strong> removes everything unmarked.</p><pre><code>Root -&gt; A -&gt; B -&gt; C   (reachable, marked)
+D -&gt; E                (no path from root -&gt; unmarked -&gt; swept)
+</code></pre><p><strong>Problem:</strong> leaves fragmented free memory scattered between surviving objects — slow for large heaps, and large-object allocation can fail even with plenty of <em>total</em> free space if no single contiguous block is big enough.</p><p><strong>2. Mark-Compact</strong> — same marking phase, but instead of just removing dead objects, it <strong>slides all live objects to one end</strong> of the region, then reclaims everything past that boundary as one contiguous block.</p><pre><code>Before:  [A*][B][C*][D][E][F*]     (* = live)
+After:   [A][C][F][ Free space  ]
+</code></pre><p>Fixes fragmentation entirely, at the cost of extra work: every reference pointing at a moved object must be updated to its new address.</p><p><strong>3. Copying</strong> — divide memory into two equal semi-spaces (<strong>From</strong> and <strong>To</strong>); allocate only in From; on GC, copy <em>only the live objects</em> into To, then swap roles.</p><pre><code>From: [A][B][C][D][E][Free]   (only A, C, E are still live)
+                |  copy live objects only
+                v
+To:   [A][C][E]
+                |  swap roles
+                v
+Active space is now: [A][C][E][Free][Free][Free]
+</code></pre><p>Very fast (touches only live objects, not dead ones) and produces zero fragmentation, at the cost of permanently sacrificing half the available memory to the inactive space.</p><p><strong>4. Generational Collection</strong> — the practical combination: since the Young Generation reliably has a <em>high death rate</em> (most objects created are short-lived and die fast), the fast <strong>Copying</strong> algorithm suits it well — copying the few survivors is cheap. Since the Old Generation has a <em>high survival rate</em> (few new dead objects per cycle, no benefit from wasting half the space), <strong>Mark-Sweep</strong> or <strong>Mark-Compact</strong> suits it better.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the single most-tested GC design insight:</strong> generational GC isn't "one algorithm made generational," it's a deliberate <em>combination</em> of two different algorithms, each matched to a different generation's actual object-lifetime statistics. Explaining <em>why</em> each algorithm fits its generation (not just naming which one goes where) is what separates a memorized answer from an understood one.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Why the Survivor Space Exists — and Why It's Split in Two</summary><div class="topic-body"><p><strong>Without a survivor space:</strong> every object surviving Eden's minor GC would go straight to the Old Generation. Many objects that survive <em>one</em> minor GC still die within the next two or three — sending them to the Old Gen immediately would fill it prematurely, triggering expensive major GCs far more often than necessary. The Survivor space acts as a probation buffer — only objects that survive several minor GC cycles (commonly tuned via <code>-XX:MaxTenuringThreshold</code>) get promoted to Old Gen.</p><p><strong>Why two Survivor spaces (From/To), not one:</strong> with only one Survivor space, clearing dead objects <em>within</em> it would require Mark-Sweep on that region too — reintroducing the exact fragmentation problem generational collection exists to avoid, specifically inside the young-object-heavy region where it would hurt most. With two: each minor GC copies Eden's + the current Survivor's live objects into the <em>other</em> (empty) Survivor space, then the roles swap — the same Copying-algorithm benefit (no fragmentation) applied consistently every cycle. Splitting into three-plus spaces was considered and rejected — each partition would be small enough to fill up too fast, so two was settled on as the practical trade-off.</p></div></details>
+<details class="topic"><summary>Types of Garbage Collectors</summary><div class="topic-body"><pre><code>| Collector    | Young Gen Algorithm      | Old Gen Algorithm            | Best for                              |
+|--------------|--------------------------|-------------------------------|----------------------------------------|
+| Serial GC    | Copying                 | Mark-Compact                  | Small apps, single-threaded, low memory|
+| Parallel GC  | Copying                 | Mark-Compact                  | Throughput-focused, multi-core, default pre-Java 9 |
+| CMS          | Copying                 | Mark-Sweep (concurrent)       | Low-latency (deprecated, removed Java 14)|
+| G1 GC        | Copying (region-based)  | Mark-Compact (region-based)   | Balanced latency+throughput, default since Java 9 |
+| ZGC          | Concurrent Mark         | Relocation (copying-like)     | Ultra-low pause, very large heaps      |
+| Shenandoah   | Concurrent Mark         | Concurrent Compaction         | Ultra-low pause, alternative to ZGC    |
+</code></pre><pre><code>java -XX:+UseSerialGC   -jar app.jar
+java -XX:+UseParallelGC -jar app.jar
+java -XX:+UseG1GC       -jar app.jar   # default since Java 9
+java -XX:+UseZGC        -jar app.jar
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> CMS (<code>-XX:+UseConcMarkSweepGC</code>) is <strong>deprecated as of Java 9 and fully removed in Java 14</strong> — naming it as a current production option in a 2026-era interview is a dated answer. G1 is the safe modern default; ZGC/Shenandoah are the answer specifically when sub-millisecond pause times matter more than raw throughput (very large heaps, latency-sensitive trading/real-time systems).</p>
+</blockquote></div></details>
+<details class="topic"><summary>Stop-The-World (STW) and Safepoints</summary><div class="topic-body"><p><strong>What it is:</strong> a JVM mechanism where <strong>every application thread is paused</strong> so the collector can operate on a heap guaranteed not to be changing mid-operation.</p><pre><code>Application Running
+        |
+        v
+------ STOP THE WORLD ------
+| Mark objects              |
+| Copy / Compact memory     |
+| Update references         |
+-----------------------------
+        |
+        v
+Application Resumes
+</code></pre><p><strong>Why it's required:</strong> if application threads kept mutating references while the collector was marking or relocating objects, the heap could become inconsistent mid-collection — a moved object's old references not yet updated, or a newly-created reference to an object already swept. To guarantee correctness, the JVM brings every thread to a <strong>safepoint</strong> (a point where thread state is consistent and safely inspectable), freezes them, performs the GC phase, then resumes.</p><pre><code class="language-java">public class StopTheWorldExample {
+    public static void main(String[] args) {
+        Runtime rt = Runtime.getRuntime();
+        System.out.println("Free before GC: " + rt.freeMemory());
+        System.gc(); // requests a GC cycle -- may trigger a real STW pause
+        System.out.println("Free after GC: " + rt.freeMemory());
+    }
+}
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> "modern collectors don't have STW pauses" is false — even fully concurrent collectors like G1 and ZGC still require <strong>short</strong> STW phases for specific operations (initial marking, reference processing) — they minimize and bound STW duration, they don't eliminate it. The real tuning goal is reducing STW <em>duration and frequency</em>, via heap sizing, region configuration, and collector choice — not chasing an STW-free system that doesn't exist.</p>
+</blockquote></div></details>
+<details class="topic"><summary>The Four Reference Types</summary><div class="topic-body"><p><strong>Strong (default)</strong> — any normal object reference. Never eligible for GC while a strong reference exists.</p><pre><code class="language-java">MyClass obj = new MyClass(); // strong reference — not collectible
+obj = null;                   // now unreachable — eligible for GC
+</code></pre><p><strong>Weak</strong> — doesn't prevent collection; the referent can be collected the moment no <em>strong</em> reference remains, regardless of memory pressure.</p><pre><code class="language-java">Gfg g = new Gfg();
+WeakReference&lt;Gfg&gt; weakRef = new WeakReference&lt;&gt;(g);
+g = null;
+// g may be collected on the VERY NEXT GC cycle -- no memory pressure required
+Gfg retrieved = weakRef.get(); // may return null if already collected
+</code></pre><p>Real use: <code>WeakHashMap</code>, canonicalizing caches where entries should disappear the instant nothing else references the key.</p><p><strong>Soft</strong> — like weak, but the JVM specifically tries to <strong>keep</strong> softly-reachable objects alive as long as possible, only clearing them <strong>right before</strong> it would otherwise throw <code>OutOfMemoryError</code>.</p><pre><code class="language-java">Gfg g = new Gfg();
+SoftReference&lt;Gfg&gt; softRef = new SoftReference&lt;&gt;(g);
+g = null;
+// g is very likely to survive many GC cycles -- only cleared under genuine memory pressure
+</code></pre><p>Real use: memory-sensitive caches (image caches, computed-result caches) that should hold onto data as long as there's spare memory, but yield gracefully instead of causing an OOM.</p><p><strong>Phantom</strong> — the referent is <em>already</em> effectively gone; <code>get()</code> <strong>always</strong> returns <code>null</code> (unlike weak/soft). Used purely for cleanup notification via a <code>ReferenceQueue</code>, after <code>finalize()</code> (or, in modern code, a <code>Cleaner</code>) has run.</p><pre><code class="language-java">ReferenceQueue&lt;Gfg&gt; queue = new ReferenceQueue&lt;&gt;();
+PhantomReference&lt;Gfg&gt; phantomRef = new PhantomReference&lt;&gt;(g, queue);
+g = null;
+Gfg retrieved = phantomRef.get(); // ALWAYS null, even before collection
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — the ordering that trips people up:</strong> Strong → Soft → Weak → Phantom is the order of "how hard the GC tries to keep it alive," from "never collect while referenced" down to "already gone, this is just a collection notification." Confusing Soft and Weak specifically (both survive until <em>some</em> trigger) is the most common mix-up — the precise distinction is Weak dies on the <em>next</em> GC regardless of memory state, Soft survives until memory pressure specifically forces the JVM's hand.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: How does the JVM decide an object is garbage?</strong>
+No reference path exists from any GC Root (active thread stacks, static variables, JNI references) to the object. Reachability, not reference <em>counting</em>, is the mechanism — this is exactly why Java handles cyclic references correctly (two objects referencing each other, but unreachable from any root, are both still collected).</p><p><strong>Q: Explain why generational GC uses different algorithms for Young and Old generations.</strong>
+Young Gen has a high death rate (most objects are short-lived) — the Copying algorithm is cheap here because so few objects actually need copying. Old Gen has a high survival rate — Copying would waste half its (large) space for little benefit, so Mark-Sweep/Mark-Compact suits it better instead.</p><p><strong>Q: Why does the Survivor space exist, and why is it split into two?</strong>
+Without it, every minor-GC survivor would go straight to Old Gen, filling it prematurely even though many would die within the next couple of cycles anyway — the Survivor space is a probation buffer. It's split into two (From/To) so the Copying algorithm's no-fragmentation benefit can be applied every cycle by alternating roles, rather than needing Mark-Sweep (and its fragmentation) within a single Survivor region.</p><p><strong>Q: Is CMS still a reasonable answer for "which GC would you pick for low latency" in a modern interview?</strong>
+No — CMS is deprecated since Java 9 and removed entirely in Java 14. G1 is the modern balanced default; ZGC/Shenandoah are the current answer when sub-millisecond pauses on very large heaps genuinely matter.</p><p><strong>Q: Do modern low-latency collectors like ZGC eliminate Stop-The-World pauses entirely?</strong>
+No — they minimize and bound STW duration for specific short phases (initial marking, reference processing), but some STW pause still exists. "Fully STW-free" is a common misconception worth correcting directly if asked.</p><p><strong>Q: Soft vs Weak reference — what's the precise difference, not just "both are weaker than strong"?</strong>
+A <code>WeakReference</code>'s referent can be collected on the very next GC cycle once no strong reference remains, independent of memory pressure. A <code>SoftReference</code>'s referent is deliberately kept alive by the JVM as long as practical, only being cleared when memory pressure genuinely requires it (right before an OOM would otherwise be thrown) — making Soft the right choice for memory-sensitive caches, and Weak the right choice for canonicalizing/identity-based structures like <code>WeakHashMap</code>.</p></div></details>
+</section>
+</div>
+<script>
+function toggleAll(open){
+  document.querySelectorAll('details.topic').forEach(d => d.open = open);
+}
+</script>
+</body>
+</html>

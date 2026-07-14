@@ -80,6 +80,32 @@ Client-side balancing (Ribbon/Spring Cloud LoadBalancer) only works well **withi
 
 > ⚠️ **Pitfall:** conflating "load balancer" with "API Gateway" — a load balancer's only job is distributing traffic across instances of the *same* service; a gateway (Part 4) does that plus routing between *different* services, auth, rate limiting, and request transformation. A load balancer is often one small piece of what a gateway does internally, not a replacement for it.
 
+## Session Affinity (Sticky Sessions) — "How Do You Make Repeat Requests Hit the Same Instance?"
+
+**This is a real question asked in a real interview — and it's a genuinely different problem from everything else in this file.** Round Robin, Least Connections, and the rest all assume any healthy instance can serve any request equally well. Sticky sessions/session affinity is the opposite requirement: **the same client's follow-up requests must land on the same specific instance** — for example, "Order request 1 was handled by instance A; make sure Order request 2 from the same user also goes to instance A."
+
+**Why this need shows up at all:** it usually means an instance is holding something in memory that the next request needs — an in-progress multi-step wizard's state, a WebSocket connection (which is **stateful by nature** and must stay on one instance for its entire duration — there's no "load balancing" a single already-established connection), or a local in-memory cache that only that instance has warmed.
+
+**How to actually implement it, by layer:**
+
+- **Server-side (cookie-based)** — the load balancer sets a cookie (e.g. AWS ALB's `AWSALB` cookie) on the first response identifying which instance served the client; on every subsequent request, it reads that cookie and routes back to the same instance. This is the most common real implementation, since it works regardless of client IP changes (mobile clients switching networks, corporate NAT pools with many users sharing one IP).
+- **Server-side (IP hash)** — Nginx's `ip_hash` (or similar) directives route based on a hash of the client's IP — simpler, no cookie needed, but breaks down when many clients share one IP (NAT) or a client's IP changes mid-session.
+- **Kubernetes Service** — supports `sessionAffinity: ClientIP` directly on a Service spec — but note this is **only** IP-hash-based (Kubernetes Services operate at L4, no visibility into HTTP cookies), so it inherits the same NAT/roaming weaknesses as Nginx's `ip_hash`.
+- **Client-side (Ribbon/Spring Cloud LoadBalancer)** — **no built-in stickiness by default.** If you need it at the client-balancing layer, you'd write a custom `ServiceInstanceListSupplier`/rule that consistently hashes a session/order ID to the same instance from the resolved instance list, rather than picking round-robin.
+
+```yaml
+# AWS ALB target group — enabling cookie-based stickiness (server-side example)
+TargetGroupAttributes:
+  - Key: stickiness.enabled
+    Value: "true"
+  - Key: stickiness.type
+    Value: lb_cookie
+  - Key: stickiness.lb_cookie.duration_seconds
+    Value: "3600"
+```
+
+> ⚠️ **Pitfall — this is the actual senior-level answer, and it's not "add sticky sessions":** the strong response to "how do you make sure request 2 goes to the same instance as request 1" is to first ask **why** that's required, because the deeper, correct microservices answer is usually **you shouldn't need to** — keep services **stateless**, and externalize whatever state you're tempted to keep in-memory (session data, order-in-progress state) to a shared store like Redis or the database, keyed by session/order ID. Any instance can then serve any request, because the state travels with the request/ID rather than living in one instance's memory. Sticky sessions are a legitimate, standard tool for the cases that genuinely require it (an already-established WebSocket connection is the clearest one — you truly cannot "load balance" a live connection mid-flight), but reflexively reaching for stickiness to solve ordinary request-affinity problems is treating a symptom instead of removing the actual constraint — and it reintroduces exactly the kind of instance-coupling and uneven-load risk (one "hot" instance accumulating all of one client's traffic) that stateless horizontal scaling exists to avoid. Naming both the mechanism **and** the "should you even need it" architectural point is what separates a strong answer from a memorized one.
+
 ---
 
 ## Interview Q&A
@@ -95,3 +121,6 @@ Covered above — Round Robin (simple, equal-cost assumption), Least Connections
 
 **Q: Is a load balancer the same thing as an API Gateway?**
 No — covered above. A load balancer distributes traffic across instances of the *same* service. A gateway routes between *different* services and adds cross-cutting concerns (auth, rate limiting, transformation) on top — a gateway may use load balancing internally, but it's a superset of responsibility, not the same thing.
+
+**Q: If a client's order request goes to instance 1, how do you guarantee their next request also goes to instance 1?**
+Covered above under "Session Affinity (Sticky Sessions)." Mechanically: server-side cookie-based stickiness (e.g. AWS ALB's `AWSALB` cookie) or IP-hash-based affinity (Nginx `ip_hash`, Kubernetes `sessionAffinity: ClientIP`) — client-side balancers like Ribbon/Spring Cloud LoadBalancer have no built-in stickiness and need a custom consistent-hashing rule. But the strong answer leads with the architectural question first: why does it need to be the same instance at all? For anything other than a live WebSocket connection, the better microservices answer is usually to externalize the state (Redis, a shared DB) so every instance is interchangeable, rather than reaching for stickiness by default.

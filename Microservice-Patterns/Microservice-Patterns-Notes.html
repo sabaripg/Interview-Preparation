@@ -92,7 +92,7 @@ details.topic summary:hover{background:#f1f5f9;}
 <tr>
 <td>3</td>
 <td><a href="./Part3-Load-Balancing.md">Load Balancing</a></td>
-<td>Client-side vs server-side, algorithms, Ribbon (legacy) vs Spring Cloud LoadBalancer (modern)</td>
+<td>Client-side vs server-side, algorithms, Ribbon (legacy) vs Spring Cloud LoadBalancer (modern), <strong>session affinity / sticky sessions</strong></td>
 </tr>
 <tr>
 <td>4</td>
@@ -105,18 +105,22 @@ details.topic summary:hover{background:#f1f5f9;}
 <td>Commands vs Queries, materialized views, the real database-sync mechanisms (event sourcing, CDC, outbox), the dual-write trap, eventual consistency, when it's overkill</td>
 </tr>
 <tr>
+<td>6</td>
+<td><a href="./Part6-Saga-Pattern.md">Saga Pattern</a></td>
+<td>Local + compensating transactions, Choreography vs Orchestration, an end-to-end Order/Inventory/Payment worked example, the isolation gap, and why most candidates fail this question</td>
+</tr>
+<tr>
 <td>—</td>
 <td><a href="./Gap-Analysis-10YOE.md">Gap Analysis — 10 YOE</a></td>
-<td>Patterns a senior interview expects that the source articles don't cover: Saga, Config Server, distributed tracing, service mesh, and more</td>
+<td>Patterns a senior interview expects that the source articles don't cover: Config Server, distributed tracing, service mesh, and more</td>
 </tr>
 </tbody>
 </table></div></details>
 <details class="topic"><summary>How to use this</summary><div class="topic-body"><ul>
 <li>Start at Part 1 if building this topic up from scratch; jump to any part to revise before an interview.</li>
 <li>Every part ends with an <strong>Interview Q&amp;A</strong> section.</li>
-<li>Every legacy library mentioned (Hystrix, Ribbon, Zuul) is paired with its modern replacement — know both, since interviewers may ask about either depending on what a legacy codebase you inherited was using.</li>
-<li>Diagrams referenced inline (<code>images/*.svg</code>) sit one folder up from these files.</li>
-</ul><hr/><p><em>Last updated: July 2026</em></p></div></details>
+<li>Every legacy library mentioned (Hystrix, Ribbon, Zuul) is</li>
+</ul></div></details>
 </section>
 <section class="file-section" id="part-1-service-discovery">
 <h1 class="file-title">Part 1 — Service Discovery</h1>
@@ -392,12 +396,10 @@ WebClient.Builder loadBalancedWebClientBuilder() {
 </blockquote></div></details>
 <details class="topic"><summary>Where Server-Side Load Balancers Fit</summary><div class="topic-body"><p>Client-side balancing (Ribbon/Spring Cloud LoadBalancer) only works well <strong>within</strong> a service mesh where every caller is itself a Spring Cloud application that can run the balancing logic. For traffic <strong>entering</strong> the system from outside (browsers, mobile apps, external partners), you need a server-side load balancer in front — this is exactly the role an <strong>API Gateway</strong> (Part 4) or a cloud load balancer (AWS ALB, GCP Load Balancer) plays, and it's common to see both layers in the same architecture: a server-side LB/gateway at the edge, client-side balancing for internal service-to-service calls.</p><blockquote>
 <p>⚠️ <strong>Pitfall:</strong> conflating "load balancer" with "API Gateway" — a load balancer's only job is distributing traffic across instances of the <em>same</em> service; a gateway (Part 4) does that plus routing between <em>different</em> services, auth, rate limiting, and request transformation. A load balancer is often one small piece of what a gateway does internally, not a replacement for it.</p>
-</blockquote><hr/></div></details>
-<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Client-side vs server-side load balancing — what's the actual difference, and which does Ribbon implement?</strong>
-Covered above — Ribbon (and its replacement, Spring Cloud LoadBalancer) are client-side: the calling application itself picks which instance to call, typically using the instance list from service discovery.</p><p><strong>Q: Ribbon vs Spring Cloud LoadBalancer — which would you use today, and why?</strong>
-Spring Cloud LoadBalancer. Ribbon has been out of the default Spring Cloud stack since the 2020.0 release train and isn't actively developed; Spring Cloud LoadBalancer is the maintained replacement, works with both <code>RestTemplate</code> and reactive <code>WebClient</code>, and uses the same <code>@LoadBalanced</code> annotation so the migration is largely mechanical.</p><p><strong>Q: Name the common load-balancing algorithms and when each is appropriate.</strong>
-Covered above — Round Robin (simple, equal-cost assumption), Least Connections (better under variable request cost), Weighted Response Time (adapts to instance performance), Zone Avoidance (Ribbon-specific, AWS-zone-aware).</p><p><strong>Q: Is a load balancer the same thing as an API Gateway?</strong>
-No — covered above. A load balancer distributes traffic across instances of the <em>same</em> service. A gateway routes between <em>different</em> services and adds cross-cutting concerns (auth, rate limiting, transformation) on top — a gateway may use load balancing internally, but it's a superset of responsibility, not the same thing.</p></div></details>
+</blockquote></div></details>
+<details class="topic"><summary>Session Affinity (Sticky Sessions) — "How Do You Make Repeat Requests Hit the Same Instance?"</summary><div class="topic-body"><p><strong>This is a real question asked in a real interview — and it's a genuinely different problem from everything else in this file.</strong> Round Robin, Least Connections, and the rest all assume any healthy instance can serve any request equally well. Sticky sessions/session affinity is the opposite requirement: <strong>the same client's follow-up requests must land on the same specific instance</strong> — for example, "Order request 1 was handled by instance A; make sure Order request 2 from the same user also goes to instance A."</p><p><strong>Why this need shows up at all:</strong> it usually means an instance is holding something in memory that the next request needs — an in-progress multi-step wizard's state, a WebSocket connection (which is <strong>stateful by nature</strong> and must stay on one instance for its entire duration — there's no "load balancing" a single already-established connection), or a local in-memory cache that only that instance has warmed.</p><p><strong>How to actually implement it, by layer:</strong></p><ul>
+<li><strong>Server-side (cookie-based)</strong> — the load balancer sets a cookie (e.g. AWS ALB's <code>AWSALB</code> cookie) on the first response identifying which instance served the client; on every subsequent request, it reads that cookie and routes back to the same instance. This is the most common real implementation, since it works regardless of client IP changes (mobile clients switching networks, c</li>
+</ul></div></details>
 </section>
 <section class="file-section" id="part-4-api-gateway">
 <h1 class="file-title">Part 4 — API Gateway</h1>
@@ -536,17 +538,156 @@ Covered above under "Eventual Consistency" — a brief window where the write si
 Covered above — when read and write workloads don't actually conflict and a single well-indexed database handles both comfortably; CQRS's operational complexity (two stores, a sync mechanism, harder local reasoning about "current" state) needs a concrete justifying symptom, not just architectural fashion.</p><p><strong>Q: How does CQRS relate to Event Sourcing — are they the same thing?</strong>
 No — related but independent. CQRS is about separating read and write <em>models</em>; Event Sourcing is about making an append-only event log the write side's <em>source of truth</em>, with current state derived by replaying events. You can do CQRS with a conventional write database (synced to the read side via CDC/Outbox) without full event sourcing, and the two are frequently conflated in casual discussion — naming the distinction explicitly is a strong signal.</p></div></details>
 </section>
+<section class="file-section" id="part-6-saga-pattern">
+<h1 class="file-title">Part 6 — Saga Pattern</h1>
+<div class="file-intro"><blockquote>
+<p>This is the pattern most candidates fail on at the 10-YOE level — not because the concept is hard, but because most prep material stops at "Choreography vs Orchestration" and never goes end-to-end through a real implementation, the failure modes, or the specific follow-up questions interviewers reach for. This file goes all the way through: the problem, both coordination styles, a complete worked example with real compensation logic, every common pitfall, and a tricky-question bank.</p>
+<p>The problem, local transactions + compensating transactions, Choreography vs Orchestration, an end-to-end small-application implementation (Order/Inventory/Payment via Kafka), saga state and correlation IDs, and the specific pitfalls that fail interviews. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>The Problem It Solves</summary><div class="topic-body"><p><strong>In a monolith:</strong> "place an order" — debit inventory, charge payment, create the order record — happens inside <strong>one local ACID transaction</strong>. If any step fails, the database rolls back everything automatically. You get atomicity for free.</p><p><strong>In microservices:</strong> Order, Inventory, and Payment are now separate services with separate databases. There is no distributed transaction manager coordinating a single commit across all three in practice — two-phase commit (2PC) technically exists but is almost never used in real microservice systems, because it requires every participant to hold locks and stay available for the duration of the coordinator's decision, which is exactly the kind of tight coupling and availability risk microservices are trying to get away from.</p><p><strong>The Saga pattern's fix:</strong> break the operation into a sequence of <strong>local transactions</strong>, each one committed independently in its own service's database. If a later step fails, you don't roll back — you can't, the earlier steps already committed elsewhere — instead you run explicit <strong>compensating transactions</strong> that semantically undo each already-completed step, in reverse order.</p><p><img alt="Saga pattern — choreography happy path and compensation" src="../images/saga-flow.svg"/></p><blockquote>
+<p>⚠️ <strong>Pitfall — the definitional trap interviewers set immediately:</strong> if you describe Saga as "a distributed transaction," you've already lost points. A Saga is explicitly <strong>not</strong> a transaction in the ACID sense — there's no isolation (other transactions can see partial saga state mid-flight — see the Isolation Gap section below) and no automatic rollback. It gives you <strong>eventual consistency with explicit, hand-written compensation</strong>, which is a fundamentally different (and weaker) guarantee than what "transaction" implies. Say this distinction out loud, unprompted — it's the single fastest way to signal real understanding in the first thirty seconds of this question.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Choreography vs Orchestration</summary><div class="topic-body"><p><strong>Choreography</strong> — no central coordinator. Each service subscribes to the events it cares about, does its local transaction, and publishes its own event for the next service to react to. Fully decentralized.</p><p><strong>Orchestration</strong> — a dedicated orchestrator service explicitly calls each participant (or tells it what to do via commands), tracks the saga's current step, and contains all the compensation logic itself. Participants don't know about each other at all — they only know about the orchestrator.</p><table>
+<thead>
+<tr>
+<th></th>
+<th>Choreography</th>
+<th>Orchestration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coordination</td>
+<td>Implicit — via events, no central brain</td>
+<td>Explicit — a dedicated orchestrator owns the flow</td>
+</tr>
+<tr>
+<td>Coupling between services</td>
+<td>Low — each only knows the event shapes it consumes/produces</td>
+<td>Services are coupled to the orchestrator's commands, not each other</td>
+</tr>
+<tr>
+<td>Visibility of the overall flow</td>
+<td>Poor — you have to mentally trace event chains across services to see the whole picture</td>
+<td>Good — the entire flow lives in one place, in code</td>
+</tr>
+<tr>
+<td>Best for</td>
+<td>A small number of steps (3–4), simple linear flows</td>
+<td>Longer/more complex flows, flows needing centralized retry/timeout logic</td>
+</tr>
+<tr>
+<td>New failure mode it introduces</td>
+<td>"Event chain sprawl" — hard to trace at scale, easy to create implicit cycles</td>
+<td>The orchestrator itself is a new single point of failure/bottleneck to design around (though it doesn't hold locks, so it's not as fragile as a 2PC coordinator)</td>
+</tr>
+</tbody>
+</table><blockquote>
+<p>⚠️ <strong>Pitfall — this is a design tradeoff question, not a trivia question:</strong> interviewers ask "which would you choose" specifically to see if you reason about the actual flow's shape rather than reciting a definition. The honest, senior answer: choreography for 2–4 steps where the event chain stays easy to hold in your head; orchestration once you're past that, or once you need centralized retry/timeout/alerting logic that would otherwise be duplicated across every participant. Don't present one as universally better.</p>
+</blockquote></div></details>
+<details class="topic"><summary>End-to-End Worked Example — Small Order System (Choreography, via Kafka)</summary><div class="topic-body"><p><strong>The scenario:</strong> placing an order needs to (1) create the order, (2) reserve inventory, (3) charge payment. Any failure after step 1 must compensate backward.</p><p><strong>1. Order Service — starts the saga:</strong></p><pre><code class="language-java">@Service
+public class OrderService {
+    private final OrderRepository orderRepository;
+    private final KafkaTemplate&lt;String, Object&gt; kafka;
+
+    @Transactional
+    public String placeOrder(OrderRequest request) {
+        String sagaId = UUID.randomUUID().toString(); // correlation ID — see below
+        Order order = new Order(sagaId, request.getItems(), OrderStatus.PENDING);
+        orderRepository.save(order); // local transaction #1 — commits here, nowhere else
+
+        kafka.send("order-events", sagaId, new OrderCreated(sagaId, request.getItems(), request.getAmount()));
+        return sagaId; // caller gets this back immediately — the saga runs asynchronously from here
+    }
+
+    @KafkaListener(topics = "payment-events")
+    public void onPaymentEvent(PaymentEvent event) {
+        Order order = orderRepository.findBySagaId(event.getSagaId());
+        if (event instanceof PaymentCompleted) {
+            order.setStatus(OrderStatus.CONFIRMED); // saga's happy-path terminal state
+        } else if (event instanceof PaymentFailed) {
+            order.setStatus(OrderStatus.CANCELLED);  // saga's compensated terminal state
+        }
+        orderRepository.save(order);
+    }
+}
+</code></pre><p><strong>2. Inventory Service — reacts, reserves, and knows how to compensate:</strong></p><pre><code class="language-java">@Service
+public class InventoryService {
+    @KafkaListener(topics = "order-events")
+    public void onOrderCreated(OrderCreated event) {
+        boolean reserved = inventoryRepository.tryReserve(event.getItems()); // local transaction #2
+        if (reserved) {
+            kafka.send("inventory-events", event.getSagaId(), new InventoryReserved(event.getSagaId(), event.getAmount()));
+        } else {
+            kafka.send("inventory-events", event.getSagaId(), new InventoryReservationFailed(event.getSagaId()));
+        }
+    }
+
+    // COMPENSATING TRANSACTION — triggered if a LATER step fails
+    @KafkaListener(topics = "payment-events")
+    public void onPaymentFailed(PaymentFailed event) {
+        inventoryRepository.releaseReservation(event.getSagaId()); // local transaction #2's undo
+        kafka.send("inventory-events", event.getSagaId(), new InventoryReleased(event.getSagaId()));
+    }
+}
+</code></pre><p><strong>3. Payment Service — the step that can actually fail for a real-world reason (declined card):</strong></p><pre><code class="language-java">@Service
+public class PaymentService {
+    @KafkaListener(topics = "inventory-events")
+    public void onInventoryReserved(InventoryReserved event) {
+        boolean charged = paymentGateway.charge(event.getSagaId(), event.getAmount()); // local transaction #3
+        if (charged) {
+            kafka.send("payment-events", event.getSagaId(), new PaymentCompleted(event.getSagaId()));
+        } else {
+            kafka.send("payment-events", event.getSagaId(), new PaymentFailed(event.getSagaId()));
+        }
+    }
+}
+</code></pre><p><strong>Tracing the compensating path (this is the part most write-ups skip):</strong> if <code>PaymentService</code> fails to charge the card, it publishes <code>PaymentFailed</code>. <code>InventoryService</code> — which already reserved the stock in step 2 — is listening for exactly that event, and its <code>onPaymentFailed</code> handler runs the <strong>compensating transaction</strong>: releasing the reservation it made earlier. <code>OrderService</code> is also listening for <code>PaymentFailed</code> and marks the order <code>CANCELLED</code>. Notice there was no rollback anywhere — three separate local transactions each committed, and the "undo" is a <strong>fourth, explicit local transaction</strong> (<code>releaseReservation</code>) that semantically reverses the second one.</p><blockquote>
+<p>⚠️ <strong>Pitfall — this is the mistake that fails candidates most often:</strong> treating compensation as "just call rollback on the other service." There is no rollback across services — a compensating transaction is <strong>new code you write</strong>, specific to each step, that produces the <em>business</em> effect of undoing the original action. For a reservation, that's straightforward (release the hold). For something like "SendConfirmationEmail," there's no true undo — the compensation might be "send a cancellation email" instead, which is a <em>semantically</em> opposite action, not a technical reversal. Some steps are genuinely <strong>not compensable</strong> at all (you can refund a payment, but you can't un-deliver a package that already shipped) — recognizing and calling out non-compensable steps explicitly is exactly the kind of answer that separates a strong candidate from one reciting definitions.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Saga State and the Correlation ID</summary><div class="topic-body"><p>Notice every event above carries a <code>sagaId</code>. This is not optional — it's how every participant knows <strong>which saga instance</strong> an event belongs to, since many orders are in flight concurrently. In choreography, each service typically persists its own local state keyed by <code>sagaId</code> (e.g. Inventory's reservation table keyed by <code>sagaId</code>, not just item ID) so that a <code>PaymentFailed</code> event days—or even just seconds—later can find and undo the <em>correct</em> reservation.</p><p><strong>In orchestration</strong>, this state is centralized instead: the orchestrator maintains an explicit <strong>saga state table</strong> (<code>sagaId</code>, current step, status, timestamps) — often literally implemented as a state machine, which makes "what step is this saga stuck on" a simple, single query instead of a cross-service tracing exercise.</p></div></details>
+<details class="topic"><summary>Orchestration Variant — Sketch</summary><div class="topic-body"><pre><code class="language-java">@Service
+public class OrderSagaOrchestrator {
+
+    public void handle(OrderCreated event) {
+        sagaStateRepo.save(new SagaState(event.getSagaId(), Step.INVENTORY_PENDING));
+        commandBus.send(new ReserveInventoryCommand(event.getSagaId(), event.getItems()));
+    }
+
+    public void handle(InventoryReserved event) {
+        sagaStateRepo.updateStep(event.getSagaId(), Step.PAYMENT_PENDING);
+        commandBus.send(new ChargePaymentCommand(event.getSagaId(), event.getAmount()));
+    }
+
+    public void handle(InventoryReservationFailed event) {
+        sagaStateRepo.updateStep(event.getSagaId(), Step.FAILED);
+        commandBus.send(new CancelOrderCommand(event.getSagaId())); // no inventory was ever reserved — nothing else to compensate
+    }
+
+    public void handle(PaymentFailed event) {
+        sagaStateRepo.updateStep(event.getSagaId(), Step.COMPENSATING);
+        commandBus.send(new ReleaseInventoryCommand(event.getSagaId())); // explicit compensation, orchestrator-driven
+        commandBus.send(new CancelOrderCommand(event.getSagaId()));
+    }
+}
+</code></pre><p><strong>What changed vs choreography:</strong> <code>InventoryService</code> and <code>PaymentService</code> no longer need to know about each other's events at all — they only respond to commands from the orchestrator and report results back to it. All the "what happens next, and what needs undoing" logic lives in exactly one place.</p></div></details>
+<details class="topic"><summary>Pitfalls — Why Candidates Actually Fail This Question</summary><div class="topic-body"><p><strong>1. Confusing Saga with 2PC / true ACID transactions.</strong> Covered above — say the eventual-consistency, no-isolation distinction explicitly and early.</p><p><strong>2. The Isolation Gap — "can another transaction see a saga's partial state?"</strong> Yes. Between <code>InventoryReserved</code> and <code>PaymentCompleted</code>, the order genuinely has reserved stock but hasn't been paid for — if another process queries inventory in that window, it sees the reservation as real (correctly), but the <em>order</em> is not yet confirmed. This is a real, accepted gap in Saga's guarantees, not a bug. Mitigations exist (semantic locks — mark the record as "pending" so other operations know to treat it specially; commutative updates designed so operation order doesn't matter) but full isolation is never achieved — know this gap exists and be ready to name it.</p><p><strong>3. Assuming compensation always succeeds.</strong> What if <code>releaseReservation()</code> itself throws (DB down, network blip)? A saga with no answer to this gets <strong>stuck</strong> — inventory is held forever, the order is neither confirmed nor cancelled. The real answer: compensating transactions need their own retry policy (with backoff), and a <strong>dead-letter queue + alerting</strong> for compensations that exhaust retries — a stuck saga becomes an operational incident, not a silent failure.</p><p><strong>4. No timeout / no terminal state guarantee.</strong> If <code>PaymentService</code> never responds at all (crashed, message lost), the saga can sit in <code>PENDING</code> forever with no one noticing. Production sagas need an explicit timeout per step (a scheduled job that finds sagas stuck past N minutes and either retries or force-compensates) — this is a detail almost never mentioned in tutorial-level Saga write-ups, and exactly the kind of operational maturity a 10-YOE interviewer is listening for.</p><p><strong>5. Not handling duplicate or out-of-order events.</strong> At-least-once delivery (the Kafka default) means <code>PaymentCompleted</code> could be delivered twice, or in rare reordering scenarios, could theoretically be processed before <code>InventoryReserved</code> is fully committed locally. Every handler above needs to be <strong>idempotent</strong> (see <code>Gap-Analysis-10YOE.md</code> — item 5) — e.g. checking the order's current status before applying a transition, so a duplicate <code>PaymentCompleted</code> doesn't double-process.</p><p><strong>6. Choreography event sprawl at scale.</strong> Past 4–5 steps, choreography's implicit event chains become genuinely hard to trace — "which services react to <code>PaymentFailed</code>, and in what order do their side effects actually happen" stops being answerable by reading any single file. This is precisely the argument for switching to orchestration, or at minimum adding distributed tracing (<code>Gap-Analysis-10YOE.md</code> — item 2) so the event chain is at least observable after the fact.</p><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Walk me through implementing the Saga pattern end-to-end for an order flow with Order, Inventory, and Payment services.</strong>
+Use the worked example above — three services, three local transactions (<code>OrderService</code> creates the order PENDING, <code>InventoryService</code> reserves stock, <code>PaymentService</code> charges the card), each publishing an event that triggers the next step, with <code>InventoryService</code> and <code>OrderService</code> both listening for <code>PaymentFailed</code> to run their respective compensating transactions (release reservation, mark order CANCELLED).</p><p><strong>Q: Choreography vs Orchestration — which would you choose, and why?</strong>
+Covered above — choreography for short (2–4 step), simple linear flows where low coupling matters most; orchestration once the flow grows past that, or once centralized retry/timeout/alerting logic is needed. Justify with the specific flow's shape, not a blanket preference.</p><p><strong>Q: Is a Saga the same as a distributed transaction? What guarantees is it missing compared to ACID?</strong>
+No — covered above under "The Problem It Solves" and "The Isolation Gap." A Saga gives eventual consistency via explicit compensation, not atomicity or isolation — other transactions can observe a saga's partial, in-flight state, which is a real, accepted gap, not an edge case to hand-wave past.</p><p><strong>Q: What happens if a compensating transaction itself fails?</strong>
+Covered above under pitfall #3 — the saga gets stuck without an explicit answer. Production systems need retries with backoff on compensations, plus a dead-letter queue and alerting once retries are exhausted, so a stuck saga surfaces as an operational incident rather than silently leaving resources held forever.</p><p><strong>Q: How do you handle duplicate or out-of-order events in a saga?</strong>
+Covered above under pitfall #5 — every event handler must be idempotent (check current state before applying a transition), since at-least-once delivery means any event can be redelivered. Cross-references the idempotency write-up in <code>Gap-Analysis-10YOE.md</code>.</p><p><strong>Q: How would you know which step a stuck saga is currently on, in production?</strong>
+In orchestration, this is a direct query against the orchestrator's saga state table (<code>sagaId</code> → current step). In choreography, there's no single source of truth for this by default — you need either a shared saga-state table each participant updates, or distributed tracing (correlation ID propagated through every event) to reconstruct the chain after the fact. This is a concrete reason orchestration is often preferred once operability matters as much as decoupling.</p><p><strong>Q: Not every step can be truly "undone" — how do you handle a non-compensable action, like an email that's already been sent?</strong>
+Covered above under the compensation pitfall — compensation is a <strong>semantic</strong> opposite (send a cancellation notice), not a literal technical rollback, and some actions (a package that already shipped) may not be compensable at all. Naming this limitation explicitly, rather than implying every step can always be cleanly undone, is what separates a strong answer from a memorized one.</p><p><strong>Q: What's the correlation ID / sagaId actually for, mechanically?</strong>
+Covered above — it's how every participating service (in choreography) or the orchestrator (in orchestration) knows which in-flight saga instance a given event belongs to, since many sagas run concurrently. Every event and every piece of per-step local state must be keyed by it.</p></div></details>
+</section>
 <section class="file-section" id="microservice-patterns-gap-analysis-for-a-10-year-experience-interview">
 <h1 class="file-title">Microservice Patterns — Gap Analysis for a 10-Year-Experience Interview</h1>
 <div class="file-intro"><blockquote>
-<p>Your source articles cover Service Discovery, Circuit Breaker, Load Balancing, and CQRS (with API Gateway filled in as a genuine gap in the first article, and the database-sync mechanism filled in as a genuine gap in the CQRS article). That's a solid set, but a 10-YOE interview — especially given your Spring Boot / Kafka / AWS / Microservices background — expects you to reason about the <em>other</em> patterns that come up once a system has more than a couple of services talking to each other. Here's what's not in the source material, ranked by how likely it is to come up given your resume.</p>
+<p>Your source articles cover Service Discovery, Circuit Breaker, Load Balancing, and CQRS (with API Gateway filled in as a genuine gap in the first article, the database-sync mechanism filled in as a genuine gap in the CQRS article, and session affinity/sticky sessions added to Load Balancing after a real interview question). Saga — the pattern most candidates actually fail on — now has its own full write-up in <strong>Part 6</strong>, not just a summary here. That's a solid set, but a 10-YOE interview — especially given your Spring Boot / Kafka / AWS / Microservices background — expects you to reason about the <em>other</em> patterns that come up once a system has more than a couple of services talking to each other. Here's what's still not covered elsewhere in this folder, ranked by how likely it is to come up given your resume.</p>
 </blockquote></div>
-<details class="topic" open><summary>1. Saga Pattern — distributed transactions (high priority, directly relevant)</summary><div class="topic-body"><p><strong>The problem:</strong> a single business operation (e.g. "place an order") that used to be one local ACID transaction in a monolith now spans multiple services (Order, Inventory, Payment) with separate databases. You can't wrap that in one transaction anymore — there's no distributed 2PC in practice at this scale.</p><p><strong>The fix — a Saga:</strong> break the operation into a sequence of local transactions, each publishing an event that triggers the next step. If a step fails, run <strong>compensating transactions</strong> to undo the previous steps' effects (you can't roll back what's already committed elsewhere — you have to actively reverse it).</p><ul>
-<li><strong>Choreography</strong> — each service listens for events and reacts independently; no central coordinator. Simple for a few steps, but the overall flow becomes hard to see from any one place as it grows.</li>
-<li><strong>Orchestration</strong> — a central orchestrator service explicitly tells each participant what to do next and handles failure/compensation logic itself. Easier to reason about and debug, at the cost of a new central component.</li>
-</ul><blockquote>
-<p>Given your Kafka background, this is very likely to come up as "how would you implement a Saga" — the expected answer is choreography via Kafka events (each service consumes an event, does its local transaction, publishes a result event) or an orchestrator (e.g. a dedicated saga-orchestrator service, or a framework like Axon/Camunda) coordinating via Kafka or direct calls.</p>
-</blockquote></div></details>
+<details class="topic" open><summary>1. Saga Pattern — see Part 6 (high priority, directly relevant)</summary><div class="topic-body"><p>Moved to its own dedicated file: <strong><code>Part6-Saga-Pattern.md</code></strong> — covers local + compensating transactions, Choreography vs Orchestration, a full end-to-end Order/Inventory/Payment worked example with real compensation code, the isolation gap, stuck-saga/timeout handling, and a tricky-question bank. Given your Kafka background this is very likely to come up, and it's the single highest-value file in this folder to review closely.</p></div></details>
 <details class="topic"><summary>2. Distributed Tracing (high priority, directly relevant)</summary><div class="topic-body"><p><strong>The problem:</strong> a single user request can fan out across 5+ services. When it's slow or fails, which service in the chain is actually the problem? Logs scattered across 5 services with no shared identifier make this nearly impossible to answer quickly.</p><p><strong>The fix:</strong> every request gets a <strong>trace ID</strong> at the entry point (often the API Gateway — see Part 4), propagated through every downstream call (via HTTP headers or Kafka message headers), so every log line and every span across every service can be correlated back to one request.</p><ul>
 <li><strong>Legacy stack:</strong> Spring Cloud Sleuth + Zipkin.</li>
 <li><strong>Current stack:</strong> Sleuth is being superseded by <strong>Micrometer Tracing</strong> (Spring's own tracing facade) paired with <strong>OpenTelemetry</strong> as the instrumentation standard and Zipkin or Jaeger as the backend/visualization layer.</li>
@@ -569,7 +710,8 @@ No — related but independent. CQRS is about separating read and write <em>mode
 <li><strong>Distributed tracing</strong> (#2) — cheap to learn at a "know the current stack" level, commonly asked as a quick knowledge-currency check.</li>
 <li><strong>Config Server</strong> (#3) — straightforward, high probability of a quick factual question.</li>
 <li><strong>Outbox pattern</strong> (#7) — likely to surface as a natural follow-up if Saga/Kafka reliability or CQRS sync comes up (Part 5 already cross-references it).</li>
-<li><strong>Service mesh + Strangler Fig</strong> (#4, #6) — lower probability, but good to have a one-paragraph answer ready for "have you heard of X."</li>
+<li><strong>Service mesh + Strangler Fig</strong> (#4, #6) — lower probability, but good to have a one-paragraph answer ready for "have you heard of X."
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </li>
 </ol></div></details>
 </section>
 </div>
