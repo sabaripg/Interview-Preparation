@@ -1,0 +1,48 @@
+<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+    <marker id="arrowAmber2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c79a1e"/>
+    </marker>
+    <marker id="arrowGreen2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="760" height="420" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">Circuit Breaker — State Machine</text>
+
+  <!-- CLOSED -->
+  <circle cx="140" cy="200" r="70" fill="#e9f7ef" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="140" y="195" text-anchor="middle" font-size="16" font-weight="700" fill="#1a1a1a">CLOSED</text>
+  <text x="140" y="215" text-anchor="middle" font-size="11" fill="#333">requests flow normally</text>
+
+  <!-- OPEN -->
+  <circle cx="620" cy="200" r="70" fill="#fdecea" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="620" y="195" text-anchor="middle" font-size="16" font-weight="700" fill="#1a1a1a">OPEN</text>
+  <text x="620" y="215" text-anchor="middle" font-size="11" fill="#333">fail fast, fallback used</text>
+
+  <!-- HALF-OPEN -->
+  <circle cx="380" cy="330" r="70" fill="#fff8e1" stroke="#c79a1e" stroke-width="2.5"/>
+  <text x="380" y="325" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a1a">HALF-OPEN</text>
+  <text x="380" y="345" text-anchor="middle" font-size="11" fill="#333">limited test requests</text>
+
+  <!-- CLOSED -> OPEN -->
+  <path d="M205,175 C 350,110 480,110 555,170" stroke="#c0392b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="380" y="105" text-anchor="middle" font-size="12" fill="#c0392b" font-weight="600">failure threshold exceeded (e.g. 5 failures / 10s)</text>
+
+  <!-- OPEN -> HALF-OPEN -->
+  <path d="M580,262 C 520,300 460,320 440,325" stroke="#c79a1e" stroke-width="2.5" fill="none" marker-end="url(#arrowAmber2)"/>
+  <text x="560" y="290" font-size="12" fill="#c79a1e" font-weight="600">reset timeout elapses</text>
+
+  <!-- HALF-OPEN -> CLOSED -->
+  <path d="M320,290 C 260,260 210,235 190,220" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#arrowGreen2)"/>
+  <text x="185" y="270" font-size="12" fill="#2e7d32" font-weight="600">test requests succeed</text>
+
+  <!-- HALF-OPEN -> OPEN -->
+  <path d="M430,285 C 480,255 530,225 555,205" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,4" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="470" y="245" font-size="12" fill="#c0392b" font-weight="600">test request fails</text>
+
+  <text x="380" y="400" text-anchor="middle" font-size="12" fill="#555">Closed to Open is threshold-driven; Open to Half-Open is time-driven; Half-Open resolves on the very next test outcome.</text>
+</svg>

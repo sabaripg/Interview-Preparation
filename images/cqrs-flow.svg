@@ -1,0 +1,66 @@
+<svg viewBox="0 0 760 460" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrowCmd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2c5aa0"/>
+    </marker>
+    <marker id="arrowEvt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c79a1e"/>
+    </marker>
+    <marker id="arrowQry" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="760" height="460" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">CQRS — Separate Write and Read Models</text>
+
+  <!-- Client -->
+  <rect x="20" y="200" width="120" height="60" rx="8" fill="#fff8e1" stroke="#c79a1e" stroke-width="2.5"/>
+  <text x="80" y="235" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">Client</text>
+
+  <!-- Command side -->
+  <rect x="220" y="70" width="180" height="60" rx="8" fill="#eef3fb" stroke="#2c5aa0" stroke-width="2.5"/>
+  <text x="310" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">Command Handler</text>
+  <text x="310" y="113" text-anchor="middle" font-size="11" fill="#333">validation + business logic</text>
+
+  <rect x="220" y="170" width="180" height="60" rx="8" fill="#eef3fb" stroke="#2c5aa0" stroke-width="2.5"/>
+  <text x="310" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">Write Database</text>
+  <text x="310" y="213" text-anchor="middle" font-size="11" fill="#333">normalized schema</text>
+
+  <!-- Query side -->
+  <rect x="560" y="70" width="180" height="60" rx="8" fill="#e9f7ef" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="650" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">Query Handler</text>
+  <text x="650" y="113" text-anchor="middle" font-size="11" fill="#333">no business logic, DTO out</text>
+
+  <rect x="560" y="170" width="180" height="60" rx="8" fill="#e9f7ef" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="650" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">Read Database</text>
+  <text x="650" y="213" text-anchor="middle" font-size="11" fill="#333">materialized view, denormalized</text>
+
+  <!-- Sync mechanism -->
+  <rect x="380" y="280" width="180" height="60" rx="8" fill="#fdf3e0" stroke="#c79a1e" stroke-width="2.5"/>
+  <text x="470" y="305" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Event / CDC / Outbox</text>
+  <text x="470" y="323" text-anchor="middle" font-size="11" fill="#333">async sync mechanism</text>
+
+  <!-- Client -> Command -->
+  <path d="M140,215 C 175,180 190,140 218,110" stroke="#2c5aa0" stroke-width="2.5" fill="none" marker-end="url(#arrowCmd)"/>
+  <text x="150" y="160" font-size="11" fill="#2c5aa0" font-weight="600">command (write intent)</text>
+
+  <!-- Client -> Query -->
+  <path d="M140,240 C 300,290 450,300 555,105" stroke="#2e7d32" stroke-width="2.2" fill="none" marker-end="url(#arrowQry)"/>
+  <text x="230" y="270" font-size="11" fill="#2e7d32" font-weight="600">query (read, never mutates)</text>
+
+  <!-- Command -> WriteDB -->
+  <path d="M310,130 L 310,168" stroke="#2c5aa0" stroke-width="2.5" fill="none" marker-end="url(#arrowCmd)"/>
+
+  <!-- WriteDB -> sync -->
+  <path d="M360,230 C 390,250 400,265 410,278" stroke="#c79a1e" stroke-width="2.5" fill="none" marker-end="url(#arrowEvt)"/>
+
+  <!-- sync -> ReadDB -->
+  <path d="M540,290 C 580,265 610,240 630,232" stroke="#c79a1e" stroke-width="2.5" fill="none" marker-end="url(#arrowEvt)"/>
+  <text x="470" y="270" text-anchor="middle" font-size="11" fill="#c79a1e" font-weight="600">async, eventually consistent</text>
+
+  <!-- ReadDB -> Query -->
+  <path d="M650,168 L 650,132" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#arrowQry)"/>
+
+  <text x="380" y="410" text-anchor="middle" font-size="12" fill="#555">Write and read sides are physically separate — kept in sync asynchronously, never by a synchronous dual write.</text>
+  <text x="380" y="430" text-anchor="middle" font-size="12" fill="#555">A client that queries immediately after a command may briefly see stale data — this is the eventual-consistency tradeoff.</text>
+</svg>
