@@ -99,6 +99,42 @@ ForkJoinPool customPool = new ForkJoinPool(4); // explicit parallelism level, in
 ```
 > ⚠️ **Pitfall:** never run **blocking I/O** inside a `ForkJoinPool` task (including the common pool used by `parallelStream()` and `CompletableFuture`) — with only as many workers as CPU cores, a few blocked tasks can starve the pool for every other concurrent user of it in the JVM. That's precisely why `CompletableFuture`'s I/O-bound examples (see the dedicated guide) push you toward a separate custom `Executor` instead.
 
+## Custom Thread Pool for Parallel Streams
+
+**The problem:** `list.parallelStream()` always runs on the JVM-wide **common** `ForkJoinPool` — there's no `parallelStream(executor)` overload. Every parallel stream in your entire JVM (plus any `CompletableFuture` using the default async methods) shares that same pool. A long-running or blocking parallel stream operation can starve every other concurrent user of the common pool, and you can't simply hand it a differently-sized or isolated pool through the Streams API itself.
+
+**The workaround:** submit the stream pipeline as a task to your own `ForkJoinPool` instance — since `ForkJoinTask.fork()`/`invoke()` execution picks up the *ambient* pool of whichever thread submitted the work, wrapping the whole pipeline in `customPool.submit(...)` makes the stream run on your pool instead of the common one.
+
+```java
+public class CustomPoolParallelStream {
+    public static void main(String[] args) throws Exception {
+        ForkJoinPool customPool = new ForkJoinPool(4); // isolated from the common pool
+
+        List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8);
+
+        int sum = customPool.submit(() ->
+            numbers.parallelStream()
+                   .peek(n -> System.out.println(Thread.currentThread().getName() + " processing " + n))
+                   .mapToInt(Integer::intValue)
+                   .sum()
+        ).get(); // .submit() returns a ForkJoinTask/Future — get() blocks for the result
+
+        System.out.println("Sum: " + sum);
+        customPool.shutdown();
+    }
+}
+```
+**One possible output (worker names show it's the custom pool, not `ForkJoinPool.commonPool-worker-N`):**
+```
+ForkJoinPool-1-worker-1 processing 1
+ForkJoinPool-1-worker-2 processing 3
+ForkJoinPool-1-worker-3 processing 5
+...
+Sum: 36
+```
+
+> ⚠️ **Pitfall:** this is a genuine workaround, not officially blessed API — the JDK team has never guaranteed that a stream pipeline submitted this way won't ever spill work back onto the common pool in some edge cases (it reliably doesn't in current JDKs, but it's relying on `ForkJoinTask`'s ambient-pool behavior rather than a documented Streams-API contract). Mention this honestly if asked "is this guaranteed" — the honest senior answer is "it's the standard, working-in-practice technique, but it isn't a first-class Streams API feature," and for real isolation guarantees a manual `ExecutorService` + manually-partitioned tasks is the fully-supported alternative.
+
 ---
 
 ## Interview Q&A
@@ -117,3 +153,6 @@ Covered above under "RecursiveAction" — `RecursiveTask<V>.compute()` returns `
 
 **Q: How many threads does a ForkJoinPool use by default, and why is that different from ThreadPoolExecutor sizing?**
 Covered above under "Sizing the ForkJoinPool" — defaults to one worker per CPU core, appropriate for CPU-bound divide-and-conquer work, unlike `ThreadPoolExecutor`'s I/O-bound sizing (Part 2). Never block on I/O inside a ForkJoinPool task, including the shared common pool.
+
+**Q: How do you make a parallel stream run on a custom thread pool instead of the shared common pool?**
+Covered above under "Custom Thread Pool for Parallel Streams" — wrap the pipeline in `customForkJoinPool.submit(() -> list.parallelStream()....).get()`. There's no direct `parallelStream(executor)` API; this relies on `ForkJoinTask` execution picking up the ambient pool of the submitting thread, which works reliably in practice but isn't a formally documented Streams API guarantee.

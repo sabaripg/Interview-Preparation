@@ -97,6 +97,36 @@ Thread-1: 11
 
 > ⚠️ **Pitfall:** in thread-pool-based servers (Tomcat, etc.), threads are **reused** across requests. If you forget to call `threadLocalValue.remove()` at the end of a request, stale data leaks into the next request handled by the same pooled thread — a classic memory-leak / data-leak bug. Always clean up in a `finally` block.
 
+## ThreadLocalRandom
+
+**The problem it solves:** a plain `java.util.Random` instance shared across threads is internally backed by a single `AtomicLong` seed, updated via a CAS loop on every call to `nextInt()`/`nextDouble()`/etc. Under high contention (many threads all generating random numbers concurrently), every thread's CAS retries against that *same* seed, causing exactly the kind of contention/cache-line bouncing `LongAdder` was built to avoid for counters (Part 5) — except here it's baked into `Random` itself with no built-in fix.
+
+**What `ThreadLocalRandom` does:** exactly what the name says — combines `ThreadLocal` (Part 6, above) with a random generator, giving each thread its own independent generator instance with its own independent seed. No shared state, no CAS, no contention at all between threads.
+
+```java
+public class ThreadLocalRandomDemo {
+    public static void main(String[] args) throws InterruptedException {
+        Runnable task = () -> {
+            int value = ThreadLocalRandom.current().nextInt(1, 100);
+            System.out.println(Thread.currentThread().getName() + " got: " + value);
+        };
+        Thread t1 = new Thread(task);
+        Thread t2 = new Thread(task);
+        t1.start(); t2.start();
+        t1.join(); t2.join();
+    }
+}
+```
+**One possible output (each thread draws from its own independent generator):**
+```
+Thread-0 got: 47
+Thread-1 got: 12
+```
+
+**The API difference to notice:** you never call `new ThreadLocalRandom()` — the constructor is private. You always go through the static `ThreadLocalRandom.current()`, which hands back the calling thread's own instance (creating it lazily on first use, exactly like `ThreadLocal.withInitial()` does).
+
+> ⚠️ **Pitfall:** the mistake this actually catches in an interview is reaching for `new Random()` shared as a `static` field to "avoid creating objects repeatedly" — that instinct is exactly backwards under concurrency. A shared `Random` is a hidden contention point that scales worse as thread count grows; `ThreadLocalRandom.current()` has no shared state to contend over, and is the correct default in any multi-threaded context. Keep a single shared `Random` only when you specifically need a **reproducible seed** across threads for deterministic tests — `ThreadLocalRandom` explicitly does not support seeding for that reason.
+
 ## Designing a Thread-Safe, Bounded LRU Cache
 
 **Core structure:** `LinkedHashMap` in access-order mode, overriding `removeEldestEntry()` to evict once size exceeds capacity — gives LRU eviction for free from the JDK.
@@ -129,6 +159,9 @@ Covered above.
 
 **Q: What are use cases of ThreadLocal variables in Java?**
 Covered above.
+
+**Q: Why prefer ThreadLocalRandom over a shared Random instance in concurrent code?**
+Covered above under "ThreadLocalRandom." A shared `Random` serializes every thread through CAS retries on one internal seed; `ThreadLocalRandom.current()` gives each thread its own uncontended generator instance — strictly better for concurrent code, with the one tradeoff being no reproducible shared seeding.
 
 **Q: Design a thread-safe, bounded LRU cache — what are the key decisions?**
 Covered above.

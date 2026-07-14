@@ -97,7 +97,7 @@ details.topic summary:hover{background:#f1f5f9;}
 <tr>
 <td>4</td>
 <td><a href="./Part4-Locks.md">Locks</a></td>
-<td>synchronized vs ReentrantLock, situational lock-selection guide, ReadWriteLock, StampedLock, optimistic vs pessimistic locking, deadlock/livelock/starvation</td>
+<td>synchronized vs ReentrantLock, situational lock-selection guide, ReadWriteLock, StampedLock, optimistic vs pessimistic locking, deadlock/livelock/starvation, Dining Philosophers</td>
 </tr>
 <tr>
 <td>5</td>
@@ -107,12 +107,12 @@ details.topic summary:hover{background:#f1f5f9;}
 <tr>
 <td>6</td>
 <td><a href="./Part6-Concurrent-Collections.md">Concurrent Collections</a></td>
-<td>ConcurrentHashMap internals, CopyOnWriteArrayList, BlockingQueue variants, ThreadLocal, LRU cache design</td>
+<td>ConcurrentHashMap internals, CopyOnWriteArrayList, BlockingQueue variants, ThreadLocal, ThreadLocalRandom, LRU cache design</td>
 </tr>
 <tr>
 <td>7</td>
 <td><a href="./Part7-ForkJoin-Parallelism.md">Fork/Join &amp; Parallelism</a></td>
-<td>Concurrency vs parallelism, ForkJoinPool, RecursiveTask, work-stealing</td>
+<td>Concurrency vs parallelism, ForkJoinPool, RecursiveTask, work-stealing, custom thread pool for parallel streams</td>
 </tr>
 <tr>
 <td>8</td>
@@ -130,8 +130,8 @@ details.topic summary:hover{background:#f1f5f9;}
 <li>Start at Part 1 and work forward if you're building fundamentals up.</li>
 <li>Jump straight to a part if you're revising a specific topic before an interview.</li>
 <li>Every part ends with an <strong>Interview Q&amp;A</strong> section — good for a fast pre-interview pass.</li>
-<li>Diagrams referenced inline (<code>images/*.svg</code>) sit one folder up from these files.</li>
-</ul><hr/><p><em>Last updated: July 2026</em></p></div></details>
+<li>Diagrams referenced inline (`im</li>
+</ul></div></details>
 </section>
 <section class="file-section" id="part-1-fundamentals">
 <h1 class="file-title">Part 1 — Fundamentals</h1>
@@ -1322,42 +1322,55 @@ Thread 2: waiting for Lock A...
 - <strong>Detect via thread dump</strong> (<code>jstack &lt;pid&gt;</code>) — the JVM explicitly reports "Found one Java-level deadlock" naming the exact threads and locks. Programmatically, <code>ThreadMXBean.findDeadlockedThreads()</code> does the same in-process — useful for an automated health check.</p><blockquote>
 <p>⚠️ <strong>Pitfall:</strong> lock ordering is the most robust solution because it <em>prevents</em> deadlocks rather than just recovering from them. If asked "how would you detect this in production," the answer is a thread dump, not staring at logs.</p>
 </blockquote></div></details>
-<details class="topic"><summary>Livelock and Starvation</summary><div class="topic-body"><p><strong>Livelock</strong> — threads keep actively responding to each other, but nothing gets done, like two people repeatedly stepping aside for each other in a hallway, forever. Unlike deadlock, threads are <strong>not blocked</strong> — they're busy the whole time, just unproductively.</p><p><strong>Starvation</strong> — a thread is repeatedly denied a resource because other threads keep getting served ahead of it, often due to priority or aggressive acquisition patterns.</p><blockquote>
-<p>⚠️ <strong>Pitfall — distinguishing all three:</strong> Deadlock = threads permanently blocked, stuck. Livelock = threads permanently busy, but never progressing. Starvation = a thread simply never gets its turn, even though the system overall is making progress.</p>
-</blockquote></div></details>
-<details class="topic"><summary>Diagnosing Locks and Deadlocks</summary><div class="topic-body"><p><strong>Checking if the current thread holds a lock:</strong></p><pre><code class="language-java">synchronized (lock) {
-    System.out.println(Thread.holdsLock(lock)); // true
+<details class="topic"><summary>The Dining Philosophers Problem</summary><div class="topic-body"><p><strong>What it is:</strong> the canonical named example of deadlock, often asked by name in interviews. Five philosophers sit around a table with five forks between them — each philosopher needs <strong>both</strong> the fork to their left and the fork to their right to eat. If every philosopher simultaneously picks up their left fork first, all five forks are now held, and every philosopher is stuck waiting forever for their right fork, which their neighbor is holding. This is exactly the deadlock scenario above, generalized to N threads and N shared resources arranged in a cycle instead of just 2 threads and 2 locks.</p><p><strong>Mapping it onto the four deadlock conditions from above:</strong> mutual exclusion (a fork can only be held by one philosopher), hold-and-wait (each philosopher holds their left fork while waiting for their right), no preemption (nobody can be forced to give up a fork), circular wait (philosopher N waits on philosopher N+1's fork, all the way around back to philosopher 1) — all four hold, so it deadlocks.</p><pre><code class="language-java">class Philosopher extends Thread {
+    private final Object leftFork;
+    private final Object rightFork;
+    private final String name;
+
+    Philosopher(String name, Object leftFork, Object rightFork) {
+        this.name = name;
+        this.leftFork = leftFork;
+        this.rightFork = rightFork;
+    }
+
+    public void run() {
+        synchronized (leftFork) {
+            System.out.println(name + ": picked up left fork");
+            try { Thread.sleep(100); } catch (InterruptedException e) {}
+            synchronized (rightFork) {
+                System.out.println(name + ": picked up right fork, eating");
+            }
+        }
+    }
 }
 
-ReentrantLock reentrantLock = new ReentrantLock();
-reentrantLock.lock();
-try {
-    System.out.println(reentrantLock.isHeldByCurrentThread()); // true
-    System.out.println(reentrantLock.getHoldCount());          // 1
-} finally {
-    reentrantLock.unlock();
+public class DiningPhilosophersDeadlock {
+    public static void main(String[] args) {
+        Object fork0 = new Object(), fork1 = new Object(), fork2 = new Object();
+        // BUG: every philosopher grabs "left" first, in the same rotational order -&gt; circular wait
+        new Philosopher("P0", fork0, fork1).start();
+        new Philosopher("P1", fork1, fork2).start();
+        new Philosopher("P2", fork2, fork0).start(); // completes the cycle back to fork0
+    }
 }
-</code></pre><p><code>Thread.holdsLock(obj)</code> is static, checks <strong>only the calling thread</strong>, and returns <code>true</code> only if it holds <code>obj</code>'s monitor. For <code>ReentrantLock</code>, use <code>isHeldByCurrentThread()</code> or <code>getHoldCount()</code> for reentrancy depth.</p><blockquote>
-<p>⚠️ <strong>Pitfall:</strong> <code>Thread.holdsLock()</code> cannot check whether <em>another</em> thread holds the lock — that requires thread-dump-based inspection instead.</p>
-</blockquote><p><strong>Getting a thread dump:</strong>
-- <code>jstack &lt;pid&gt;</code> — dumps stack traces of all threads, including lock ownership and automatic deadlock detection.
-- <code>kill -3 &lt;pid&gt;</code> (Unix) — sends <code>SIGQUIT</code>; the JVM prints a thread dump to stdout/log without killing the process.
-- <code>jcmd &lt;pid&gt; Thread.print</code> — modern unified diagnostic tool equivalent.
-- Programmatically: <code>Thread.getAllStackTraces()</code> returns a <code>Map&lt;Thread, StackTraceElement[]&gt;</code> for in-process inspection.</p><blockquote>
-<p>⚠️ <strong>Pitfall:</strong> <code>jstack</code>/<code>SIGQUIT</code> explicitly reports <strong>detected deadlocks</strong> at the end of the dump — usually the first thing to check when investigating an unresponsive application.</p>
-</blockquote><hr/></div></details>
-<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Difference between Optimistic and Pessimistic Locking?</strong>
-Covered above.</p><p><strong>Q: Difference between synchronized and ReentrantLock?</strong>
-Covered above — see the full feature comparison table.</p><p><strong>Q: Multiple threads contending for a lock — how do you ensure fair (FIFO) acquisition?</strong>
-Covered above under "Fair Locking in Practice."</p><p><strong>Q: What is double-checked locking, and why does it need volatile to actually work?</strong>
-Covered above.</p><p><strong>Q: What is StampedLock?</strong>
-Covered above.</p><p><strong>Q: ReentrantReadWriteLock vs StampedLock — what does "optimistic read" actually mean?</strong>
-Covered above — <code>StampedLock</code> adds a lock-free optimistic path that <code>ReentrantReadWriteLock</code> doesn't have; <code>StampedLock</code> isn't reentrant and doesn't support <code>Condition</code>, so it's not a drop-in replacement.</p><p><strong>Q: What is the Condition interface, and how does it improve on wait()/notify()?</strong>
-See Part 3.</p><p><strong>Q: ReadWriteLock — what are the exact concurrency rules between readers and writers?</strong>
-Covered above.</p><p><strong>Q: Walk through detecting and fixing a deadlock end-to-end.</strong>
-Covered above under "Deadlock."</p><p><strong>Q: How do you check if a thread holds a lock or not?</strong>
-Covered above under "Diagnosing Locks and Deadlocks."</p><p><strong>Q: How do you get a thread dump in Java?</strong>
-Covered above.</p></div></details>
+</code></pre><p><strong>Output (then hangs — same shape as the two-lock deadlock above, just with a 3-cycle instead of a 2-cycle):</strong></p><pre><code>P0: picked up left fork
+P1: picked up left fork
+P2: picked up left fork
+[program hangs here indefinitely — every philosopher holds one fork, waiting on the next]
+</code></pre><p><strong>The standard fix — break the cycle with a resource ordering (the same "lock ordering" fix from the Deadlock section above, applied concretely):</strong> give every fork a fixed global index, and make every philosopher always pick up the <strong>lower-indexed</strong> fork first, regardless of which side it's physically on.</p><p>```java
+class SafePhilosopher extends Thread {
+    private final Object firstFork, secondFork; // "first"/"second" by GLOBAL ORDER, not left/right
+    private final String name;</p><pre><code>SafePhilosopher(String name, Object forkA, Object forkB, int idA, int idB) {
+    this.name = name;
+    // always acquire the lower-ID fork first -- breaks circular wait for every philosopher
+    if (idA &lt; idB) { this.firstFork = forkA; this.secondFork = forkB; }
+    else            { this.firstFork = forkB; this.secondFork = forkA; }
+}
+
+public void run() {
+    synchronized (firstFork) {
+        System.out.println(name + ": picked up first fork (lower id)");
+</code></pre></div></details>
 </section>
 <section class="file-section" id="part-5-memory-model-lock-free-concurrency">
 <h1 class="file-title">Part 5 — Memory Model & Lock-Free Concurrency</h1>
@@ -1694,20 +1707,23 @@ Thread-1: 11
 - <strong>Framework internals</strong> — Spring's <code>RequestContextHolder</code>, Spring Security's <code>SecurityContextHolder</code>, SLF4J/Logback MDC, Hibernate Session Context all use <code>ThreadLocal</code> internally.</p><blockquote>
 <p>⚠️ <strong>Pitfall:</strong> in thread-pool-based servers (Tomcat, etc.), threads are <strong>reused</strong> across requests. If you forget to call <code>threadLocalValue.remove()</code> at the end of a request, stale data leaks into the next request handled by the same pooled thread — a classic memory-leak / data-leak bug. Always clean up in a <code>finally</code> block.</p>
 </blockquote></div></details>
-<details class="topic"><summary>Designing a Thread-Safe, Bounded LRU Cache</summary><div class="topic-body"><p><strong>Core structure:</strong> <code>LinkedHashMap</code> in access-order mode, overriding <code>removeEldestEntry()</code> to evict once size exceeds capacity — gives LRU eviction for free from the JDK.</p><pre><code class="language-java">LinkedHashMap&lt;K, V&gt; cache = new LinkedHashMap&lt;&gt;(capacity, 0.75f, true) {
-    protected boolean removeEldestEntry(Map.Entry&lt;K, V&gt; eldest) {
-        return size() &gt; capacity;
+<details class="topic"><summary>ThreadLocalRandom</summary><div class="topic-body"><p><strong>The problem it solves:</strong> a plain <code>java.util.Random</code> instance shared across threads is internally backed by a single <code>AtomicLong</code> seed, updated via a CAS loop on every call to <code>nextInt()</code>/<code>nextDouble()</code>/etc. Under high contention (many threads all generating random numbers concurrently), every thread's CAS retries against that <em>same</em> seed, causing exactly the kind of contention/cache-line bouncing <code>LongAdder</code> was built to avoid for counters (Part 5) — except here it's baked into <code>Random</code> itself with no built-in fix.</p><p><strong>What <code>ThreadLocalRandom</code> does:</strong> exactly what the name says — combines <code>ThreadLocal</code> (Part 6, above) with a random generator, giving each thread its own independent generator instance with its own independent seed. No shared state, no CAS, no contention at all between threads.</p><pre><code class="language-java">public class ThreadLocalRandomDemo {
+    public static void main(String[] args) throws InterruptedException {
+        Runnable task = () -&gt; {
+            int value = ThreadLocalRandom.current().nextInt(1, 100);
+            System.out.println(Thread.currentThread().getName() + " got: " + value);
+        };
+        Thread t1 = new Thread(task);
+        Thread t2 = new Thread(task);
+        t1.start(); t2.start();
+        t1.join(); t2.join();
     }
-};
-</code></pre><p><strong>Thread safety:</strong> wrapping every method in a single <code>synchronized</code> block (or <code>ReentrantLock</code>) is the simplest correct approach.</p><blockquote>
-<p>⚠️ <strong>Pitfall — the detail candidates most often miss:</strong> <code>LinkedHashMap</code>'s access-order reordering happens on <strong>reads</strong> (<code>get()</code>) as well as writes — so even "read-only" cache lookups mutate internal state and need the same lock as writes. You cannot get away with a <code>ReadWriteLock</code> here unless you accept giving up true-LRU ordering. Assuming a <code>ReadWriteLock</code> is a safe optimization for an LRU cache is exactly the mistake that separates a surface-level answer from one that shows real implementation experience.</p>
-</blockquote><p>For real production scale beyond a single lock's throughput ceiling: <code>ConcurrentHashMap</code> doesn't give you LRU ordering for free, so a genuinely concurrent LRU cache typically means either accepting approximate LRU (a CLOCK-based or sampled-eviction approximation, like Redis uses) or reaching for a proven library (Caffeine, Guava Cache) rather than hand-rolling one at scale.</p><hr/></div></details>
-<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: How does ConcurrentHashMap avoid a single global lock?</strong>
-Covered above — know the Java 7 segment-locking vs Java 8+ per-bin distinction.</p><p><strong>Q: When is CopyOnWriteArrayList a good fit, and when is it a trap?</strong>
-Covered above.</p><p><strong>Q: ArrayBlockingQueue vs LinkedBlockingQueue vs SynchronousQueue — how do you choose?</strong>
-Covered above.</p><p><strong>Q: What are use cases of ThreadLocal variables in Java?</strong>
-Covered above.</p><p><strong>Q: Design a thread-safe, bounded LRU cache — what are the key decisions?</strong>
-Covered above.</p></div></details>
+}
+</code></pre><p><strong>One possible output (each thread draws from its own independent generator):</strong></p><pre><code>Thread-0 got: 47
+Thread-1 got: 12
+</code></pre><p><strong>The API difference to notice:</strong> you never call <code>new ThreadLocalRandom()</code> — the constructor is private. You always go through the static <code>ThreadLocalRandom.current()</code>, which hands back the calling thread's own instance (creating it lazily on first use, exactly like <code>ThreadLocal.withInitial()</code> does).</p><blockquote>
+<p>⚠️ <strong>Pitfall:</strong> the mistake this actually catches in an interview is reaching for <code>new Random()</code> shared as a <code>static</code> field to "avoid creating objects repeatedly" — that instinct is exactly backwards under concurrency. A shared <code>Random</code> is a hidden </p>
+</blockquote></div></details>
 </section>
 <section class="file-section" id="part-7-fork-join-parallelism">
 <h1 class="file-title">Part 7 — Fork/Join & Parallelism</h1>
@@ -1772,13 +1788,11 @@ Covered above.</p></div></details>
 <details class="topic"><summary>Sizing the ForkJoinPool</summary><div class="topic-body"><p><code>ForkJoinPool</code> defaults its parallelism to <code>Runtime.getRuntime().availableProcessors()</code> — one worker per CPU core, which makes sense for the <strong>CPU-bound</strong> divide-and-conquer work this framework targets. This is a meaningfully different sizing rule from the I/O-bound <code>ThreadPoolExecutor</code> sizing discussed in Part 2, and mixing the two mental models is a common mistake.</p><pre><code class="language-java">ForkJoinPool customPool = new ForkJoinPool(4); // explicit parallelism level, instead of the default
 </code></pre><blockquote>
 <p>⚠️ <strong>Pitfall:</strong> never run <strong>blocking I/O</strong> inside a <code>ForkJoinPool</code> task (including the common pool used by <code>parallelStream()</code> and <code>CompletableFuture</code>) — with only as many workers as CPU cores, a few blocked tasks can starve the pool for every other concurrent user of it in the JVM. That's precisely why <code>CompletableFuture</code>'s I/O-bound examples (see the dedicated guide) push you toward a separate custom <code>Executor</code> instead.</p>
-</blockquote><hr/></div></details>
-<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Difference between Concurrency and Parallelism?</strong>
-Covered above.</p><p><strong>Q: How is the Fork/Join framework different from traditional thread pools?</strong>
-Covered above.</p><p><strong>Q: Explain ForkJoinPool's RecursiveTask specifically — how does fork()/join() work?</strong>
-Covered above.</p><p><strong>Q: RecursiveTask vs RecursiveAction — what's the difference?</strong>
-Covered above under "RecursiveAction" — <code>RecursiveTask&lt;V&gt;.compute()</code> returns <code>V</code>; <code>RecursiveAction.compute()</code> returns <code>void</code>. Everything else (fork/join mechanics, work-stealing, the compute-one-half-inline pattern) is identical.</p><p><strong>Q: How many threads does a ForkJoinPool use by default, and why is that different from ThreadPoolExecutor sizing?</strong>
-Covered above under "Sizing the ForkJoinPool" — defaults to one worker per CPU core, appropriate for CPU-bound divide-and-conquer work, unlike <code>ThreadPoolExecutor</code>'s I/O-bound sizing (Part 2). Never block on I/O inside a ForkJoinPool task, including the shared common pool.</p></div></details>
+</blockquote></div></details>
+<details class="topic"><summary>Custom Thread Pool for Parallel Streams</summary><div class="topic-body"><p><strong>The problem:</strong> <code>list.parallelStream()</code> always runs on the JVM-wide <strong>common</strong> <code>ForkJoinPool</code> — there's no <code>parallelStream(executor)</code> overload. Every parallel stream in your entire JVM (plus any <code>CompletableFuture</code> using the default async methods) shares that same pool. A long-running or blocking parallel stream operation can starve every other concurrent user of the common pool, and you can't simply hand it a differently-sized or isolated pool through the Streams API itself.</p><p><strong>The workaround:</strong> submit the stream pipeline as a task to your own <code>ForkJoinPool</code> instance — since <code>ForkJoinTask.fork()</code>/<code>invoke()</code> execution picks up the <em>ambient</em> pool of whichever thread submitted the work, wrapping the whole pipeline in <code>customPool.submit(...)</code> makes the stream run on your pool instead of the common one.</p><p>```java
+public class CustomPoolParallelStream {
+    public static void main(String[] args) throws Exception {
+        ForkJoinPo</p></div></details>
 </section>
 <section class="file-section" id="part-8-virtual-threads-uncaught-exception-handling">
 <h1 class="file-title">Part 8 — Virtual Threads & Uncaught Exception Handling</h1>

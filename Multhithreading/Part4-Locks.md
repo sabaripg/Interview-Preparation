@@ -411,6 +411,82 @@ Thread 2: waiting for Lock A...
 
 > ⚠️ **Pitfall:** lock ordering is the most robust solution because it *prevents* deadlocks rather than just recovering from them. If asked "how would you detect this in production," the answer is a thread dump, not staring at logs.
 
+## The Dining Philosophers Problem
+
+**What it is:** the canonical named example of deadlock, often asked by name in interviews. Five philosophers sit around a table with five forks between them — each philosopher needs **both** the fork to their left and the fork to their right to eat. If every philosopher simultaneously picks up their left fork first, all five forks are now held, and every philosopher is stuck waiting forever for their right fork, which their neighbor is holding. This is exactly the deadlock scenario above, generalized to N threads and N shared resources arranged in a cycle instead of just 2 threads and 2 locks.
+
+**Mapping it onto the four deadlock conditions from above:** mutual exclusion (a fork can only be held by one philosopher), hold-and-wait (each philosopher holds their left fork while waiting for their right), no preemption (nobody can be forced to give up a fork), circular wait (philosopher N waits on philosopher N+1's fork, all the way around back to philosopher 1) — all four hold, so it deadlocks.
+
+```java
+class Philosopher extends Thread {
+    private final Object leftFork;
+    private final Object rightFork;
+    private final String name;
+
+    Philosopher(String name, Object leftFork, Object rightFork) {
+        this.name = name;
+        this.leftFork = leftFork;
+        this.rightFork = rightFork;
+    }
+
+    public void run() {
+        synchronized (leftFork) {
+            System.out.println(name + ": picked up left fork");
+            try { Thread.sleep(100); } catch (InterruptedException e) {}
+            synchronized (rightFork) {
+                System.out.println(name + ": picked up right fork, eating");
+            }
+        }
+    }
+}
+
+public class DiningPhilosophersDeadlock {
+    public static void main(String[] args) {
+        Object fork0 = new Object(), fork1 = new Object(), fork2 = new Object();
+        // BUG: every philosopher grabs "left" first, in the same rotational order -> circular wait
+        new Philosopher("P0", fork0, fork1).start();
+        new Philosopher("P1", fork1, fork2).start();
+        new Philosopher("P2", fork2, fork0).start(); // completes the cycle back to fork0
+    }
+}
+```
+**Output (then hangs — same shape as the two-lock deadlock above, just with a 3-cycle instead of a 2-cycle):**
+```
+P0: picked up left fork
+P1: picked up left fork
+P2: picked up left fork
+[program hangs here indefinitely — every philosopher holds one fork, waiting on the next]
+```
+
+**The standard fix — break the cycle with a resource ordering (the same "lock ordering" fix from the Deadlock section above, applied concretely):** give every fork a fixed global index, and make every philosopher always pick up the **lower-indexed** fork first, regardless of which side it's physically on.
+
+```java
+class SafePhilosopher extends Thread {
+    private final Object firstFork, secondFork; // "first"/"second" by GLOBAL ORDER, not left/right
+    private final String name;
+
+    SafePhilosopher(String name, Object forkA, Object forkB, int idA, int idB) {
+        this.name = name;
+        // always acquire the lower-ID fork first -- breaks circular wait for every philosopher
+        if (idA < idB) { this.firstFork = forkA; this.secondFork = forkB; }
+        else            { this.firstFork = forkB; this.secondFork = forkA; }
+    }
+
+    public void run() {
+        synchronized (firstFork) {
+            System.out.println(name + ": picked up first fork (lower id)");
+            try { Thread.sleep(100); } catch (InterruptedException e) {}
+            synchronized (secondFork) {
+                System.out.println(name + ": picked up second fork, eating");
+            }
+        }
+    }
+}
+```
+The last philosopher in the cycle (`P2`, holding `fork2` and `fork0`) now tries to pick up `fork0` **first** (lower id), not `fork2` — exactly the same code shape as everyone else, but this one reversal is what breaks the cycle. With every philosopher agreeing on a single global acquisition order, at least one philosopher can never be the one "holding the low fork, waiting on the high one" while another holds the high one waiting on the low — the circular wait condition becomes structurally impossible.
+
+> ⚠️ **Pitfall:** the trap in this classic problem is proposing a fix that only *reduces the odds* of deadlock (random back-off and retry, or a global lock around the whole table) instead of one that *structurally eliminates* it. Global resource ordering is the textbook-correct answer because it removes circular wait entirely, not just makes it statistically rarer — the same principle as "lock ordering" in the Deadlock section above, just easier to see with 5 philosophers than with 2 threads.
+
 ## Livelock and Starvation
 
 **Livelock** — threads keep actively responding to each other, but nothing gets done, like two people repeatedly stepping aside for each other in a hallway, forever. Unlike deadlock, threads are **not blocked** — they're busy the whole time, just unproductively.
@@ -477,6 +553,9 @@ Covered above.
 
 **Q: Walk through detecting and fixing a deadlock end-to-end.**
 Covered above under "Deadlock."
+
+**Q: Explain the Dining Philosophers problem and how you'd fix it.**
+Covered above under "The Dining Philosophers Problem." Five philosophers, five forks, each needs both neighboring forks to eat — if everyone grabs their left fork first, circular wait deadlocks all five. Fix: impose a global resource ordering (every philosopher picks up the lower-numbered fork first, regardless of left/right) — this structurally eliminates circular wait rather than just making it less likely, the same principle as lock ordering above applied to N resources in a cycle instead of 2.
 
 **Q: How do you check if a thread holds a lock or not?**
 Covered above under "Diagnosing Locks and Deadlocks."
