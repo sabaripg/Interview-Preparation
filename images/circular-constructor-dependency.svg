@@ -1,0 +1,29 @@
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="needs" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="760" height="340" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">Circular Constructor Dependency — the Chicken-and-Egg Problem</text>
+
+  <circle cx="220" cy="150" r="70" fill="#eef3fb" stroke="#2c5aa0" stroke-width="2"/>
+  <text x="220" y="145" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a1a">Class A</text>
+  <text x="220" y="164" text-anchor="middle" font-size="11" fill="#333">constructor needs a B</text>
+
+  <circle cx="540" cy="150" r="70" fill="#fff8e1" stroke="#c79a1e" stroke-width="2"/>
+  <text x="540" y="145" text-anchor="middle" font-size="15" font-weight="700" fill="#1a1a1a">Class B</text>
+  <text x="540" y="164" text-anchor="middle" font-size="11" fill="#333">constructor needs an A</text>
+
+  <path d="M292,130 C 380,90 400,90 468,130" stroke="#c0392b" stroke-width="2.5" fill="none" marker-end="url(#needs)"/>
+  <text x="380" y="90" text-anchor="middle" font-size="12" fill="#c0392b" font-weight="700">new A() needs a B first</text>
+
+  <path d="M468,175 C 400,215 380,215 292,175" stroke="#c0392b" stroke-width="2.5" fill="none" marker-end="url(#needs)"/>
+  <text x="380" y="228" text-anchor="middle" font-size="12" fill="#c0392b" font-weight="700">new B() needs an A first</text>
+
+  <text x="380" y="150" text-anchor="middle" font-size="24" fill="#999">?</text>
+
+  <rect x="90" y="270" width="580" height="55" rx="6" fill="#eafaf1" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="380" y="293" text-anchor="middle" font-size="13" fill="#1a1a1a">Plain constructors can never resolve this — neither object can finish being built first.</text>
+  <text x="380" y="313" text-anchor="middle" font-size="13" fill="#1a1a1a">Fix: setter/field injection on one side, an abstraction between them, or (the senior answer) treat it as a design smell.</text>
+</svg>

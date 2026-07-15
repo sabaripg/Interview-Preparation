@@ -1,0 +1,37 @@
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrowTrunc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrowFloor" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="760" height="320" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">(int)(-2.9) — Truncation Moves Toward Zero, Not Toward -∞</text>
+
+  <!-- Number line -->
+  <line x1="80" y1="170" x2="680" y2="170" stroke="#333" stroke-width="2"/>
+  <!-- ticks -->
+  <g font-size="14" fill="#333">
+    <line x1="120" y1="164" x2="120" y2="176" stroke="#333" stroke-width="2"/><text x="120" y="196" text-anchor="middle">-4</text>
+    <line x1="240" y1="164" x2="240" y2="176" stroke="#333" stroke-width="2"/><text x="240" y="196" text-anchor="middle">-3</text>
+    <line x1="360" y1="164" x2="360" y2="176" stroke="#333" stroke-width="2"/><text x="360" y="196" text-anchor="middle">-2</text>
+    <line x1="480" y1="164" x2="480" y2="176" stroke="#333" stroke-width="2"/><text x="480" y="196" text-anchor="middle">-1</text>
+    <line x1="600" y1="164" x2="600" y2="176" stroke="#333" stroke-width="2"/><text x="600" y="196" text-anchor="middle">0</text>
+  </g>
+
+  <!-- point at -2.9 -->
+  <circle cx="276" cy="170" r="6" fill="#1a1a1a"/>
+  <text x="276" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">-2.9</text>
+
+  <!-- Truncation arrow: toward zero, to -2 -->
+  <path d="M276,170 C 320,110 360,90 360,90" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#arrowTrunc)"/>
+  <text x="420" y="85" font-size="13" font-weight="700" fill="#2e7d32">(int) cast → -2 (toward zero)</text>
+
+  <!-- Floor arrow: toward -infinity, to -3 -->
+  <path d="M276,170 C 250,230 240,250 240,250" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,4" fill="none" marker-end="url(#arrowFloor)"/>
+  <text x="90" y="270" font-size="13" font-weight="700" fill="#c0392b">Math.floor() → -3 (toward -∞)</text>
+
+  <text x="380" y="300" text-anchor="middle" font-size="12" fill="#555">Both round -2.9, but in opposite directions. They only disagree on negative numbers — for positive values, truncation and floor give the same answer.</text>
+</svg>

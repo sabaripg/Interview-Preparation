@@ -65,6 +65,29 @@ String result = sb.toString();
 
 > ⚠️ **Pitfall — this specific compiler behavior is easy to over-generalize:** the JVM/compiler's implicit `StringBuilder` rewrite for a **single** `+=`/`+` expression (not in a loop) is genuinely fine and idiomatic — `String msg = "User " + userId + " logged in";` is not a performance problem, it's one `StringBuilder`, used once. The problem is specifically **repeated concatenation across loop iterations**, where each iteration pays the new-builder-plus-new-string cost again. Know the distinction: one-shot concatenation, fine; loop-accumulated concatenation, use an explicit `StringBuilder` declared *outside* the loop.
 
+## Compact Strings (Java 9+) — `byte[]` Instead of `char[]`
+
+**Before Java 9:** `String` stored its characters internally as a `char[]` — **2 bytes per character, unconditionally**, even for pure-ASCII/Latin-1 content that only ever needs 1 byte per character (the vast majority of real-world text: English strings, most identifiers, JSON/XML keys, log messages).
+
+**Java 9's Compact Strings (JEP 254)** changed `String`'s internal representation to a `byte[]` plus a one-byte "coder" flag (`LATIN1` or `UTF16`) — a string containing only Latin-1-representable characters now uses **1 byte per character** internally; only strings that genuinely need characters beyond Latin-1 fall back to the old 2-bytes-per-character layout.
+
+> ⚠️ **Pitfall — this is entirely transparent at the API level, which is exactly why it's worth knowing:** every public `String` method behaves identically before and after this change — no source code anywhere needs to change to benefit. The memory savings (commonly cited around 50% for typical ASCII-heavy workloads — most enterprise Java applications) are a completely free win on JVM upgrade. Interviewers ask this specifically as an ecosystem-currency check: candidates who don't know Compact Strings exist will describe `String`'s internals using the pre-Java-9 `char[]` model, which is now simply wrong for any JVM from 9 onward.
+
+## `intern()` — Deeper Mechanics
+
+**What it precisely does:** `String.intern()` returns the canonical, pooled representative for a string's **contents** — if an equal string is already present in the pool, `intern()` returns that existing pooled reference; otherwise, it adds *this* string's own reference to the pool and returns it.
+
+```java
+String a = new String("hello"); // heap object, NOT pooled
+String b = a.intern();          // returns the POOLED "hello" (already present from a literal elsewhere, or added now)
+String c = "hello";             // literal -- auto-interned at compile/class-load time
+System.out.println(b == c); // true -- both reference the same pooled instance
+System.out.println(a == c); // false -- 'a' is still the separate heap object created by 'new String(...)'
+```
+**Since Java 7**, the string pool lives in the regular heap (moved out of PermGen) — meaning pooled strings are now subject to ordinary garbage collection, just like any other heap object. A string that's `intern()`-ed but has no other live references can eventually be collected, whereas pre-Java-7 PermGen-resident pooled strings were effectively permanent for the JVM's lifetime — a real (if now largely historical) source of PermGen exhaustion in old codebases that over-used `intern()`.
+
+> ⚠️ **Pitfall — "intern everything to save memory" backfires:** interning has its own real cost — a hash lookup into the pool on every call. The memory savings only materialize when there's genuine, significant duplication across many strings; interning unique, rarely-repeated strings (user-generated content, one-off computed values) adds CPU overhead for pool bookkeeping with no deduplication benefit at all, and can bloat the pool itself if the JVM never has reason to collect those entries.
+
 ---
 
 ## Interview Q&A
@@ -80,3 +103,9 @@ Because the compiler creates a **new** `StringBuilder` on every iteration of the
 
 **Q: Does calling `s.trim()` or `s.replace(...)` modify the original `String`?**
 No — every apparent "mutating" method on `String` (`trim`, `replace`, `concat`, `toUpperCase`, `substring`, etc.) returns a brand-new `String` and leaves the original completely unchanged. Calling one of these without reassigning the result (`s = s.trim();`) is a common bug where the transformed value is silently discarded.
+
+**Q: What are Compact Strings, and why don't they require any application code changes?**
+Java 9's JEP 254 changed `String`'s internal storage from an unconditional `char[]` (2 bytes/char) to a `byte[]` plus a coder flag, using 1 byte per character for Latin-1-representable content. It's transparent because every public `String` method's behavior is unchanged — only the internal representation is more memory-efficient, delivering roughly 50% memory savings on typical ASCII-heavy workloads for free on upgrade.
+
+**Q: Why can over-using `String.intern()` actually hurt performance instead of helping?**
+`intern()` pays a real cost — a hash lookup into the string pool on every call. That cost is only worth paying when a string is genuinely duplicated many times elsewhere; interning unique or rarely-repeated strings adds CPU overhead with no deduplication benefit, and can bloat the pool itself.

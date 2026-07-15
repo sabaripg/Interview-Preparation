@@ -133,6 +133,19 @@ This is exactly how Spring instantiates beans and Jackson instantiates deseriali
 
 > ⚠️ **Pitfall:** "reflection is just a bit slower" understates it for hot-path code — reflectively invoking a method inside a tight loop processing millions of records is a real, measurable production performance issue, not a theoretical one. Cache the `Method`/`Field` object (looked up once) rather than re-resolving it on every call, and consider whether reflection is even necessary versus a direct call, an interface, or a generated accessor.
 
+## `MethodHandle` — the Modern, Faster Alternative to Reflection
+
+**What it is:** `java.lang.invoke.MethodHandle` (Java 7+) is a lower-level, JVM-native mechanism for method invocation that the JIT can inline and optimize far more aggressively than classic `Method.invoke()` — `MethodHandle`s are, in fact, exactly what `invokedynamic` (and therefore lambda expressions — see `Java8-Features/Part2-Lambdas-Functional-Interfaces.md`) compile down to underneath.
+
+```java
+MethodHandles.Lookup lookup = MethodHandles.lookup();
+MethodHandle greet = lookup.findVirtual(Employee.class, "greet", MethodType.methodType(String.class, String.class));
+String result = (String) greet.invoke(new Employee(), "Hello");
+```
+**Why it's faster:** `Method.invoke()` goes through a generic, boxing-heavy call path that historically carried security-manager checks on every invocation (partially JIT-mitigated in modern JVMs, but still real overhead). A resolved `MethodHandle`, once warmed up by the JIT, behaves much closer to a direct method call, because the JVM has dedicated bytecode-level support for handle invocation that it never had for reflective `Method.invoke()`.
+
+> ⚠️ **Pitfall — knowing it exists is the signal, not necessarily using it:** `MethodHandle`'s API is notoriously low-level and unfriendly compared to reflection (explicit `MethodType` construction, no simple `getDeclaredMethods()`-style enumeration) — it's the tool library and framework authors reach for once performance is *genuinely proven* to matter (modern JSON libraries, some DI containers, the `invokedynamic` machinery itself), not a drop-in replacement for everyday reflective code in application logic. For most application code, plain reflection (or better, avoiding the need for either) remains the right default — but recognizing `MethodHandle` by name, and *why* it's faster, is exactly the kind of ecosystem-currency signal a 10-YOE interview probes for.
+
 ---
 
 ## Interview Q&A
@@ -151,3 +164,6 @@ It bypasses the JVM's normal Java-language access-control check for that specifi
 
 **Q: What's the real performance cost of reflection, and how do high-performance frameworks avoid paying it repeatedly?**
 Reflective calls run materially slower than direct calls (often cited 10-100x) because the JIT can't optimize through the indirection as well. Frameworks amortize this by caching resolved `Method`/`Field` objects instead of re-resolving by name on every call, or by generating real bytecode accessors once at startup (ASM/ByteBuddy) instead of using raw reflection on every access.
+
+**Q: What is `MethodHandle`, and why is it faster than classic reflection?**
+A lower-level, JVM-native invocation mechanism (Java 7+) that the JIT can inline and optimize much more aggressively than `Method.invoke()` — it's the same underlying machinery `invokedynamic` and lambda expressions compile to. Once resolved and JIT-warmed, a `MethodHandle` call performs close to a direct method call, unlike reflective `Method.invoke()`, which pays a generic, boxing-heavy overhead on every call.

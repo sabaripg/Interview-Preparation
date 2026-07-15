@@ -156,6 +156,10 @@ public Order clone() {
 - Special memory region (heap since Java 7, previously PermGen) caching unique **String literals**.
 - Literals auto-interned at compile/class-load time; `new String(...)` bypasses the pool; `.intern()` manually pools.
 
+**In plain words:** think of the pool as a shared shelf of unique String values. Every time you write a literal like `"ab"` in your source code, the compiler checks the shelf first — if `"ab"` is already there, your variable just points to that existing copy instead of a new one. `"a"+"b"` is written as two separate literals, but since both halves are known at **compile time**, the compiler folds them into a single `"ab"` literal before the program even runs — so it resolves to the exact same shelf entry as a plain `"ab"` literal, which is why `==` reports `true`. `new String("ab")`, on the other hand, is an explicit runtime instruction to build a brand-new object on the regular heap, deliberately bypassing the shelf — so even though its contents are identical, it's a different object, and `==` reports `false`.
+
+![The string pool vs a new String() heap object](../images/string-pool-constant-folding.svg)
+
 > ⚠️ **Pitfall:** Classic gotcha — `"a"+"b" == "ab"` → often `true` (constant folding), `new String("ab") == "ab"` → `false`. Have both examples ready.
 
 ### Q13. Why is `char[]` preferred over `String` for passwords?
@@ -163,7 +167,9 @@ public Order clone() {
 - `char[]` can be **explicitly zeroed** (`Arrays.fill(pw, '0')`) right after use.
 - Strings show up more easily in heap dumps/logs/stack traces.
 
-> ⚠️ **Pitfall — KEY POINT:** The real reason is **active zeroing capability**, not "strings are immutable" alone.
+**In plain words:** once you create a `String` holding a password, you have **no way to force it out of memory early** — because Strings are immutable, there's no "clear this string's contents" operation, and you don't control exactly when the garbage collector reclaims it. So the plaintext password could realistically sit in memory for an unpredictable amount of time, visible to anyone who takes a heap dump. A `char[]`, by contrast, is a plain mutable array — the moment you're done with it, you can call `Arrays.fill(pw, '0')` to actively overwrite every character in place, right then, on your own schedule, rather than hoping the GC gets to it soon. That's the real distinguishing reason — active, immediate zeroing — not simply "Strings are immutable" (which is true, but doesn't by itself explain *why* immutability is the problem here).
+
+> ⚠️ **Pitfall — KEY POINT:** The real reason is **active zeroing capability**, not "strings are immutable" alone — an interviewer wants to hear that you understand *why* immutability matters here specifically (no way to actively clear it), not just that Strings happen to be immutable.
 
 ### Q53. Floating point pitfalls — NaN, Infinity, 0.1+0.2
 ```java
@@ -179,6 +185,11 @@ For money: use `BigDecimal` with the **String constructor**, never the double co
 new BigDecimal("0.1").add(new BigDecimal("0.2")); // correct
 new BigDecimal(0.1);                               // WRONG — imprecision baked in
 ```
+
+**In plain words, why each surprise happens:**
+- **`0.1 + 0.2 != 0.3`:** `double` stores numbers in binary floating point, and just like `1/3` has no exact finite decimal representation, `0.1` and `0.2` have no exact finite *binary* representation — they're stored as the closest approximation the format allows. Adding two approximations doesn't necessarily land exactly on the approximation of `0.3`, so the tiny rounding errors show up as `0.30000000000000004`.
+- **`NaN == NaN` is `false`:** `NaN` ("Not a Number") represents the result of an undefined operation like `0.0/0.0` — by design (IEEE 754, the standard Java's floating point follows), `NaN` is defined to compare unequal to *everything*, including another `NaN`, specifically so that an accidental undefined result can never silently look like a normal, valid comparison passing. This is exactly why `Double.isNaN(x)` exists — it's the only reliable way to check.
+- **`new BigDecimal(0.1)` is wrong:** the `double` constructor path takes the *already-imprecise* binary approximation of `0.1` and locks that imprecision into the `BigDecimal`, rather than the value `0.1` you actually meant. The `String` constructor instead parses the decimal digits `"0.1"` directly, with no binary floating-point step in between, giving you the exact value you wrote.
 
 > ⚠️ **Pitfall — HIGH VALUE:** `nan == nan` being `false` catches people off guard. `new BigDecimal(0.1)` "looking correct" while being wrong is a real production bug.
 
@@ -224,25 +235,31 @@ new BigDecimal(0.1);                               // WRONG — imprecision bake
 ```java
 byte b = (byte)(128); // -128
 ```
-128 = `10000000` (9 bits needed) → truncated to 8 bits → MSB=1 → two's complement → `-128`.
+**In plain words:** a `byte` only has 8 bits to work with, and the highest of those 8 bits is reserved as the sign bit (0 = positive, 1 = negative) — this is called **two's complement**. The number 128 needs **9 bits** to write out as a positive number (`0 1000 0000`). When you cast to `byte`, Java doesn't resize or clamp anything — it just **keeps the low 8 bits and throws the 9th away**. What's left is `1000 0000`. Because the leftover top bit is now `1`, the JVM reads the whole thing as a *negative* number instead of the positive `128` you started with — and in two's complement, `1000 0000` happens to decode to exactly `-128`.
 
-> ⚠️ **Pitfall:** Follow-up: `(byte)(200)` → `200-256 = -56`. General rule: keep ±`2^N` until back in range.
+![Two's complement narrowing cast walkthrough](../images/twos-complement-narrowing-cast.svg)
+
+> ⚠️ **Pitfall:** Follow-up: `(byte)(200)` → `200-256 = -56`. General rule: keep ±`2^N` (256 for byte) until the value lands back in the valid -128..127 range — it wraps, it never clamps to `Byte.MAX_VALUE`.
 
 ### Q52. `(int)(-2.9)` — truncation vs rounding
 ```java
 (int)(-2.9);  // -2, NOT -3
 ```
-Truncation moves **toward zero**, never toward negative infinity (`Math.floor()` differs).
+**In plain words:** `(int)` casting doesn't "round" at all — it just **chops off the decimal part**, always moving toward zero. For a positive number like `2.9`, chopping toward zero and rounding down (flooring) give the same answer (`2`). But for a **negative** number, they disagree: `-2.9` chopped toward zero lands on `-2` (a smaller magnitude, but a *larger* value on the number line), while `Math.floor(-2.9)` moves toward negative infinity and lands on `-3` (a *smaller* value). Same starting number, two different "correct" answers depending on which operation you actually call.
 
-> ⚠️ **Pitfall — VERY COMMON MISTAKE:** Confusing truncation with flooring; only diverges for negative numbers.
+![Truncation moves toward zero, not toward negative infinity](../images/truncation-vs-floor.svg)
+
+> ⚠️ **Pitfall — VERY COMMON MISTAKE:** Confusing truncation with flooring; they only diverge for negative numbers — for positive numbers, `(int)` cast and `Math.floor()` always agree.
 
 ### Q54. `Integer.MIN_VALUE` negation — overflow trap
 ```java
 Math.abs(Integer.MIN_VALUE) == Integer.MIN_VALUE; // TRUE — still negative!
 ```
-No positive counterpart exists for `-2147483648` in two's complement — negation **silently overflows back to itself**.
+**In plain words:** a 32-bit signed `int` can represent 2,147,483,648 negative values but only 2,147,483,647 positive ones — one extra negative slot, because two's complement is asymmetric. `Integer.MIN_VALUE` is `-2,147,483,648`. Negating it should give `+2,147,483,648`, but that number is one more than the largest `int` can hold — there's simply no bit pattern for it. So the negation silently **wraps back around** to `-2,147,483,648`, the exact same (still negative) value you started with. `Math.abs()` on the most negative int is the one case where "absolute value" doesn't actually make the number non-negative.
 
-> ⚠️ **Pitfall:** Use `Math.absExact()` (Java 15+) to throw `ArithmeticException` instead of silently wrong result.
+![Why Integer.MIN_VALUE negation wraps back to itself](../images/int-min-value-overflow.svg)
+
+> ⚠️ **Pitfall:** Use `Math.absExact()` (Java 15+) to throw `ArithmeticException` instead of silently returning the wrong (still-negative) result.
 
 ---
 
@@ -375,13 +392,21 @@ Java 8+ lets the compiler auto-wrap repeated annotations into the container.
 - **Bootstrap** (core JDK, native code), **Platform/Extension**, **Application/System** (classpath, default for user code), **Custom** (app servers, plugins).
 - **Parent-delegation model**: request delegates up to parent first.
 
-> ⚠️ **Pitfall:** Explain *why* delegation exists — prevents a malicious/accidental `java.lang.String` on classpath from shadowing the real one.
+**In plain words:** there's a small chain of loaders, each responsible for a different "layer" of classes — Bootstrap (the JDK's own core classes) sits at the top, then Platform, then your Application/System loader, then any Custom loader a framework adds. When any loader is asked to load a class, it doesn't just load it itself right away — it first **asks its parent** to try, and that parent asks *its* parent, all the way up to Bootstrap. Only if no ancestor already has that class does the request come back down and get loaded at the level that was originally asked. This "ask up before loading down" rule is the parent-delegation model.
+
+![Parent-delegation model — requests go up before loading goes down](../images/classloader-delegation-hierarchy.svg)
+
+> ⚠️ **Pitfall:** Explain *why* delegation exists — it guarantees that even if your own classpath accidentally (or maliciously) contains a file named `java.lang.String`, the request for `java.lang.String` gets delegated all the way up to Bootstrap first, which already has the real one — so your fake copy is never used, no matter where it sits on the classpath.
 
 ### Q20. Can a class be loaded by two ClassLoaders?
 - **Yes** — same FQN loaded by two unrelated loaders → JVM treats as **two distinct types**.
 - Causes `ClassCastException` with **identical-looking class names on both sides**.
 
-> ⚠️ **Pitfall — STRONG SENIOR SIGNAL:** Recognizing this exact symptom pattern instantly.
+**In plain words:** to the JVM, a class's real identity isn't just its name — it's the **combination** of (fully-qualified name + the specific ClassLoader that loaded it). So if two different, unrelated loaders both load a class named `com.foo.Bar` — even from the exact same `.class` file, byte-for-byte identical — the JVM treats the two results as **two completely separate types** that happen to share a name. If you try to cast an object built by one `Bar` into the other `Bar`, you get a `ClassCastException` — and the confusing part is the error message shows `com.foo.Bar` on both sides, since the printed name doesn't include which loader produced it. This typically shows up in app servers or plugin systems that intentionally give each deployed application its own isolated loader.
+
+![Same class name loaded by two different loaders becomes two distinct types](../images/classloader-duplicate-class.svg)
+
+> ⚠️ **Pitfall — STRONG SENIOR SIGNAL:** Recognizing this exact symptom pattern instantly — a `ClassCastException` where both sides of the message print the identical class name is the tell that two ClassLoaders are involved, not a simple type mismatch.
 
 ### Q44. Class loading — 3 phases in order
 ```
@@ -477,6 +502,10 @@ MyInterface proxy = (MyInterface) Proxy.newProxyInstance(
 ```
 `java.lang.reflect.Proxy` generates a runtime class implementing interfaces, routing calls through an `InvocationHandler`. Powers Spring AOP, Mockito interface mocks.
 
+**In plain words:** the client code holds a reference typed as the interface, but the actual object behind it is a synthetic `Proxy` class the JVM generated on the fly — the client never sees or touches the real object directly. Every method call on that reference gets intercepted and routed to your `InvocationHandler.invoke(proxy, method, args)` method first. Inside `invoke()`, you decide what happens — typically some "before" logic, then `method.invoke(realObject, args)` to actually run the real method, then some "after" logic — before returning the result back out through the same chain to the original caller. This interception point is exactly where Spring inserts things like transaction management or caching without you writing that logic into your own class.
+
+![JDK dynamic proxy call flow](../images/dynamic-proxy-flow.svg)
+
 > ⚠️ **Pitfall:** Only works for **interfaces** — proxying a concrete class needs CGLIB-style subclassing (what Spring falls back to for `@Transactional` without an interface).
 
 ### Q33. Role of `ClassLoader` in dynamic proxy creation
@@ -493,7 +522,11 @@ MyInterface proxy = (MyInterface) Proxy.newProxyInstance(
 - `FileReader` reads char data directly — inefficient, near-per-char syscalls.
 - `BufferedReader` wraps another `Reader`, buffers larger chunks, drastically reduces I/O ops. Adds `readLine()`.
 
-> ⚠️ **Pitfall — ARCHITECTURAL SIGNAL:** Frame as the **Decorator pattern** applied to I/O — same pattern behind `BufferedOutputStream`/`BufferedInputStream` throughout `java.io`.
+**In plain words:** `new BufferedReader(new FileReader("file.txt"))` isn't inheritance — `BufferedReader` isn't a subclass of `FileReader`. It's **wrapping**: `BufferedReader` holds a reference to the `FileReader` you gave it, and adds a large internal in-memory buffer in front of it. Instead of asking the OS for one character at a time (a real, relatively expensive system call each time), `BufferedReader` asks the OS for a big chunk once, holds it in memory, and serves your `read()`/`readLine()` calls out of that in-memory chunk until it's exhausted — then goes back to the OS for the next chunk. Same underlying data, dramatically fewer actual I/O operations.
+
+![BufferedReader wrapping FileReader — the Decorator pattern](../images/decorator-io-pattern.svg)
+
+> ⚠️ **Pitfall — ARCHITECTURAL SIGNAL:** Frame as the **Decorator pattern** applied to I/O — same pattern behind `BufferedOutputStream`/`BufferedInputStream` throughout `java.io`. The decorator wraps the original object and adds behavior, without the original needing to change or the caller needing a different interface.
 
 ---
 
@@ -510,13 +543,19 @@ MyInterface proxy = (MyInterface) Proxy.newProxyInstance(
 - Fixes: setter/field injection for one side, introduce an abstraction, or (senior answer) treat it as a **design smell** — extract a coordinating third class.
 - Spring: constructor-injection cycles fail context startup by default; setter injection is a workaround, not the real fix.
 
-> ⚠️ **Pitfall — SENIOR ANSWER:** The real fix is recognizing poor separation of concerns, not just reciting the wiring hack.
+**In plain words:** if `A`'s constructor requires a fully-built `B` as an argument, and `B`'s constructor requires a fully-built `A`, neither one can ever finish being constructed first — building `A` needs a `B` that doesn't exist yet, and building that `B` needs an `A` that doesn't exist yet either. It's not a bug in your code so much as a structural deadlock in the design. Since neither object can be "first," a plain constructor-only approach has no valid order to run in. The workarounds all do the same thing at heart: delay one side of the wiring until *after* both objects already exist as bare instances (setter/field injection), or restructure so neither class needs the *other concrete class* directly (introduce an interface, or a third coordinating class both depend on).
+
+![Circular constructor dependency between two classes](../images/circular-constructor-dependency.svg)
+
+> ⚠️ **Pitfall — SENIOR ANSWER:** The real fix is recognizing poor separation of concerns, not just reciting the wiring hack — two classes needing each other at construction time is usually a sign they should be redesigned, not just patched with setter injection.
 
 ### Q32. "Ghost methods" — compiler optimization?
 - Not a standard Java term — **say so honestly** rather than inventing a definition.
 - Closest real concepts: **bridge methods** (generic type erasure / covariant returns) or **synthetic methods** (compiler-generated, e.g. nested-class private access).
 
-> ⚠️ **Pitfall:** The right interview instinct — admit unfamiliarity, then pivot to the closest concept you do know.
+**In plain words:** "ghost methods" isn't real Java terminology — if you're asked this, the term itself is likely a red herring or a mis-phrased question, and the strongest answer is admitting you haven't heard that exact phrase rather than guessing a definition. What the interviewer is *probably* getting at is one of two real, compiler-generated things: a **bridge method** (an invisible method the compiler adds to keep polymorphism working correctly after generic type erasure — see `core-java/Generics.md`'s Bridge Methods section for a full worked example), or a **synthetic method** (any compiler-generated method not written by the developer, such as the hidden accessor methods that let a nested class reach a private field of its enclosing class).
+
+> ⚠️ **Pitfall:** The right interview instinct — admit unfamiliarity with the exact term, then pivot to the closest real concept you do know (bridge methods or synthetic methods) rather than inventing a plausible-sounding but wrong definition.
 
 ---
 

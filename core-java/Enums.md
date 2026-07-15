@@ -107,6 +107,22 @@ for (Status s : Status.values()) {
 
 > ⚠️ **Pitfall — the ordinal trap:** never persist an enum's `ordinal()` to a database or serialize it as the source of truth for "which constant was this." Inserting a new constant in the middle of the declaration list shifts every ordinal after it, silently corrupting previously stored data. Persist `name()` (a stable string) instead, or an explicit custom code field.
 
+## `EnumMap` and `EnumSet` — Why They Outperform `HashMap`/`HashSet`
+
+**What they are:** `EnumMap<K extends Enum<K>, V>` and `EnumSet<E extends Enum<E>>` are specialized collection implementations usable **only** with enum keys/elements, internally backed by a plain array indexed directly by each constant's `ordinal()` — not a hash table at all.
+
+```java
+enum Day { MON, TUE, WED, THU, FRI, SAT, SUN }
+
+EnumMap<Day, String> schedule = new EnumMap<>(Day.class);
+schedule.put(Day.MON, "Standup");
+schedule.put(Day.WED, "Sprint Review");
+// iteration order is ALWAYS declaration order (MON, TUE, WED, ...) -- never an unspecified hash-bucket order
+```
+**Why this is genuinely faster than `HashMap<Day, String>`:** a `HashMap` put/get pays for `hashCode()` computation, potential collision handling, and bucket traversal on every call. An `EnumMap` skips all of that — the enum constant's `ordinal()` **is** the array index, so a lookup is a direct array access, not a hash computation. It's real O(1) with a tiny constant factor and zero possibility of hash collisions, by construction — not just "usually fast like a HashMap," but structurally simpler and cheaper.
+
+> ⚠️ **Pitfall — this is a "know it exists" signal, not a hard technique:** reaching for a generic `HashMap<SomeEnum, V>`/`HashSet<SomeEnum>` instead of `EnumMap<SomeEnum, V>`/`EnumSet<SomeEnum>` when the key/element domain is a fixed, known enum is a missed, essentially free optimization — and precisely the kind of thing a senior-level interviewer probes for specifically because it's cheap to know and easy to overlook in practice. If the map/set's keys are ever going to be an enum, `EnumMap`/`EnumSet` should be the reflexive first choice, not an afterthought.
+
 ---
 
 ## Interview Q&A
@@ -125,3 +141,6 @@ Each enum constant can override an abstract method with its own body — behavio
 
 **Q: Why shouldn't you persist `ordinal()` as a stored value?**
 `ordinal()` reflects declaration order, which shifts if constants are reordered or a new one is inserted in the middle — silently corrupting any previously persisted ordinal-based data. Use `name()` or an explicit stable code field instead.
+
+**Q: Why is `EnumMap` faster than `HashMap` for an enum-keyed map, precisely?**
+`EnumMap` is backed by a plain array indexed directly by each key's `ordinal()` — a lookup is a direct array access, with no hash computation and no possibility of collisions. `HashMap` pays for `hashCode()`, collision handling, and bucket traversal on every operation. When the key domain is a fixed enum, `EnumMap`/`EnumSet` should be the default choice, not `HashMap`/`HashSet`.

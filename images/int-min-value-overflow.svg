@@ -1,0 +1,30 @@
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="760" height="320" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">Why Math.abs(Integer.MIN_VALUE) Is Still Negative</text>
+
+  <!-- Range bar -->
+  <rect x="60" y="80" width="640" height="50" fill="#eef3fb" stroke="#2c5aa0" stroke-width="1.5"/>
+  <line x1="380" y1="80" x2="380" y2="130" stroke="#999" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="65" y="72" font-size="13" font-weight="700" fill="#c0392b">-2,147,483,648</text>
+  <text x="695" y="72" text-anchor="end" font-size="13" font-weight="700" fill="#2e7d32">2,147,483,647</text>
+  <text x="380" y="72" text-anchor="middle" font-size="12" fill="#555">0</text>
+  <text x="380" y="150" text-anchor="middle" font-size="12" fill="#333">32-bit signed int range — one MORE negative value than positive values</text>
+
+  <!-- MIN_VALUE marker -->
+  <circle cx="66" cy="105" r="6" fill="#c0392b"/>
+  <text x="66" y="185" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b">MIN_VALUE</text>
+
+  <!-- attempted positive counterpart, off the chart -->
+  <rect x="700" y="80" width="50" height="50" fill="#fdecea" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <text x="725" y="110" text-anchor="middle" font-size="11" fill="#c0392b">+2,147,483,648</text>
+  <text x="725" y="185" text-anchor="middle" font-size="12" fill="#c0392b" font-weight="700">doesn't exist</text>
+  <text x="725" y="200" text-anchor="middle" font-size="11" fill="#c0392b">(would need 33 bits)</text>
+
+  <path d="M700,105 L710,105" stroke="#c0392b" stroke-width="2"/>
+
+  <rect x="60" y="230" width="640" height="55" rx="6" fill="#fff8e1" stroke="#c79a1e" stroke-width="1.5"/>
+  <text x="380" y="253" text-anchor="middle" font-size="14" fill="#1a1a1a">-Integer.MIN_VALUE should be +2,147,483,648 — but that value has no representation</text>
+  <text x="380" y="273" text-anchor="middle" font-size="14" fill="#1a1a1a">so negation silently wraps back around to -2,147,483,648 itself</text>
+
+  <text x="380" y="308" text-anchor="middle" font-size="12" fill="#555">Fix: Math.absExact() (Java 15+) throws ArithmeticException instead of silently returning the wrong (still-negative) answer.</text>
+</svg>

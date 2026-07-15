@@ -1,0 +1,32 @@
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="760" height="340" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">Same Class Name, Two Loaders = Two DIFFERENT Types to the JVM</text>
+
+  <!-- Loader 1 -->
+  <rect x="60" y="70" width="240" height="60" rx="6" fill="#eef3fb" stroke="#2c5aa0" stroke-width="2"/>
+  <text x="180" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">ClassLoader A</text>
+  <text x="180" y="113" text-anchor="middle" font-size="11" fill="#333">loads com.foo.Bar</text>
+
+  <!-- Loader 2 -->
+  <rect x="460" y="70" width="240" height="60" rx="6" fill="#fff8e1" stroke="#c79a1e" stroke-width="2"/>
+  <text x="580" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">ClassLoader B</text>
+  <text x="580" y="113" text-anchor="middle" font-size="11" fill="#333">loads com.foo.Bar</text>
+
+  <!-- Resulting types -->
+  <rect x="90" y="170" width="180" height="50" rx="6" fill="#eafaf1" stroke="#2e7d32" stroke-width="2"/>
+  <text x="180" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Bar (via A)</text>
+
+  <rect x="490" y="170" width="180" height="50" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="580" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Bar (via B)</text>
+
+  <line x1="180" y1="130" x2="180" y2="168" stroke="#2c5aa0" stroke-width="2"/>
+  <line x1="580" y1="130" x2="580" y2="168" stroke="#c79a1e" stroke-width="2"/>
+
+  <text x="380" y="200" text-anchor="middle" font-size="20" fill="#999">≠</text>
+
+  <rect x="120" y="250" width="520" height="55" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="380" y="273" text-anchor="middle" font-size="14" fill="#1a1a1a">Same fully-qualified name, IDENTICAL bytecode — still two distinct runtime types</text>
+  <text x="380" y="293" text-anchor="middle" font-size="13" fill="#c0392b" font-weight="700">Casting one to the other throws ClassCastException, both sides printing "com.foo.Bar"</text>
+
+  <text x="380" y="325" text-anchor="middle" font-size="12" fill="#555">A class's true identity to the JVM is (fully-qualified name + defining ClassLoader) — not the name alone. Common in app servers with isolated deployment loaders.</text>
+</svg>

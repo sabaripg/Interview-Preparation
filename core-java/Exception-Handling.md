@@ -354,6 +354,23 @@ This is exactly why `ReentrantLock` needs the `try { } finally { lock.unlock(); 
 
 > ⚠️ **Pitfall — cleanup is not guaranteed in general:** only `synchronized` monitors get this structural JVM-level protection. Everything else (file handles, DB connections, explicit locks) is cleaned up only if a programmer wired it into `finally`/try-with-resources — and even that can be defeated: during a `StackOverflowError`, the stack is already exhausted, and if a `finally` block itself does anything stack-intensive, it can throw a *second* `StackOverflowError` mid-cleanup, defeating the original cleanup entirely. "Gracefully recover from `StackOverflowError`" deserves the same skepticism as recovering from `OutOfMemoryError`.
 
+## Overriding `fillInStackTrace()` — the Hot-Path Performance Technique
+
+**Recall from earlier in this file:** the expensive part of throwing an exception is `fillInStackTrace()` walking the call stack at *construction* time, not the exception-table lookup. For exceptions thrown at **genuinely high frequency** as a deliberate control-flow signal — not a rare, truly exceptional failure, but something like a validation short-circuit thrown thousands of times per second inside deeply recursive logic — paying for a stack trace that's never actually inspected is pure waste.
+
+```java
+public class FastValidationException extends RuntimeException {
+    public FastValidationException(String message) {
+        super(message, null, false, false); // Throwable(message, cause, enableSuppression, writableStackTrace) -- Java 7+
+        // writableStackTrace = false means the constructor SKIPS fillInStackTrace() entirely
+    }
+    @Override public synchronized Throwable fillInStackTrace() { return this; } // belt-and-suspenders no-op, in case anything calls it directly later
+}
+```
+This is a real, measured technique used in high-throughput frameworks (some validation libraries, low-latency trading systems, certain game engines) — turning exception construction from an `O(stack depth)` operation into effectively `O(1)`.
+
+> ⚠️ **Pitfall — this trades away debuggability, deliberately:** an exception thrown with `writableStackTrace = false` has **no stack trace at all** if it ever surfaces somewhere unexpected — genuinely harder to diagnose in production. Reserve this technique for exceptions that are (1) thrown at real, measured high frequency, (2) used as an understood, deliberate control-flow mechanism rather than a genuine error condition, and (3) never expected to need a stack trace for debugging — disabling it is a permanent, specific loss of information for that exception type, not a general-purpose exception optimization to apply everywhere.
+
 ---
 
 ## Interview Q&A — Rapid Fire
@@ -375,3 +392,6 @@ It uses `addSuppressed()` — if both the try body and `close()` throw, the `clo
 
 **Q: Your `NoClassDefFoundError` started appearing after a deployment that changed nothing you can find — what's the first thing to check?**
 Scroll up in the logs for an earlier `ExceptionInInitializerError` on that same class — a static initializer failing once permanently marks the class unusable, and every access after the first throws `NoClassDefFoundError` with no obvious link back to the real root cause.
+
+**Q: How would you make exception throwing cheaper for a custom exception used as high-frequency control flow, and what's the trade-off?**
+Use the 4-argument `Throwable(message, cause, enableSuppression, writableStackTrace)` constructor with `writableStackTrace = false` (optionally also overriding `fillInStackTrace()` as a no-op) — this skips the expensive call-stack walk entirely at construction time. The trade-off is a total, permanent loss of stack trace information for that exception type, so it's only appropriate when the exception is a deliberate, understood control-flow signal thrown at real measured frequency, never a genuine error condition someone will need to debug later.

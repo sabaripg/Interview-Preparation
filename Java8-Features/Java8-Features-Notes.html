@@ -70,7 +70,7 @@ details.topic summary:hover{background:#f1f5f9;}
 <section class="file-section" id="java-8-functional-programming-interview-preparation">
 <h1 class="file-title">Java 8+ Functional Programming — Interview Preparation</h1>
 <div class="file-intro"><blockquote>
-<p>Stream API depth (creation, intermediate/terminal operations, collectors, parallel streams), lambdas and the built-in functional interfaces, and method references — the modern-Java fluency a 10-YOE interview expects beyond just "I use streams sometimes." Every section has a worked Java example and an explicit pitfall.</p>
+<p>Stream API depth (creation, sorting, intermediate/terminal operations, a full <code>flatMap</code> deep-dive, primitive streams, <code>takeWhile</code>/<code>dropWhile</code>, collectors, parallel streams), lambdas and the built-in functional interfaces, method references, and a worked practice bank of real interview Stream questions against one running Employee dataset — the modern-Java fluency a 10-YOE interview expects beyond just "I use streams sometimes." Every section has a worked Java example and an explicit pitfall.</p>
 </blockquote></div>
 <details class="topic" open><summary>Contents</summary><div class="topic-body"><table>
 <thead>
@@ -84,7 +84,7 @@ details.topic summary:hover{background:#f1f5f9;}
 <tr>
 <td>1</td>
 <td><a href="./Part1-Streams-API.md">Streams API</a></td>
-<td>Stream creation, intermediate vs terminal ops, laziness, <code>flatMap</code>, Collectors (<code>groupingBy</code>/<code>partitioningBy</code>/<code>joining</code>), <code>Optional</code>, parallel streams and when not to use them</td>
+<td>Stream creation, sorting, intermediate vs terminal ops, laziness, a full <code>flatMap</code> deep-dive (why it exists + 4 concrete cases), primitive streams (<code>IntStream</code>/<code>DoubleStream</code>, <code>mapToInt</code>/<code>mapToDouble</code>, <code>sum</code>/<code>average</code>), <code>takeWhile</code>/<code>dropWhile</code>, Collectors (<code>groupingBy</code>/<code>partitioningBy</code>/<code>joining</code>/<code>mapping</code>), <code>Optional</code>, the <code>forEach</code>-side-effect anti-pattern, parallel streams and when not to use them</td>
 </tr>
 <tr>
 <td>2</td>
@@ -96,18 +96,18 @@ details.topic summary:hover{background:#f1f5f9;}
 <td><a href="./Part3-Method-References.md">Method References</a></td>
 <td>The four kinds of method references, when they're clearer than a lambda and when they're not, ambiguous-overload gotchas</td>
 </tr>
+<tr>
+<td>4</td>
+<td><a href="./Part4-Stream-Practice-Bank.md">Stream Interview Practice Bank</a></td>
+<td>A full worked Employee-dataset bank: min/max lookups, depart</td>
+</tr>
 </tbody>
 </table></div></details>
-<details class="topic"><summary>How to use this</summary><div class="topic-body"><ul>
-<li>Part 1 is the one most interviews actually probe — know it cold, especially the laziness model and the Collectors toolkit.</li>
-<li>Every part ends with an <strong>Interview Q&amp;A</strong> section.</li>
-<li>Cross-references: <code>core-java/Generics.md</code> (functional interfaces are themselves generic types), <code>Multhithreading/</code> (parallel streams share a common ForkJoinPool with <code>parallelStream()</code> — see the Multhithreading notes on <code>ForkJoinPool.commonPool()</code> before reaching for parallel streams in production).</li>
-</ul><hr/><p><em>Last updated: July 2026</em></p></div></details>
 </section>
 <section class="file-section" id="part-1-streams-api">
 <h1 class="file-title">Part 1 — Streams API</h1>
 <div class="file-intro"><blockquote>
-<p>What a Stream actually is (not a data structure), creating streams, intermediate vs terminal operations and lazy evaluation, <code>flatMap</code>, the Collectors toolkit (<code>groupingBy</code>/<code>partitioningBy</code>/<code>joining</code>), <code>Optional</code>, and parallel streams — including exactly when not to reach for them. Interview Q&amp;A at the end.</p>
+<p>What a Stream actually is (not a data structure), creating streams, sorting, intermediate vs terminal operations and lazy evaluation, a full deep-dive on <code>flatMap</code> (why it exists, every common shape it solves), primitive streams (<code>IntStream</code>/<code>DoubleStream</code>/<code>LongStream</code>, <code>mapToInt</code>/<code>mapToDouble</code>, <code>sum</code>/<code>average</code>/<code>max</code>/<code>min</code>), <code>takeWhile</code>/<code>dropWhile</code>, the Collectors toolkit (<code>groupingBy</code>/<code>partitioningBy</code>/<code>joining</code>/<code>mapping</code>), <code>Optional</code>, and parallel streams — including exactly when not to reach for them. Interview Q&amp;A at the end.</p>
 </blockquote></div>
 <details class="topic" open><summary>What a Stream Actually Is</summary><div class="topic-body"><p><strong>What it does:</strong> a <code>Stream</code> is a one-time-use pipeline for processing a sequence of elements declaratively — you describe <em>what</em> transformation you want (map, filter, sum), not <em>how</em> to loop and accumulate it yourself. It is <strong>not</strong> a data structure: a stream holds no elements of its own, doesn't store anything, and can't be reused once a terminal operation has consumed it.</p><pre><code class="language-java">List&lt;String&gt; names = List.of("Alice", "Bob", "Charlie", "Dave");
 List&lt;String&gt; longNames = names.stream()
@@ -129,6 +129,24 @@ Stream.generate(Math::random).limit(3);               // infinite, must be bound
 </code></pre><blockquote>
 <p>⚠️ <strong>Pitfall:</strong> <code>Stream.iterate()</code> and <code>Stream.generate()</code> produce <strong>infinite</strong> streams — forgetting <code>.limit(n)</code> on one hangs the program (or eventually throws <code>OutOfMemoryError</code> if a terminal operation like <code>collect()</code> tries to exhaust it). Always pair an infinite source with a bounding intermediate operation.</p>
 </blockquote></div></details>
+<details class="topic"><summary>Sorting Streams — Natural Order, Reverse, Comparator, By Attribute</summary><div class="topic-body"><pre><code class="language-java">List&lt;Integer&gt; numbers = Arrays.asList(3, 45, 5, 2, 5, 3, 22, 40, 4);
+
+numbers.stream().sorted().collect(Collectors.toList());                       // natural order: needs Comparable
+numbers.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList()); // reverse natural order
+
+Comparator&lt;Integer&gt; comp = (i1, i2) -&gt; i1.compareTo(i2);
+numbers.stream().sorted(comp).collect(Collectors.toList());                   // explicit comparator, same effect as natural order here
+</code></pre><p><strong>Sorting objects by an attribute</strong> — this is the shape that actually comes up in interviews, not sorting bare integers:</p><pre><code class="language-java">record Student(String name, int age) {}
+List&lt;Student&gt; students = List.of(new Student("Tim", 30), new Student("Sim", 22), new Student("Sam", 28));
+
+students.stream().sorted(Comparator.comparingInt(Student::age)).toList();                 // ascending by age
+students.stream().sorted(Comparator.comparing(Student::name).reversed()).toList();          // descending by name
+students.stream()
+    .sorted(Comparator.comparing(Student::age).thenComparing(Student::name))               // multi-key sort
+    .toList();
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — <code>sorted()</code> with no comparator requires <code>Comparable</code>:</strong> calling the no-argument <code>sorted()</code> on a stream of a custom type that does <strong>not</strong> implement <code>Comparable&lt;T&gt;</code> throws <code>ClassCastException</code> at runtime (<code>class Student cannot be cast to class java.lang.Comparable</code>) — not a compile-time error, because the compiler can't verify comparability for an arbitrary generic <code>Stream&lt;T&gt;</code>. Either implement <code>Comparable</code> on the type, or (the far more common real-world fix) always pass an explicit <code>Comparator</code> via <code>Comparator.comparing(...)</code> instead of relying on natural ordering existing.</p>
+</blockquote></div></details>
 <details class="topic"><summary>Intermediate vs Terminal Operations — and Why Laziness Matters</summary><div class="topic-body"><p><strong>Intermediate operations</strong> (<code>map</code>, <code>filter</code>, <code>sorted</code>, <code>distinct</code>, <code>limit</code>, <code>skip</code>, <code>flatMap</code>, <code>peek</code>) return a new <code>Stream</code> and are <strong>lazy</strong> — they don't actually run anything, they just build up a pipeline description. <strong>Terminal operations</strong> (<code>collect</code>, <code>reduce</code>, <code>forEach</code>, <code>count</code>, <code>anyMatch</code>/<code>allMatch</code>/<code>noneMatch</code>, <code>findFirst</code>/<code>findAny</code>) trigger the actual execution, and only then does the pipeline run, element by element, through every intermediate stage.</p><pre><code class="language-java">Stream&lt;String&gt; pipeline = names.stream()
     .filter(n -&gt; { System.out.println("filtering " + n); return n.length() &gt; 3; })
     .map(n -&gt; { System.out.println("mapping " + n); return n.toUpperCase(); });
@@ -144,73 +162,65 @@ mapping Dave
 </code></pre><p>Notice the order: it's not "filter everything, then map everything" — each element flows through the <strong>entire</strong> pipeline (filter → map) before the next element starts. This is why streams can short-circuit efficiently: <code>findFirst()</code> after a <code>filter()</code> can stop at the very first match without evaluating the rest of the source at all.</p><blockquote>
 <p>⚠️ <strong>Pitfall — the classic "why didn't my code run" bug:</strong> building a stream pipeline with no terminal operation at the end does <strong>nothing</strong> — no exception, no output, just silently no-op code, because nothing ever triggered execution. This is the single most common stream mistake for developers new to the API: forgetting the terminal operation entirely and wondering why <code>peek()</code>/<code>map()</code> side effects never happened.</p>
 </blockquote></div></details>
-<details class="topic"><summary>flatMap — Flattening Nested Structures</summary><div class="topic-body"><p><strong>What it does:</strong> <code>map()</code> transforms each element 1-to-1; <code>flatMap()</code> transforms each element into its <strong>own stream</strong>, then flattens all those streams into a single stream — essential when each input element itself produces a collection.</p><pre><code class="language-java">List&lt;List&lt;Integer&gt;&gt; nested = List.of(List.of(1, 2, 3), List.of(4, 5), List.of(6));
+<details class="topic"><summary>flatMap — Why It Exists, and Every Shape It Solves</summary><div class="topic-body"><p><strong>The core problem <code>flatMap</code> exists to solve:</strong> <code>map()</code> is strictly 1-to-1 — one input element produces exactly one output element. The moment an input element itself produces a <em>collection</em> of things (zero, one, or many), <code>map()</code> leaves you with a <strong>stream of streams</strong> (or a stream of lists) — a nested, awkward shape you'd then have to unwrap by hand. <code>flatMap()</code> does the 1-to-many transformation <strong>and</strong> the flattening in one step: it maps each element to its own stream, then merges every one of those streams into a single, flat result stream.</p><pre><code>map():      [A, B, C]  --f--&gt;  [f(A), f(B), f(C)]                     -- still one output per input
+flatMap():  [A, B, C]  --f--&gt;  f(A) ++ f(B) ++ f(C)  (all concatenated into ONE flat stream)
+</code></pre><h3>Case 1 — Flattening a List of Lists (the textbook case)</h3><pre><code class="language-java">List&lt;List&lt;Integer&gt;&gt; nested = List.of(List.of(1, 2, 3), List.of(4, 5), List.of(6));
 List&lt;Integer&gt; flat = nested.stream()
     .flatMap(List::stream)
     .collect(Collectors.toList());
-System.out.println(flat);
-</code></pre><p><strong>Output:</strong></p><pre><code>[1, 2, 3, 4, 5, 6]
-</code></pre><blockquote>
-<p>⚠️ <strong>Pitfall:</strong> using <code>map()</code> where <code>flatMap()</code> was needed produces a <code>Stream&lt;List&lt;Integer&gt;&gt;</code> (a stream <em>of lists</em>) instead of the flattened <code>Stream&lt;Integer&gt;</code> you actually wanted — a very common early mistake, and the compiler won't catch it since <code>Stream&lt;List&lt;Integer&gt;&gt;</code> is a perfectly valid type, just not the one you meant.</p>
-</blockquote></div></details>
-<details class="topic"><summary>Collectors — the Real Toolkit Beyond toList()</summary><div class="topic-body"><pre><code class="language-java">record Employee(String name, String department, double salary) {}
+System.out.println(flat); // [1, 2, 3, 4, 5, 6]
+</code></pre><p>Without <code>flatMap</code>, <code>nested.stream().map(List::stream)</code> would produce a <code>Stream&lt;Stream&lt;Integer&gt;&gt;</code> — a stream <em>of streams</em> — which is almost never what you actually want to work with.</p><h3>Case 2 — One Input, Many Outputs (splitting/expanding each element)</h3><pre><code class="language-java">List&lt;String&gt; sentences = List.of("hello world", "streams are powerful");
+List&lt;String&gt; words = sentences.stream()
+    .flatMap(sentence -&gt; Arrays.stream(sentence.split(" ")))
+    .collect(Collectors.toList());
+System.out.println(words); // [hello, world, streams, are, powerful]
+</code></pre><p>Each sentence becomes <em>multiple</em> words — <code>map()</code> alone could only ever give you one output per sentence (e.g., the array itself, not its individual elements); <code>flatMap</code> is what actually explodes each sentence into its constituent words and merges them all into one flat stream of words.</p><h3>Case 3 — Flattening a Stream of Custom Objects' Nested Collections</h3><pre><code class="language-java">record Employee(String name, List&lt;String&gt; projects) {}
 List&lt;Employee&gt; employees = List.of(
-    new Employee("Alice", "Engineering", 95000),
-    new Employee("Bob", "Engineering", 87000),
-    new Employee("Charlie", "Sales", 72000),
-    new Employee("Dave", "Sales", 68000)
+    new Employee("Alice", List.of("Alpha", "Beta")),
+    new Employee("Bob", List.of("Beta", "Gamma"))
 );
-
-// groupingBy -- Map&lt;K, List&lt;V&gt;&gt;
-Map&lt;String, List&lt;Employee&gt;&gt; byDept = employees.stream()
-    .collect(Collectors.groupingBy(Employee::department));
-
-// groupingBy + downstream collector -- Map&lt;K, D&gt;
-Map&lt;String, Double&gt; avgSalaryByDept = employees.stream()
-    .collect(Collectors.groupingBy(Employee::department, Collectors.averagingDouble(Employee::salary)));
-
-// partitioningBy -- always exactly TWO groups, keyed by boolean
-Map&lt;Boolean, List&lt;Employee&gt;&gt; aboveAvg = employees.stream()
-    .collect(Collectors.partitioningBy(e -&gt; e.salary() &gt; 80000));
-
-// joining -- building a delimited String
-String names = employees.stream().map(Employee::name).collect(Collectors.joining(", ", "[", "]"));
-// "[Alice, Bob, Charlie, Dave]"
-
-// toMap -- careful with duplicate keys
-Map&lt;String, Double&gt; nameToSalary = employees.stream()
-    .collect(Collectors.toMap(Employee::name, Employee::salary));
-
-// counting, summarizing
-Map&lt;String, Long&gt; countByDept = employees.stream()
-    .collect(Collectors.groupingBy(Employee::department, Collectors.counting()));
-DoubleSummaryStatistics stats = employees.stream()
-    .collect(Collectors.summarizingDouble(Employee::salary)); // min/max/avg/sum/count in one pass
-</code></pre><blockquote>
-<p>⚠️ <strong>Pitfall — <code>toMap()</code> with duplicate keys:</strong> <code>Collectors.toMap(keyFn, valueFn)</code> throws <code>IllegalStateException: Duplicate key</code> at runtime if two elements produce the same key — not a compile-time-visible risk, and easy to miss until production data has a collision dev data didn't. Fix by supplying a third <strong>merge function</strong> argument: <code>Collectors.toMap(keyFn, valueFn, (existing, replacement) -&gt; existing)</code> to explicitly decide what happens on collision, rather than letting it throw.</p>
-</blockquote><p><strong><code>groupingBy</code> vs <code>partitioningBy</code> — the real distinction:</strong> <code>groupingBy</code> can produce any number of groups, keyed by whatever the classifier function returns. <code>partitioningBy</code> is a specialized, more efficient case that <strong>always</strong> produces exactly two groups (<code>true</code>/<code>false</code>), because the classifier is a <code>Predicate</code>, not an arbitrary function — reach for <code>partitioningBy</code> specifically when the split is genuinely binary, since it's a clearer signal of intent than <code>groupingBy</code> with a boolean-returning classifier.</p></div></details>
-<details class="topic"><summary>Optional — Avoiding Null Checks in a Stream Pipeline</summary><div class="topic-body"><pre><code class="language-java">Optional&lt;Employee&gt; highestPaid = employees.stream()
-    .max(Comparator.comparingDouble(Employee::salary));
-
-String result = highestPaid
-    .map(Employee::name)
-    .orElse("No employees found");
-</code></pre><p><code>Optional</code> represents "a value that might not be present" as a real type the compiler forces you to handle, rather than a <code>null</code> that silently propagates until some unrelated line throws <code>NullPointerException</code>. Key methods: <code>isPresent()</code>/<code>isEmpty()</code> (check without extracting), <code>orElse(default)</code> (eager default, always evaluated even if not used), <code>orElseGet(supplier)</code> (lazy default, only evaluated if actually needed), <code>orElseThrow()</code> (convert absence into an explicit exception), <code>map()</code>/<code>filter()</code> (chain transformations that short-circuit to empty if the Optional is already empty).</p><blockquote>
-<p>⚠️ <strong>Pitfall — <code>orElse()</code> vs <code>orElseGet()</code> is not just style:</strong> <code>orElse(expensiveDefaultValue())</code> <strong>always</strong> evaluates <code>expensiveDefaultValue()</code> eagerly, even when the <code>Optional</code> already has a value and the default is never used — a real, easy-to-miss performance cost if the default involves a database call or heavy computation. <code>orElseGet(() -&gt; expensiveDefaultValue())</code> only evaluates the supplier lazily, when actually needed. Also: <code>Optional.get()</code> without checking presence first defeats the entire purpose of <code>Optional</code> — it throws <code>NoSuchElementException</code>, which is exactly the unchecked-null-access problem <code>Optional</code> exists to prevent, just with a different exception name.</p>
+List&lt;String&gt; allDistinctProjects = employees.stream()
+    .flatMap(e -&gt; e.projects().stream())
+    .distinct()
+    .collect(Collectors.toList());
+System.out.println(allDistinctProjects); // [Alpha, Beta, Gamma]
+</code></pre><p>This is the real-world shape that shows up constantly: each employee "contains" a list of projects; you want one flat list of every project across every employee, deduplicated. <code>flatMap</code> plus <code>distinct()</code> is the standard combination for exactly this "find all the unique children across all parents" pattern.</p><h3>Case 4 — Flattening an <code>Optional&lt;T&gt;</code> (a lesser-known but real use)</h3><pre><code class="language-java">Optional&lt;String&gt; maybeName = Optional.of("Alice");
+Stream&lt;String&gt; asStream = maybeName.stream(); // Optional.stream() -- 0 or 1 elements
+List&lt;Optional&lt;String&gt;&gt; maybeNames = List.of(Optional.of("Alice"), Optional.empty(), Optional.of("Bob"));
+List&lt;String&gt; presentNames = maybeNames.stream()
+    .flatMap(Optional::stream) // Java 9+ Optional.stream(): empty Optionals contribute nothing, present ones contribute their value
+    .collect(Collectors.toList());
+System.out.println(presentNames); // [Alice, Bob] -- empties silently dropped
+</code></pre><p><code>Optional.stream()</code> (added in Java 9) turns an <code>Optional</code> into a stream of zero or one elements — combined with <code>flatMap</code>, this is a clean, idiomatic way to run a stream of computations that may or may not produce a value, then collect only the ones that did, without any manual null-checking or <code>isPresent()</code> branching.</p><blockquote>
+<p>⚠️ <strong>Pitfall — the practical benefit, stated plainly:</strong> using <code>map()</code> where <code>flatMap()</code> was actually needed produces a <code>Stream&lt;List&lt;Integer&gt;&gt;</code> (or <code>Stream&lt;Stream&lt;Integer&gt;&gt;</code>) instead of the flattened result you wanted — a very common early mistake, and the compiler won't catch it, since <code>Stream&lt;List&lt;Integer&gt;&gt;</code> is a perfectly valid, compilable type, just not the shape you meant to end up with. The tell that you need <code>flatMap</code> instead of <code>map</code>: the transformation function you're about to write returns a <em>collection or stream</em>, not a single value.</p>
 </blockquote></div></details>
-<details class="topic"><summary>Parallel Streams — and Why You Probably Don't Want One by Default</summary><div class="topic-body"><pre><code class="language-java">long count = employees.parallelStream()
-    .filter(e -&gt; e.salary() &gt; 80000)
-    .count();
-</code></pre><p><strong>What it actually does:</strong> splits the source into chunks and processes them concurrently using the <strong>common <code>ForkJoinPool</code></strong> (<code>ForkJoinPool.commonPool()</code>, sized to <code>Runtime.getRuntime().availableProcessors() - 1</code> by default) — the same shared pool used by parallel <code>Arrays.parallelSort()</code> and, unless explicitly configured otherwise, <code>CompletableFuture.supplyAsync()</code> too.</p><blockquote>
-<p>⚠️ <strong>Pitfall — the real reasons parallel streams are not a free performance win:</strong> (1) <strong>Shared pool contention</strong> — because <code>parallelStream()</code> uses the JVM-wide common pool by default, a CPU-heavy parallel stream running in one part of the application can starve unrelated <code>CompletableFuture</code> work elsewhere in the same JVM competing for the same threads (see the Multhithreading notes' <code>ForkJoinPool.commonPool()</code> section for the full mechanics). (2) <strong>Overhead for small or I/O-bound workloads</strong> — splitting, coordinating, and merging has real cost; for anything but genuinely large, CPU-bound, easily-partitionable workloads, a sequential stream is often faster. (3) <strong>Ordering and shared mutable state</strong> — using <code>forEach</code> with a shared, non-thread-safe collection inside a parallel stream is a silent data-race waiting to happen; if order matters, <code>forEachOrdered</code> gives it back but also removes most of the parallelism benefit. The senior-level answer to "would you use <code>parallelStream()</code> here" is not a reflexive yes — it's "only after measuring, on a large CPU-bound collection, with awareness of what else is sharing the common pool."</p>
-</blockquote><hr/></div></details>
-<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: Why can't a stream be reused after a terminal operation?</strong>
-A stream isn't a data structure — it's a single-pass pipeline description with no backing storage. Once a terminal operation consumes it, the pipeline is spent; calling another terminal operation throws <code>IllegalStateException</code>. Build a fresh stream from the source collection if you need to process the same data a second way.</p><p><strong>Q: Explain why streams are lazy, and what breaks if you forget the terminal operation.</strong>
-Intermediate operations (<code>map</code>, <code>filter</code>, etc.) only build up a description of the pipeline; nothing executes until a terminal operation (<code>collect</code>, <code>forEach</code>, <code>count</code>, etc.) is called. Forgetting the terminal operation means the pipeline silently never runs — no error, just no-op code, which is one of the most common early mistakes with the API.</p><p><strong>Q: <code>map()</code> vs <code>flatMap()</code> — when do you need <code>flatMap</code>?</strong>
-<code>map()</code> is a 1-to-1 transformation. <code>flatMap()</code> is for when each input element itself produces a collection/stream of its own (e.g., a <code>List&lt;List&lt;T&gt;&gt;</code>) — it transforms each element into its own stream, then flattens all of them into one combined stream, rather than leaving you with a stream of streams.</p><p><strong>Q: <code>groupingBy</code> vs <code>partitioningBy</code> — what's the actual difference?</strong>
-<code>groupingBy</code> can produce any number of groups based on an arbitrary classifier function. <code>partitioningBy</code> is specialized for exactly two groups (<code>true</code>/<code>false</code>) because it takes a <code>Predicate</code> — reach for it specifically when the split is genuinely binary, as a clearer signal of intent.</p><p><strong>Q: <code>orElse()</code> vs <code>orElseGet()</code> on an <code>Optional</code> — is there a real difference?</strong>
-Yes — <code>orElse(value)</code> always evaluates its argument eagerly, even when the Optional already holds a value and the default is discarded. <code>orElseGet(supplier)</code> only invokes the supplier lazily, when the Optional is actually empty. If the default is expensive to compute (a DB call, heavy work), using <code>orElse()</code> pays that cost unconditionally.</p><p><strong>Q: Would you use <code>parallelStream()</code> for a given piece of code — how do you decide?</strong>
-Not reflexively. Parallel streams share the JVM-wide common <code>ForkJoinPool</code>, so CPU-heavy parallel stream work can starve unrelated concurrent work (including <code>CompletableFuture</code> tasks) competing for the same pool. They pay real coordination overhead, so they only help on large, CPU-bound, easily-partitioned workloads — and using shared mutable state inside one via <code>forEach</code> is a real data-race risk. Measure before reaching for it.</p></div></details>
+<details class="topic"><summary>Primitive Streams — IntStream, DoubleStream, LongStream</summary><div class="topic-body"><p><strong>Why they exist:</strong> a regular <code>Stream&lt;Integer&gt;</code> or <code>Stream&lt;Double&gt;</code> stores <strong>boxed</strong> wrapper objects — every element is a full heap object (<code>Integer</code>, <code>Double</code>), not a raw primitive (see <code>core-java/StringBuilder-Immutability.md</code>-adjacent boxing-overhead numbers in the core-java Wrapper Classes section — <code>Integer</code> costs roughly 4x an <code>int</code> in memory, and boxing/unboxing costs real CPU too). <code>IntStream</code>, <code>LongStream</code>, and <code>DoubleStream</code> are specialized stream types that hold <strong>raw primitives directly</strong>, avoiding both the memory overhead and the boxing/unboxing cost on every operation — and they add numeric-specific terminal operations (<code>sum()</code>, <code>average()</code>, <code>max()</code>, <code>min()</code>, <code>summaryStatistics()</code>) that a generic <code>Stream&lt;T&gt;</code> simply doesn't have, because summing or averaging arbitrary objects doesn't make general sense.</p><pre><code class="language-java">List&lt;Employee&gt; employees = Employee.employeeData(); // assume salary is a double field
+
+// mapToDouble converts a Stream&lt;Employee&gt; into a DoubleStream -- unwrapping the salary field AS A PRIMITIVE
+double totalSalary = employees.stream()
+    .mapToDouble(Employee::getSalary)
+    .sum(); // sum() only exists on DoubleStream/IntStream/LongStream, NOT on Stream&lt;Double&gt;
+
+OptionalDouble avgSalary = employees.stream()
+    .mapToDouble(Employee::getSalary)
+    .average(); // average() -- also primitive-stream-only
+
+DoubleSummaryStatistics stats = employees.stream()
+    .mapToDouble(Employee::getSalary)
+    .summaryStatistics(); // min/max/average/sum/count ALL IN ONE PASS
+System.out.println(stats.getMin() + " / " + stats.getMax() + " / " + stats.getAverage());
+</code></pre><p><strong>The exact gotcha this trips people up with:</strong></p><pre><code class="language-java">// WRONG -- .map() keeps you in the boxed Stream&lt;Double&gt; world
+OptionalDouble avg = employees.stream()
+    .map(Employee::getSalary)   // Stream&lt;Double&gt; -- if getSalary() returns double, this actually won't even compile cleanly without boxing
+    .average();                 // COMPILE ERROR -- average() does not exist on Stream&lt;Double&gt;
+
+// RIGHT -- .mapToDouble() converts to the primitive DoubleStream, which DOES have average()
+OptionalDouble avg = employees.stream()
+    .mapToDouble(Employee::getSalary)
+    .average();
+</code></pre><blockquote>
+<p>⚠️ <strong>Pitfall — this is a real, frequent compile-time trap, not a style nitpick:</strong> <code>Stream&lt;T&gt;</code> (the generic/boxed stream) does <strong>not</strong> have <code>sum()</code>, <code>average()</code>, or <code>summaryStatistics()</code> at all — those methods only exist on <code>IntStream</code>/<code>LongStream</code>/<code>DoubleStream</code>. The fix is always to switch to the primitive stream via <code>mapToInt()</code>/<code>mapToDouble()</code>/<code>mapToLong()</code> <em>before</em> calling the numeric terminal operation, not to try to call it on the boxed stream. Going back the other way — from a primitive stream to a boxed one — uses <code>.boxed()</code> (<code>IntStream.range(0,5).boxed()</code> → <code>Stream&lt;Integer&gt;</code>), needed specifically when a later operation (like `collect(Collectors.toList(</p>
+</blockquote></div></details>
 </section>
 <section class="file-section" id="part-2-lambdas-functional-interfaces">
 <h1 class="file-title">Part 2 — Lambdas & Functional Interfaces</h1>
@@ -343,6 +353,104 @@ List&lt;Employee&gt; employees = names.stream()
 Just shorthand — a method reference still targets a functional interface and compiles through the same <code>invokedynamic</code>/<code>LambdaMetafactory</code> path as a lambda. It's purely a more concise way to write a lambda whose entire body is "call this one existing method."</p><p><strong>Q: What's the actual difference between <code>instance::method</code> and <code>Class::instanceMethod</code>?</strong>
 <code>instance::method</code> (kind 2) targets an object that already exists — the functional interface's parameters map directly to the method's arguments. <code>Class::instanceMethod</code> (kind 3) has no object yet — the functional interface's <em>first</em> parameter becomes the receiver the method is called on, and any remaining parameters become the method's actual arguments. This is why <code>String::compareToIgnoreCase</code> can serve as a two-argument <code>Comparator&lt;String&gt;</code> despite being declared as a one-argument instance method.</p><p><strong>Q: When would you prefer a lambda over a method reference, even though method references are considered more "modern"?</strong>
 When the lambda needs to do anything beyond forwarding its arguments directly to one existing method — extra logic, reordered arguments, an additional fixed parameter not in the right position, or when a method reference produces an ambiguous-overload compile error a lambda would avoid by making parameter types explicit.</p></div></details>
+</section>
+<section class="file-section" id="part-4-stream-interview-practice-bank">
+<h1 class="file-title">Part 4 — Stream Interview Practice Bank</h1>
+<div class="file-intro"><blockquote>
+<p>A worked bank of the exact Stream questions that show up in real interviews (Amazon/Flipkart-style), all built against one running <code>Employee</code> dataset — min/max lookups, department/company/location aggregations, the N-th-highest-value pattern, and <code>flatMap</code> over nested collections. Each one states <em>why</em> it's asked, not just the code. Interview Q&amp;A at the end.</p>
+</blockquote></div>
+<details class="topic" open><summary>The Dataset Used Throughout</summary><div class="topic-body"><pre><code class="language-java">public class Employee {
+    int empId;
+    String name;
+    String dept;
+    String company;
+    String location;
+    double salary;
+    List&lt;String&gt; projects;
+    // constructor, getters/setters omitted
+
+    public static List&lt;Employee&gt; employeeData() {
+        return List.of(
+            new Employee(1, "Anurag", "IT", "TCS", "Bangalore", 65000, List.of("Alpha", "Beta")),
+            new Employee(2, "Ravi", "HR", "Infosys", "Pune", 48000, List.of("Gamma")),
+            new Employee(3, "Aarti", "Finance", "TCS", "Noida", 72000, List.of("Beta", "Delta")),
+            new Employee(4, "John", "IT", "Wipro", "Bangalore", 58000, List.of("Alpha", "Delta"))
+        );
+    }
+}
+List&lt;Employee&gt; employees = Employee.employeeData();
+</code></pre></div></details>
+<details class="topic"><summary>Min / Max Lookups</summary><div class="topic-body"><pre><code class="language-java">Employee minSalaryEmp = employees.stream()
+    .min(Comparator.comparingDouble(Employee::getSalary))
+    .orElse(null);
+
+Employee maxSalaryEmp = employees.stream()
+    .max(Comparator.comparingDouble(Employee::getSalary))
+    .orElse(null);
+
+String topCompany = employees.stream()
+    .max(Comparator.comparingDouble(Employee::getSalary))
+    .map(Employee::getCompany)
+    .orElse("No data");
+</code></pre><p><strong>Why it's asked:</strong> tests whether you reach for <code>.min()</code>/<code>.max()</code> with a <code>Comparator</code> directly, instead of manually sorting the whole list and grabbing the first/last element (correct, but wasteful — sorting is <code>O(n log n)</code>, <code>min</code>/<code>max</code> is a single <code>O(n)</code> pass).</p></div></details>
+<details class="topic"><summary>Department / Company / Location Aggregations</summary><div class="topic-body"><pre><code class="language-java">// Count per department
+Map&lt;String, Long&gt; countByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDept, Collectors.counting()));
+
+// Sum of salaries per department
+Map&lt;String, Double&gt; sumByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDept, Collectors.summingDouble(Employee::getSalary)));
+
+// Average salary per company, sorted highest to lowest
+employees.stream()
+    .collect(Collectors.groupingBy(Employee::getCompany, Collectors.averagingDouble(Employee::getSalary)))
+    .entrySet().stream()
+    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+    .forEach(entry -&gt; System.out.println(entry.getKey() + ": " + entry.getValue()));
+
+// Highest-paid employee PER location
+Map&lt;String, Optional&lt;Employee&gt;&gt; topEarnerByLocation = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getLocation, Collectors.maxBy(Comparator.comparingDouble(Employee::getSalary))));
+
+// Which DEPARTMENT has the single highest-paid employee overall (a two-step aggregation)
+employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDept, Collectors.maxBy(Comparator.comparingDouble(Employee::getSalary))))
+    .entrySet().stream()
+    .max(Comparator.comparingDouble(entry -&gt; entry.getValue().get().getSalary()))
+    .ifPresent(System.out::println);
+</code></pre><p><strong>Why the last one is asked specifically:</strong> it's a <strong>two-level aggregation</strong> — first <code>groupingBy</code> + <code>maxBy</code> to find each department's top earner, <em>then</em> a second stream pass over that resulting map to find which department's top earner is the overall highest. Interviewers use this to see whether you can chain aggregations rather than trying to do it all in one pass (which isn't cleanly possible here, since you need the per-department max <em>before</em> you can compare across departments).</p><blockquote>
+<p>⚠️ <strong>Pitfall — sorting a <code>Map</code> by value:</strong> a <code>Map</code> has no inherent order, so "sort by value" always means converting <code>entrySet()</code> to a stream, sorting <em>that</em>, and consuming the result as an ordered sequence (<code>forEach</code>, or collecting into a <code>LinkedHashMap</code> if you need an actual ordered map back) — you cannot sort a <code>HashMap</code> in place. <code>Map.Entry.comparingByValue(Comparator.reverseOrder())</code> is the idiomatic one-liner for descending-by-value.</p>
+</blockquote></div></details>
+<details class="topic"><summary>Grouping by One Field, Collecting a Different Field</summary><div class="topic-body"><pre><code class="language-java">Map&lt;String, List&lt;String&gt;&gt; namesByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDept, Collectors.mapping(Employee::getName, Collectors.toList())));
+// {IT=[Anurag, John], HR=[Ravi], Finance=[Aarti]}
+</code></pre><p><strong>Why it's asked:</strong> to check you know <code>Collectors.mapping()</code> as the downstream collector for "group by X, but I only want field Y from each element" — see Part 1's Collectors section for the full explanation of why a plain <code>groupingBy</code> alone can't do this.</p></div></details>
+<details class="topic"><summary>flatMap Over Nested Collections — Distinct Projects Across All Employees</summary><div class="topic-body"><pre><code class="language-java">List&lt;String&gt; allDistinctProjects = employees.stream()
+    .flatMap(e -&gt; e.getProjects().stream())
+    .distinct()
+    .collect(Collectors.toList());
+// [Alpha, Beta, Gamma, Delta]
+</code></pre><p><strong>Why it's asked:</strong> this is the canonical real-world <code>flatMap</code> question — "get me one flat, deduplicated list of X across all the Y's" whenever each Y itself holds a collection of X. See Part 1's full <code>flatMap</code> deep-dive for three more variations of this same underlying shape.</p></div></details>
+<details class="topic"><summary>Partitioning by a Threshold</summary><div class="topic-body"><pre><code class="language-java">Map&lt;Boolean, List&lt;Employee&gt;&gt; partitioned = employees.stream()
+    .collect(Collectors.partitioningBy(e -&gt; e.getSalary() &gt; 50000));
+System.out.println("Above 50k: " + partitioned.get(true));
+System.out.println("At or below 50k: " + partitioned.get(false));
+</code></pre><p><strong>Why it's asked:</strong> tests whether you reach for <code>partitioningBy</code> (guaranteed exactly two groups) instead of <code>groupingBy</code> with a boolean classifier — see Part 1 for the precise distinction between the two.</p></div></details>
+<details class="topic"><summary>The N-th Highest Value Pattern</summary><div class="topic-body"><pre><code class="language-java">OptionalDouble thirdHighestSalary = employees.stream()
+    .mapToDouble(Employee::getSalary)
+    .distinct()     // remove duplicate salary values FIRST -- otherwise ties corrupt the "Nth highest" notion
+    .sorted()        // ascending
+    .skip(2)         // skip the two lowest of what remains -- 0-indexed, so skip(2) leaves the 3rd-lowest onward
+    .findFirst();    // ascending + skip(n-1) = the n-th lowest; for n-th HIGHEST, reverse the sort direction or skip from the top
+</code></pre><p><strong>Why this exact combination matters:</strong> <code>distinct()</code> <strong>must</strong> come before <code>sorted().skip(n)</code> — if two employees share the same salary, skipping by raw position (without deduplicating first) would give you a wrong or duplicate-driven answer for "the 3rd <em>highest distinct</em> salary." This four-operation chain (<code>distinct</code> → <code>sorted</code> → <code>skip</code> → <code>findFirst</code>) is a genuinely common composed pattern worth having memorized as a unit, not derived from scratch under interview pressure.</p><blockquote>
+<p>⚠️ <strong>Pitfall — ascending vs descending direction:</strong> <code>sorted()</code> alone sorts ascending, so <code>skip(n-1).findFirst()</code> after a plain ascending sort gives you the <strong>n-th lowest</strong>, not highest. For the n-th <strong>highest</strong>, either sort descending first (<code>sorted(Comparator.reverseOrder())</code> on a boxed stream, since <code>DoubleStream.sorted()</code> has no reverse-order overload — you may need <code>.boxed().sorted(Comparator.reverseOrder())</code>), or compute <code>count() - n</code> and adjust the skip amount against an ascending sort. Getting the sort direction backwards here is an easy, common slip under interview time pressure.</p>
+</blockquote><hr/></div></details>
+<details class="topic"><summary>Interview Q&A</summary><div class="topic-body"><p><strong>Q: How would you find the employee with the highest salary, and then the company they work for?</strong>
+<code>employees.stream().max(Comparator.comparingDouble(Employee::getSalary)).map(Employee::getCompany).orElse(...)</code> — find the max employee first via a <code>Comparator</code>-driven <code>.max()</code>, then <code>.map()</code> the resulting <code>Optional&lt;Employee&gt;</code> down to just the company field.</p><p><strong>Q: How do you find which department has the single highest-paid employee, given salaries vary within each department?</strong>
+Two-step aggregation: first <code>groupingBy(dept, maxBy(salary comparator))</code> to get each department's top earner, then stream over that resulting map's entries and <code>max()</code> again by the nested employee's salary to find the overall top department. This can't be done in one <code>groupingBy</code> pass because you need every department's max computed before you can compare across departments.</p><p><strong>Q: You need names of employees per department, not the full employee objects — how?</strong>
+<code>Collectors.groupingBy(Employee::getDept, Collectors.mapping(Employee::getName, Collectors.toList()))</code> — <code>Collectors.mapping()</code> is the downstream collector specifically for "group by one field, collect a different extracted field."</p><p><strong>Q: Walk through finding the 3rd-highest distinct salary in a stream of employees.</strong>
+<code>mapToDouble(Employee::getSalary).distinct().sorted().skip(n).findFirst()</code> for the n-th <em>lowest</em> distinct value — <code>distinct()</code> must run before <code>sorted()</code>/<code>skip()</code> so that duplicate salaries don't corrupt the position count. For the n-th <em>highest</em>, either sort descending or compute the skip amount relative to the total count, since a plain ascending <code>sorted()</code> gives you the lowest end by default.</p><p><strong>Q: Why can't you sort a <code>Map</code> directly by its values?</strong>
+A <code>Map</code> has no inherent ordering contract — "sorting by value" always means streaming <code>entrySet()</code>, sorting that stream via <code>Map.Entry.comparingByValue(...)</code>, then consuming the sorted sequence (<code>forEach</code>, or re-collecting into a <code>LinkedHashMap</code> if an actual ordered map is needed back) — you cannot sort a <code>HashMap</code> (or most <code>Map</code> implementations) in place.</p></div></details>
 </section>
 </div>
 <script>

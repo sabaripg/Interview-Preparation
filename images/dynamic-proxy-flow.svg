@@ -1,0 +1,53 @@
+<svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="flow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2c5aa0"/>
+    </marker>
+    <marker id="flowBack" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="760" height="380" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">JDK Dynamic Proxy — Where a Call Actually Goes</text>
+
+  <!-- Boxes -->
+  <rect x="30" y="70" width="140" height="55" rx="6" fill="#eef3fb" stroke="#2c5aa0" stroke-width="2"/>
+  <text x="100" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Client code</text>
+
+  <rect x="230" y="70" width="160" height="55" rx="6" fill="#fff8e1" stroke="#c79a1e" stroke-width="2"/>
+  <text x="310" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Proxy</text>
+  <text x="310" y="112" text-anchor="middle" font-size="11" fill="#333">generated at runtime</text>
+
+  <rect x="450" y="70" width="180" height="55" rx="6" fill="#f3e9fb" stroke="#7b3fa0" stroke-width="2"/>
+  <text x="540" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">InvocationHandler</text>
+  <text x="540" y="112" text-anchor="middle" font-size="11" fill="#333">.invoke(proxy, method, args)</text>
+
+  <rect x="450" y="200" width="180" height="55" rx="6" fill="#eafaf1" stroke="#2e7d32" stroke-width="2"/>
+  <text x="540" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Real object</text>
+  <text x="540" y="249" text-anchor="middle" font-size="11" fill="#333">actual method body</text>
+
+  <!-- Flow arrows -->
+  <path d="M170,97 L228,97" stroke="#2c5aa0" stroke-width="2.5" fill="none" marker-end="url(#flow)"/>
+  <text x="185" y="88" font-size="11" fill="#2c5aa0">1. proxy.method()</text>
+
+  <path d="M390,97 L448,97" stroke="#2c5aa0" stroke-width="2.5" fill="none" marker-end="url(#flow)"/>
+  <text x="393" y="88" font-size="11" fill="#2c5aa0">2. dispatch</text>
+
+  <path d="M520,125 C 500,160 500,180 520,198" stroke="#2c5aa0" stroke-width="2.5" fill="none" marker-end="url(#flow)"/>
+  <text x="420" y="165" font-size="11" fill="#2c5aa0">3. method.invoke(real, args)</text>
+
+  <path d="M560,198 C 580,180 580,160 560,125" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#flowBack)"/>
+  <text x="565" y="165" font-size="11" fill="#2e7d32">4. result</text>
+
+  <path d="M448,110 L392,110" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#flowBack)"/>
+  <text x="393" y="130" font-size="11" fill="#2e7d32">5. return through handler</text>
+
+  <path d="M228,112 L172,112" stroke="#2e7d32" stroke-width="2.5" fill="none" marker-end="url(#flowBack)"/>
+  <text x="180" y="130" font-size="11" fill="#2e7d32">6. result to client</text>
+
+  <rect x="60" y="290" width="640" height="60" rx="6" fill="#f5f5f5" stroke="#999" stroke-width="1"/>
+  <text x="380" y="313" text-anchor="middle" font-size="13" fill="#1a1a1a">The client only ever sees the Proxy — it thinks it's calling the real interface directly.</text>
+  <text x="380" y="333" text-anchor="middle" font-size="13" fill="#1a1a1a">Only works for interfaces — a concrete class needs CGLIB/ByteBuddy subclassing instead.</text>
+
+  <text x="380" y="370" text-anchor="middle" font-size="12" fill="#555">Powers Spring AOP (@Transactional, @Cacheable) and Mockito's interface mocks.</text>
+</svg>

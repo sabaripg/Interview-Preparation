@@ -1,0 +1,50 @@
+<svg viewBox="0 0 760 480" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="760" height="480" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">Narrowing Cast to byte — Why 128 Becomes -128</text>
+
+  <!-- Panel A: 128 as 9-bit value -->
+  <text x="40" y="70" font-size="13" font-weight="700" fill="#2c5aa0">Step 1 — 128 needs 9 bits to represent as a positive number</text>
+  <g font-family="Consolas, monospace" font-size="16">
+    <rect x="40" y="85" width="30" height="34" fill="#eef3fb" stroke="#2c5aa0"/><text x="55" y="108" text-anchor="middle">0</text>
+    <rect x="70" y="85" width="30" height="34" fill="#fff8e1" stroke="#c79a1e"/><text x="85" y="108" text-anchor="middle">1</text>
+    <rect x="100" y="85" width="30" height="34" fill="#fff8e1" stroke="#c79a1e"/><text x="115" y="108" text-anchor="middle">0</text>
+    <rect x="130" y="85" width="30" height="34" fill="#fff8e1" stroke="#c79a1e"/><text x="145" y="108" text-anchor="middle">0</text>
+    <rect x="160" y="85" width="30" height="34" fill="#fff8e1" stroke="#c79a1e"/><text x="175" y="108" text-anchor="middle">0</text>
+    <rect x="190" y="85" width="30" height="34" fill="#fff8e1" stroke="#c79a1e"/><text x="205" y="108" text-anchor="middle">0</text>
+    <rect x="220" y="85" width="30" height="34" fill="#fff8e1" stroke="#c79a1e"/><text x="235" y="108" text-anchor="middle">0</text>
+    <rect x="250" y="85" width="30" height="34" fill="#fff8e1" stroke="#c79a1e"/><text x="265" y="108" text-anchor="middle">0</text>
+    <rect x="280" y="85" width="30" height="34" fill="#fff8e1" stroke="#c79a1e"/><text x="295" y="108" text-anchor="middle">0</text>
+  </g>
+  <text x="40" y="135" font-size="11" fill="#555">↑ extra sign-extension bit (dropped)</text>
+  <text x="300" y="108" font-size="13" fill="#333">= 128 (int, 9 significant bits)</text>
+
+  <!-- Step 2: truncate to 8 bits -->
+  <text x="40" y="175" font-size="13" font-weight="700" fill="#c0392b">Step 2 — (byte) keeps only the low 8 bits; the 9th bit is thrown away</text>
+  <g font-family="Consolas, monospace" font-size="16">
+    <rect x="70" y="190" width="30" height="34" fill="#fdecea" stroke="#c0392b" stroke-width="2"/><text x="85" y="213" text-anchor="middle" font-weight="700">1</text>
+    <rect x="100" y="190" width="30" height="34" fill="#f2f2f2" stroke="#999"/><text x="115" y="213" text-anchor="middle">0</text>
+    <rect x="130" y="190" width="30" height="34" fill="#f2f2f2" stroke="#999"/><text x="145" y="213" text-anchor="middle">0</text>
+    <rect x="160" y="190" width="30" height="34" fill="#f2f2f2" stroke="#999"/><text x="175" y="213" text-anchor="middle">0</text>
+    <rect x="190" y="190" width="30" height="34" fill="#f2f2f2" stroke="#999"/><text x="205" y="213" text-anchor="middle">0</text>
+    <rect x="220" y="190" width="30" height="34" fill="#f2f2f2" stroke="#999"/><text x="235" y="213" text-anchor="middle">0</text>
+    <rect x="250" y="190" width="30" height="34" fill="#f2f2f2" stroke="#999"/><text x="265" y="213" text-anchor="middle">0</text>
+    <rect x="280" y="190" width="30" height="34" fill="#f2f2f2" stroke="#999"/><text x="295" y="213" text-anchor="middle">0</text>
+  </g>
+  <text x="70" y="240" font-size="11" fill="#c0392b" font-weight="700">MSB (sign bit) = 1 → this byte is now negative</text>
+
+  <!-- Step 3: decode as two's complement -->
+  <text x="40" y="280" font-size="13" font-weight="700" fill="#2e7d32">Step 3 — decode 10000000 as a signed (two's complement) byte</text>
+  <rect x="40" y="295" width="680" height="40" rx="6" fill="#eafaf1" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="380" y="320" text-anchor="middle" font-size="14" fill="#1a1a1a">10000000 (byte) = -128 &#160;&#160;(the most negative value a byte can hold)</text>
+
+  <!-- Divider -->
+  <line x1="40" y1="355" x2="720" y2="355" stroke="#ddd" stroke-width="1"/>
+
+  <!-- Bonus example: 200 -->
+  <text x="40" y="380" font-size="13" font-weight="700" fill="#2c5aa0">Same idea, different number — (byte)(200)</text>
+  <text x="40" y="405" font-size="13" fill="#333">200 doesn't fit in a signed byte range (-128..127) either, so it wraps the same way:</text>
+  <rect x="40" y="415" width="680" height="34" rx="6" fill="#eef3fb" stroke="#2c5aa0" stroke-width="1.5"/>
+  <text x="380" y="437" text-anchor="middle" font-size="14" fill="#1a1a1a">200 - 256 = -56 &#160;&#160;(general rule: keep subtracting/adding 2^N until the value is back in range)</text>
+
+  <text x="380" y="470" text-anchor="middle" font-size="12" fill="#555">A byte only has 8 bits. Any value outside -128..127 wraps around by exactly 256 — it never "clamps" to the max/min.</text>
+</svg>

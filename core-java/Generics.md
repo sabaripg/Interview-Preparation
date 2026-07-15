@@ -163,6 +163,37 @@ List<Object> objList = list; // compile error -- generics are invariant, deliber
 ```
 Arrays carry their component type at runtime and check it on every store (allowing this unsafe-looking assignment to compile, but failing loudly later). Generics carry no such runtime information (erasure), so the language closes the hole entirely at compile time instead — generic type parameters are invariant unless a wildcard explicitly says otherwise (which is the entire reason wildcards with PECS exist).
 
+## Generic Array Creation and `@SafeVarargs`
+
+**The real-world workaround for "can't create a generic array":** the Type Erasure section above covers *why* `new T[10]` doesn't compile — no runtime type to build the array from. The practical, unsafe-but-common workaround:
+```java
+@SuppressWarnings("unchecked")
+T[] array = (T[]) new Object[10]; // compiles -- but genuinely unsafe if this array is ever exposed as a real T[] to outside callers
+```
+The JDK's own `ArrayList.toArray(T[] a)` avoids this hack by using `Arrays.copyOf` with a runtime `Class` token obtained from the caller-supplied array — that's precisely why `toArray()` takes an array argument at all, rather than just returning `T[]` directly.
+
+**`@SafeVarargs` — what it actually promises:** a varargs parameter of a generic type (`T... args`) implicitly creates a generic array under the hood, which is exactly the **heap pollution** risk covered earlier in this file (a compiler warning: "possible heap pollution from parameterized vararg type"). `@SafeVarargs` (Java 7+) is a **documented promise from the method author** that the method body never does anything unsafe with that implicit array (storing into it in a way that could corrupt a caller's data, or exposing/returning it) — it suppresses the warning without changing anything at the bytecode level; it's a contract, not a fix.
+
+> ⚠️ **Pitfall — why `@SafeVarargs` has restricted placement:** it's only legal on `static`, `final`, `private` methods, or constructors (Java 9+ relaxed it to also allow `private` instance methods) — specifically because those can't be *overridden*. If a non-final instance method could carry `@SafeVarargs`, a subclass could override it and break the safety promise the annotation makes, while callers relying on the (inherited) annotation would have no way to know the guarantee no longer holds.
+
+## The Wildcard Capture Problem
+
+```java
+public void swap(List<?> list, int i, int j) {
+    list.set(i, list.set(j, list.get(i))); // COMPILE ERROR -- can't call set(index, value) on a List<?>
+}
+```
+The compiler treats `?` as *some specific but unknown* type — it refuses `list.set(i, someObject)` because it can't prove `someObject`'s type actually matches the list's real (unknown) element type, even though this swap is obviously safe in practice (every value being inserted came out of the *same* list).
+
+**The fix — capture the wildcard into a type parameter via a private helper method:**
+```java
+public void swap(List<?> list, int i, int j) { swapHelper(list, i, j); }
+private <T> void swapHelper(List<T> list, int i, int j) {
+    list.set(i, list.set(j, list.get(i))); // compiles -- T is now a concrete (if still generic) type parameter within this method
+}
+```
+> ⚠️ **Pitfall — recognize this pattern by name:** this "capture helper" trick is exactly what the JDK's own `Collections.swap()` does internally. When a generic method involving a `?` wildcard refuses to compile for something that's "obviously" safe, the capture-helper pattern (delegate to a private generic method that gives the wildcard a real name) is the standard fix — worth recognizing immediately rather than re-deriving under interview pressure.
+
 ## The Diamond Operator (Java 7+)
 
 ```java
@@ -189,3 +220,9 @@ It happens when a raw-type reference to the same underlying object bypasses gene
 
 **Q: Why are arrays covariant while generics are invariant — isn't that inconsistent?**
 Arrays carry runtime type information and enforce it on every store, throwing `ArrayStoreException` if violated — so allowing the covariant assignment to compile is "safe" in the sense that a violation is caught immediately, just at runtime instead of compile time. Generics have no such runtime information after erasure, so the language closes the equivalent hole at compile time instead by making generics invariant by default — wildcards are the deliberate, explicit escape hatch when covariance/contravariance is actually needed.
+
+**Q: What does `@SafeVarargs` actually do, and why can't you put it on any instance method?**
+It's a documented promise that a generic varargs method doesn't do anything unsafe with the implicit generic array the varargs parameter creates (storing bad data into it, or exposing it) — it only suppresses the heap-pollution compiler warning, it doesn't change anything at the bytecode level. It's restricted to `static`/`final`/`private` methods and constructors because those can't be overridden — an overridable method carrying the annotation could have a subclass silently break the promise it makes.
+
+**Q: A method taking `List<?> list` won't let you call `list.set(i, list.get(j))` even though it's obviously safe — why, and what's the fix?**
+The compiler treats `?` as some specific-but-unknown type and can't prove a value read from the list is safe to write back into it. The fix is the "capture helper" pattern: delegate to a private generic method (`private <T> void helper(List<T> list, ...)`) that gives the wildcard a concrete (if still generic) name — exactly what `Collections.swap()` does internally in the JDK.

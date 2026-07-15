@@ -1,0 +1,26 @@
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="760" height="320" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">BufferedReader Wrapping FileReader — the Decorator Pattern</text>
+
+  <!-- Outer box: BufferedReader -->
+  <rect x="120" y="60" width="520" height="180" rx="10" fill="#eef3fb" stroke="#2c5aa0" stroke-width="2.5"/>
+  <text x="380" y="85" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">BufferedReader (decorator)</text>
+  <text x="380" y="103" text-anchor="middle" font-size="11" fill="#333">adds an internal char[] buffer + readLine()</text>
+
+  <!-- Inner box: FileReader -->
+  <rect x="200" y="130" width="360" height="80" rx="8" fill="#fff8e1" stroke="#c79a1e" stroke-width="2"/>
+  <text x="380" y="160" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a1a">FileReader (raw component)</text>
+  <text x="380" y="180" text-anchor="middle" font-size="11" fill="#333">reads char-by-char, one syscall each</text>
+
+  <!-- syscall comparison -->
+  <g font-size="12" fill="#333">
+    <text x="140" y="260" font-weight="700" fill="#c0392b">Without buffering:</text>
+    <text x="140" y="278">reading a 10,000-char file ≈ 10,000 individual syscalls</text>
+  </g>
+  <g font-size="12" fill="#333">
+    <text x="440" y="260" font-weight="700" fill="#2e7d32">With BufferedReader:</text>
+    <text x="440" y="278">same file ≈ a handful of large-chunk reads</text>
+  </g>
+
+  <text x="380" y="300" text-anchor="middle" font-size="12" fill="#555">Same pattern behind BufferedOutputStream/BufferedInputStream throughout java.io — a decorator adds behavior without changing the wrapped object's interface.</text>
+</svg>
