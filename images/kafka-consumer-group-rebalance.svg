@@ -1,0 +1,33 @@
+<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="760" height="420" fill="#ffffff"/>
+  <text x="380" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1a1a1a">Eager vs Cooperative Rebalancing — Consumer D Joins</text>
+
+  <!-- Eager section -->
+  <text x="40" y="65" font-size="14" font-weight="700" fill="#c0392b">Eager (old default) — stop-the-world</text>
+  <g font-size="11">
+    <rect x="40" y="80" width="80" height="40" rx="4" fill="#fdecea" stroke="#c0392b"/><text x="80" y="104" text-anchor="middle">A: paused</text>
+    <rect x="140" y="80" width="80" height="40" rx="4" fill="#fdecea" stroke="#c0392b"/><text x="180" y="104" text-anchor="middle">B: paused</text>
+    <rect x="240" y="80" width="80" height="40" rx="4" fill="#fdecea" stroke="#c0392b"/><text x="280" y="104" text-anchor="middle">C: paused</text>
+    <rect x="340" y="80" width="80" height="40" rx="4" fill="#fdecea" stroke="#c0392b"/><text x="380" y="104" text-anchor="middle">D: joins</text>
+  </g>
+  <text x="240" y="140" text-anchor="middle" font-size="12" fill="#c0392b" font-weight="700">ALL 4 consumers revoke ALL partitions, then get reassigned — group-wide pause</text>
+
+  <line x1="40" y1="165" x2="720" y2="165" stroke="#ddd" stroke-width="1"/>
+
+  <!-- Cooperative section -->
+  <text x="40" y="200" font-size="14" font-weight="700" fill="#2e7d32">Cooperative Sticky (modern default) — incremental</text>
+  <g font-size="11">
+    <rect x="40" y="215" width="80" height="40" rx="4" fill="#eafaf1" stroke="#2e7d32"/><text x="80" y="239" text-anchor="middle">A: keeps going</text>
+    <rect x="140" y="215" width="80" height="40" rx="4" fill="#eafaf1" stroke="#2e7d32"/><text x="180" y="239" text-anchor="middle">B: keeps going</text>
+    <rect x="240" y="215" width="80" height="40" rx="4" fill="#fff8e1" stroke="#c79a1e"/><text x="280" y="233" text-anchor="middle">C: gives up</text>
+    <text x="280" y="247" text-anchor="middle" font-size="10">1 partition</text>
+    <rect x="340" y="215" width="80" height="40" rx="4" fill="#eef3fb" stroke="#2c5aa0"/><text x="380" y="233" text-anchor="middle">D: joins,</text>
+    <text x="380" y="247" text-anchor="middle" font-size="10">gets it</text>
+  </g>
+  <text x="240" y="280" text-anchor="middle" font-size="12" fill="#2e7d32" font-weight="700">Only C's excess partition moves — A and B are never interrupted at all</text>
+
+  <rect x="40" y="310" width="680" height="80" rx="6" fill="#f5f5f5" stroke="#999"/>
+  <text x="380" y="335" text-anchor="middle" font-size="13" fill="#1a1a1a">Cooperative rebalancing may take two rounds to fully settle, but the vast</text>
+  <text x="380" y="355" text-anchor="middle" font-size="13" fill="#1a1a1a">majority of the group sees zero interruption for a routine join/leave —</text>
+  <text x="380" y="375" text-anchor="middle" font-size="13" fill="#1a1a1a">this is why CooperativeStickyAssignor is the modern default.</text>
+</svg>
